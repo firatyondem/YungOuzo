@@ -9,7 +9,7 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 
-export const PRIVATE_FILES = ["content/players.real.json"];
+export const PRIVATE_FILES = ["content/players.real.json", "content/teams.real.json"];
 
 const lines = (text) =>
   String(text || "")

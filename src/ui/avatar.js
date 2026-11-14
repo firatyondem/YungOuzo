@@ -1,6 +1,7 @@
 // 2D player portraits, generated locally as SVG strings from the player's `look`.
 // No images, no network requests. Pure string building (also runs in Node).
 // The same look data drives the 3D figurines (scene/figurine.js).
+import { portraitHTML } from "./images.js";
 import { normalizeLook, safeColor, SKIN_TONES, HAIR_COLOR } from "../look.js";
 
 const INK = "#0a0c11";
@@ -209,7 +210,7 @@ export function avatarHTML(player, opts = {}) {
   const color = safeColor(opts.color ?? p.color);
   const number = String(p.jersey ?? "").replace(/[^0-9]/g, "").slice(0, 2);
   const cls = ["av", `av-${opts.size || "md"}`, opts.round === false ? "av-square" : ""].filter(Boolean).join(" ");
-  return `<span class="${cls}" style="--pc:${color}" title="${escAttr(p.name ?? "")}">${generatePlayerAvatar(p, { color })}${
+  return `<span class="${cls}" style="--pc:${color}" title="${escAttr(p.name ?? "")}">${generatePlayerAvatar(p, { color })}${portraitHTML(p)}${
     opts.badge && number ? `<i class="av-num">${number}</i>` : ""
   }</span>`;
 }

@@ -29,7 +29,8 @@
 //     lineup: [player x5],       // deep copies (ratings can be upgraded)
 //     deck:   [{ iid, cardId, source }],   // source: "starter" | "reward" | playerId
 //     nextIid,
-//     rewards: null | [{ kind: "card"|"player"|"upgrade", ... }],
+//     rewards: null | [{ kind: "card"|"upgrade"|"remove"|"deal"|"player", ... }],
+//     perks: [{ id, name, text, effects }],   // front-office deals taken (rules, see teamRules.js)
 //     results: [{ teamId, player, opp, won }],   // finished matches
 //     stats: { wins, turns, shots, makes, threes, pointsFor, pointsAgainst, cardsPlayed, steals },
 //     match: null | {
@@ -116,6 +117,7 @@ export function createRun(content, config, seed) {
   Object.defineProperty(run, "content", { value: content, enumerable: false });
   Object.defineProperty(run, "config", { value: config, enumerable: false });
   run.lineup = config.STARTING_LINEUP.map((id) => clonePlayer(content.players[id]));
+  run.perks = [];
   run.deck = buildStartingDeck(run);
   run.schedule = buildSchedule(run);
   run.strategy = defaultStrategy(run); // { offense, defense, pace, starId } - see strategy.js

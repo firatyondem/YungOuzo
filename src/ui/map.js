@@ -1,4 +1,7 @@
 // Tournament map: three opponents, your team, deck viewer.
+import { logoHTML } from "./images.js";
+import { deckBarHTML } from "./rewards.js";
+import { getCard } from "../engine/rules.js";
 import { getActiveChemistry } from "../engine/rules.js";
 import { $, esc, ARCHETYPE_LABEL } from "./dom.js";
 import { playerCardHTML } from "./playerCard.js";
@@ -15,10 +18,12 @@ const TYPE_ORDER = ["Shot", "Offense", "Defense", "Buff", "Utility"];
 export function showDeck(app) {
   const run = app.run;
   const cards = run.deck
-    .map((inst) => ({ inst, card: run.content.cards[inst.cardId] }))
+    .map((inst) => ({ inst, card: getCard(run, inst) }))
     .sort((a, b) => TYPE_ORDER.indexOf(a.card.type) - TYPE_ORDER.indexOf(b.card.type) || a.card.name.localeCompare(b.card.name));
   const o = showOverlay(
     `<h3 class="ov-title">YOUR DECK · ${cards.length} CARDS</h3>
+     ${deckBarHTML(run)}
+     ${(run.perks || []).map((p) => `<div class="perk-line"><b>${esc(p.name)}</b> ${esc(p.text)}</div>`).join("")}
      <div class="deck-grid">${cards
        .map(({ inst, card }) => {
          const owner = run.lineup.find((p) => p.id === inst.source);
@@ -55,7 +60,7 @@ export function renderMap(app) {
     else status = `${icon("lock")}LOCKED`;
     return `
       <div class="bnode ${state}" style="--team:${teamColors(t).primary}">
-        <div class="bnode-top"><div class="bnode-round">${esc(stop.label)}${series ? ` / best of ${stop.games}` : ""}</div><div class="bnode-name">${esc(t.name)}</div></div>
+        <div class="bnode-top"><div class="bnode-round">${esc(stop.label)}${series ? ` / best of ${stop.games}` : ""}</div><div class="bnode-name">${logoHTML(t, "bnode-logo")}${esc(t.name)}</div></div>
         <div class="bnode-body">
           <div class="bnode-stats">
             <span class="bnode-def" title="Subtracted from all your shot percentages">DEF ${t.defense}</span>

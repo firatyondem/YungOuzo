@@ -4,3 +4,9 @@ Thumbs.db
 
 # Private roster: local only, never committed or deployed (see README).
 content/players.real.json
+content/teams.real.json
+# Team logos and player portraits are local only (no official logos are shipped).
+assets/teams/*
+assets/players/*
+!assets/teams/README.md
+!assets/players/README.md

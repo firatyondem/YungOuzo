@@ -10,7 +10,7 @@ import { league as content, REAL_CONFIG as CONFIG } from "../tests/helpers.js";
 import { createRun } from "../src/engine/gameState.js";
 import { startMatch, playCard, endTurn, toggleHold } from "../src/engine/turnLoop.js";
 import { canPlay, calcShot, checkCondition, getCard, getCardCost, getShootEffect, opponentPreview } from "../src/engine/rules.js";
-import { applyReward } from "../src/engine/rewards.js";
+import { applyReward, upgradable, removable } from "../src/engine/rewards.js";
 import { canUseAction, useAction, isClosingTime } from "../src/engine/actions.js";
 import { recommended, setStrategy } from "../src/engine/strategy.js";
 import { nextFloat } from "../src/engine/rng.js";
@@ -19,6 +19,8 @@ const ARG = process.argv.slice(2);
 const MODE = ARG.includes("random") ? "random" : ARG.includes("casual") ? "casual" : "thorough";
 const PER_TEAM = ARG.includes("teams");
 const TOP_CARDS = ARG.includes("cards");
+// Reward policy of the thorough bot: mix (default) | card | upgrade | remove | deal | player
+const POLICY = (ARG.find((a) => a.startsWith("policy=")) || "policy=mix").slice(7);
 
 // ---------- Thorough bot: expected-value planning ----------
 
@@ -221,13 +223,16 @@ export function botTurn(run, mode = MODE, dice = null) {
 // ---------- Seasons ----------
 
 /** Play `runs` seasons. Returns per-stop and per-team tallies. */
-export function simulate(runs, { mode = MODE, teams = content.teams, config = CONFIG, casual = false } = {}) {
+export function simulate(runs, { mode = MODE, teams = content.teams, config = CONFIG, casual = false, policy = POLICY } = {}) {
   if (casual) mode = "casual";
   const c = { ...content, teams };
   const stops = {};
   const byTeam = {};
   const plans = {};
   const winCards = {};
+  const winUpgrades = {};
+  const winPerks = {};
+  const rewardsTaken = {};
   const stat = { cards: 0, turns: 0, shots: 0, makes: 0 };
   let champions = 0;
   let matches = 0;
@@ -267,23 +272,70 @@ export function simulate(runs, { mode = MODE, teams = content.teams, config = CO
       if (run.phase === "map" && run.round > roundBefore) s.cleared++; // won a rematch: no reward
       if (run.phase === "reward") {
         s.cleared++;
-        let idx;
-        if (mode === "random") idx = Math.floor(nextFloat(dice) * run.rewards.length);
-        else {
-          idx = run.rewards.findIndex((r) => r.kind === "upgrade");
-          if (idx < 0) idx = 0;
-        }
-        applyReward(run, idx, { slot: Math.floor(nextFloat(dice) * 5) });
+        const took = pickReward(run, mode, dice, policy);
+        if (took) rewardsTaken[took] = (rewardsTaken[took] || 0) + 1;
       } else if (run.phase === "victory") {
         s.cleared++;
         champions++;
-        for (const id of new Set(run.deck.map((d) => d.cardId))) winCards[id] = (winCards[id] || 0) + 1;
+        // Only what the run added or improved: starters and signature cards are in every deck.
+        for (const id of new Set(run.deck.filter((d) => d.source === "reward").map((d) => d.cardId))) winCards[id] = (winCards[id] || 0) + 1;
+        for (const id of new Set(run.deck.filter((d) => d.up).map((d) => d.cardId))) winUpgrades[id] = (winUpgrades[id] || 0) + 1;
+        for (const p of run.perks || []) winPerks[p.id] = (winPerks[p.id] || 0) + 1;
       }
     }
     stat.shots += run.stats.shots;
     stat.makes += run.stats.makes;
   }
-  return { runs, mode, stops, byTeam, plans, winCards, stat, champions, matches, turns };
+  return { runs, mode, stops, byTeam, plans, winCards, winUpgrades, winPerks, rewardsTaken, stat, champions, matches, turns };
+}
+
+// ---------- Rewards ----------
+
+// What the thorough bot upgrades first (cheaper shots open up three-card turns) and cuts first.
+const UPGRADE_ORDER = ["pull_up_jumper", "euro_step", "drive_and_finish", "alley_oop", "catch_and_shoot_3", "corner_three", "step_back_3", "lockdown", "pick_and_roll", "contest"];
+const CUT_ORDER = ["film_study", "iso", "hard_screen", "swing_pass", "no_look_dime", "help_defense", "box_out", "swipe", "contest"];
+const byOrder = (run, list, order) => {
+  for (const id of order) {
+    const hit = list.find((c) => c.cardId === id);
+    if (hit) return hit;
+  }
+  return list[0] || null;
+};
+
+/** Take a reward. Returns the kind taken (or null). */
+export function pickReward(run, mode, dice, policy = "mix") {
+  const opts = run.rewards || [];
+  const idxOf = (kind) => opts.findIndex((o) => o.kind === kind);
+  const take = (kind) => {
+    const i = idxOf(kind);
+    if (i < 0) return false;
+    let params = {};
+    if (kind === "upgrade") {
+      const list = upgradable(run);
+      const inst = mode === "random" ? list[Math.floor(nextFloat(dice) * list.length)] : byOrder(run, list, UPGRADE_ORDER);
+      params = { iid: inst && inst.iid };
+    } else if (kind === "remove") {
+      const list = removable(run);
+      const inst = mode === "random" ? list[Math.floor(nextFloat(dice) * list.length)] : byOrder(run, list, CUT_ORDER);
+      params = { iid: inst && inst.iid };
+    } else if (kind === "player") {
+      params = { slot: dice ? Math.floor(nextFloat(dice) * 5) : 0 };
+    }
+    return applyReward(run, i, params);
+  };
+  let order;
+  if (mode === "random") {
+    const kinds = opts.map((o) => o.kind);
+    order = [kinds[Math.floor(nextFloat(dice) * kinds.length)], ...kinds];
+  } else if (mode === "casual") {
+    order = ["card", "upgrade", "remove"]; // "more cards is better"
+  } else if (policy === "mix") {
+    order = [["upgrade", "remove", "card"], ["remove", "upgrade", "card"], ["upgrade", "remove", "card"]][run.round % 3];
+  } else {
+    order = [policy, "upgrade", "remove", "card"];
+  }
+  for (const kind of order) if (take(kind)) return kind;
+  return null;
 }
 
 function report(r) {
@@ -294,11 +346,14 @@ function report(r) {
   }
   console.log(`full run (champions): ${pct(r.champions, r.runs)}`);
   const top = Object.entries(r.plans).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const taken = Object.entries(r.rewardsTaken).sort((a, b) => b[1] - a[1]);
+  if (taken.length) console.log(`rewards taken: ${taken.map(([k, v]) => `${k} ${v}`).join(", ")}`);
   console.log(`plans used: ${top.map(([k, v]) => `${k} ${Math.round((100 * v) / r.matches)}%`).join(", ")}`);
   if (TOP_CARDS && r.champions) {
-    const starters = new Set(["swing_pass", "pull_up_jumper", "contest"]);
-    const rows = Object.entries(r.winCards).filter(([id]) => !starters.has(id)).sort((a, b) => b[1] - a[1]).slice(0, 8);
-    console.log(`cards in winning decks (of ${r.champions}): ${rows.map(([id, n]) => `${id} ${Math.round((100 * n) / r.champions)}%`).join(", ")}`);
+    const top5 = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id, n]) => `${id} ${Math.round((100 * n) / r.champions)}%`).join(", ") || "-";
+    console.log(`winning decks (${r.champions}), cards added:    ${top5(r.winCards)}`);
+    console.log(`winning decks (${r.champions}), cards upgraded: ${top5(r.winUpgrades)}`);
+    console.log(`winning decks (${r.champions}), deals:          ${top5(r.winPerks)}`);
   }
   if (PER_TEAM) {
     console.log("\nper team (game win rate, average score):");

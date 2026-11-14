@@ -6,9 +6,9 @@
 import { league, REAL_CONFIG as CONFIG } from "../tests/helpers.js";
 import { createRun } from "../src/engine/gameState.js";
 import { startMatch } from "../src/engine/turnLoop.js";
-import { generateRewards, applyReward } from "../src/engine/rewards.js";
+import { generateRewards } from "../src/engine/rewards.js";
 import { recommended, setStrategy } from "../src/engine/strategy.js";
-import { botTurn } from "./sim.js";
+import { botTurn, pickReward } from "./sim.js";
 
 const games = Number(process.argv[2]) || 300;
 // Thorough-bot game win rate per tier. With two lives and a best-of-3 Finals
@@ -39,8 +39,7 @@ export function tierRate(teams, tier, n = games, mode = "thorough") {
     for (let r = 0; r < STOP[tier]; r++) {
       run.phase = "reward";
       generateRewards(run);
-      const idx = Math.max(0, run.rewards.findIndex((x) => x.kind === "upgrade"));
-      applyReward(run, idx, { slot: 0 });
+      pickReward(run, "thorough", null);
     }
     run.round = STOP[tier];
     const team = pool[seed % pool.length];

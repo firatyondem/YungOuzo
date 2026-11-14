@@ -17,7 +17,8 @@ import { renderTitle, renderHowTo, showHowToOverlay, soundButtonHTML } from "./u
 import { createTutorial } from "./ui/tutorial.js";
 import { loadManifest } from "./assets.js";
 import { AudioManager } from "./audio/AudioManager.js";
-import { loadRoster } from "./roster.js";
+import { loadRoster, loadTeamOverlay, applyTeamOverlay } from "./roster.js";
+import { setImageManifest } from "./ui/images.js";
 import { icon } from "./ui/icons.js";
 
 function readMuted() {
@@ -84,6 +85,8 @@ async function loadJson(path) {
 
 async function loadContent() {
   // Roster selection lives in src/roster.js: league by default, private only with ?roster=real.
+  loadManifest().then(setImageManifest);
+  const overlay = await loadTeamOverlay({ fetchFn: fetchRetry });
   const [cards, roster, teams, chemistry, rewards, plays, actions, lineups, strategy] = await Promise.all([
     loadJson("content/cards.json"),
     loadRoster({ requiredIds: CONFIG.STARTING_LINEUP, fetchFn: fetchRetry }),
@@ -96,6 +99,7 @@ async function loadContent() {
     loadJson("content/strategy.json"),
   ]);
   app.roster = { source: roster.source, warning: roster.warning || "" };
+  applyTeamOverlay(teams, overlay);
   return buildContent({ cards, players: roster.players, teams, chemistry, rewards, plays, actions, lineups, strategy });
 }
 

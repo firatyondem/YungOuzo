@@ -35,5 +35,112 @@
     "player_12",
     "player_14",
     "player_15"
+  ],
+  "archetypes": {
+    "Perimeter": "Perimeter shooting",
+    "Paint": "Paint dominance",
+    "Defense": "Defensive grind",
+    "Transition": "Fast transition",
+    "PickRoll": "Pick & Roll",
+    "Balanced": "Balanced offense"
+  },
+  "deals": [
+    {
+      "id": "supermax_star",
+      "name": "Supermax Star",
+      "gain": "Your Star's shots are at +10%.",
+      "price": "Everyone else shoots at -6%: the offense runs through one player.",
+      "effects": [
+        {
+          "type": "shot_mod",
+          "star": true,
+          "value": 10
+        },
+        {
+          "type": "shot_mod",
+          "star": false,
+          "value": -6
+        }
+      ],
+      "text": "Your Star's shots are at +10%. Everyone else shoots at -6%: the offense runs through one player."
+    },
+    {
+      "id": "defensive_specialist",
+      "name": "Defensive Specialist",
+      "gain": "+6 Contest every turn and +10% on steals.",
+      "price": "He cannot score: all your shots are at -4%.",
+      "effects": [
+        {
+          "type": "contest_start",
+          "value": 6
+        },
+        {
+          "type": "steal_bonus",
+          "value": 10
+        },
+        {
+          "type": "shot_mod",
+          "value": -4
+        }
+      ],
+      "text": "+6 Contest every turn and +10% on steals. He cannot score: all your shots are at -4%."
+    },
+    {
+      "id": "veteran_leader",
+      "name": "Veteran Leader",
+      "gain": "Draw 1 extra card every turn.",
+      "price": "Old legs: -5 Contest every turn.",
+      "effects": [
+        {
+          "type": "draw_bonus",
+          "value": 1
+        },
+        {
+          "type": "contest_start",
+          "value": -5
+        }
+      ],
+      "text": "Draw 1 extra card every turn. Old legs: -5 Contest every turn."
+    },
+    {
+      "id": "rim_protector",
+      "name": "Rim Protector",
+      "gain": "+8 Contest every turn.",
+      "price": "He clogs your spacing: your threes are at -8%.",
+      "effects": [
+        {
+          "type": "contest_start",
+          "value": 8
+        },
+        {
+          "type": "shot_mod",
+          "points": 3,
+          "value": -8
+        },
+        {
+          "type": "shot_mod",
+          "points": 4,
+          "value": -8
+        }
+      ],
+      "text": "+8 Contest every turn. He clogs your spacing: your threes are at -8%."
+    },
+    {
+      "id": "microwave_scorer",
+      "name": "Microwave Scorer",
+      "gain": "+8 Openness every turn.",
+      "price": "He guards nobody: their plays are at +6%.",
+      "effects": [
+        {
+          "type": "openness_start",
+          "value": 8
+        },
+        {
+          "type": "intent_bonus",
+          "value": 6
+        }
+      ],
+      "text": "+8 Openness every turn. He guards nobody: their plays are at +6%."
+    }
   ]
 }

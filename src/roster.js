@@ -77,3 +77,51 @@ export async function loadRoster({
   if (warning) result.warning = warning;
   return result;
 }
+
+// ---------- Private team names (same rule as the private roster) ----------
+// content/teams.real.json is local only and gitignored. It is requested ONLY
+// with ?roster=real, and may rename teams and their players and point to logo
+// images:  { "<team id>": { "name": "...", "logo": "assets/teams/x.png", "players": ["name", ...] } }
+// Anything missing or malformed is ignored and the fictional league stays.
+export const REAL_TEAMS_URL = "content/teams.real.json";
+
+export async function loadTeamOverlay({ search = globalThis.location ? globalThis.location.search : "", fetchFn = globalThis.fetch } = {}) {
+  let wantsReal = false;
+  try {
+    wantsReal = new URLSearchParams(search).get("roster") === "real";
+  } catch {
+    wantsReal = false;
+  }
+  if (!wantsReal) return null;
+  try {
+    const res = await fetchFn(REAL_TEAMS_URL);
+    if (!res || !res.ok) return null;
+    const data = await res.json();
+    return data && typeof data === "object" && !Array.isArray(data) ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+const cleanName = (v) => (typeof v === "string" && v.trim() && v.trim() !== "TODO" ? v.trim().slice(0, 40) : null);
+
+/** Rename teams (and their players) in place from the private overlay. Returns how many teams changed. */
+export function applyTeamOverlay(teams, overlay) {
+  if (!overlay || !Array.isArray(teams)) return 0;
+  let n = 0;
+  for (const t of teams) {
+    const o = overlay[t.id];
+    if (!o || typeof o !== "object") continue;
+    const name = cleanName(o.name);
+    if (name) t.name = name;
+    if (typeof o.logo === "string" && /^assets\/teams\/[A-Za-z0-9._-]+$/.test(o.logo)) t.logo = o.logo;
+    if (Array.isArray(o.players)) {
+      (t.players || []).forEach((p, i) => {
+        const pn = cleanName(o.players[i]);
+        if (pn) p.name = pn;
+      });
+    }
+    n++;
+  }
+  return n;
+}

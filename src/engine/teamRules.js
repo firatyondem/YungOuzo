@@ -94,6 +94,7 @@ export function activeRules(run) {
   if (phase) rules.push(...withLabel(phase.effects, phase.name));
   rules.push(...(m.extraRules || []));
   for (const shape of activeShapes(run)) rules.push(...withLabel(shape.effects, shape.name));
+  for (const perk of run.perks || []) rules.push(...withLabel(perk.effects, perk.name)); // front-office deals (rewards.js)
   rules.push(...strategyRules(run)); // your offensive system, defensive scheme and pace
   rules.push(...adaptRules(run)); // their adjustments to your habits (adapt.js)
   return rules;

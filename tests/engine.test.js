@@ -13,7 +13,7 @@ import {
   passiveOpenness,
 } from "../src/engine/rules.js";
 import { drawCards } from "../src/engine/deck.js";
-import { replacePlayer, applyReward, generateRewards } from "../src/engine/rewards.js";
+import { replacePlayer, applyReward } from "../src/engine/rewards.js";
 import { nextFloat, hashSeed } from "../src/engine/rng.js";
 
 const allIids = (m) => [...m.draw, ...m.hand, ...m.discard, ...m.exhaust].map((c) => c.iid);
@@ -279,7 +279,7 @@ test("win and loss conditions", () => {
   assert.equal(run.match.over, true);
   assert.equal(run.match.winner, "player");
   assert.equal(run.phase, "reward");
-  assert.equal(run.rewards.length, 3);
+  assert.equal(run.rewards.length, 4);
   assert.deepEqual(playCard(run, run.match.hand[0]?.iid), [], "no cards after the match ends");
   assert.deepEqual(endTurn(run), []);
 
@@ -297,32 +297,17 @@ test("win and loss conditions", () => {
   assert.equal(fin.phase, "victory");
 });
 
-test("rewards: three valid options, applying advances the tournament", () => {
+test("rewards: applying a reward advances the season", () => {
   const run = newMatch(3);
   debugAddPoints(run, 15);
   assert.equal(run.phase, "reward");
-  const kinds = run.rewards.map((r) => r.kind);
-  assert.deepEqual(kinds, ["card", "player", "upgrade"]);
-  const up = run.rewards[2];
-  const target = run.lineup.find((p) => p.id === up.playerId);
-  const before = target.ratings[up.rating];
-  assert.ok(before < 5);
-  assert.equal(applyReward(run, 2), true);
-  assert.equal(target.ratings[up.rating], before + 1);
+  assert.deepEqual(run.rewards.slice(0, 3).map((r) => r.kind), ["card", "upgrade", "remove"]);
+  // Card reward adds exactly one instance.
+  assert.equal(applyReward(run, 0), true);
+  assert.equal(run.deck.length, 21);
+  assert.equal(run.deck.at(-1).source, "reward");
   assert.equal(run.round, 1);
   assert.equal(run.phase, "map");
-
-  // Card reward adds exactly one instance.
-  const r2 = newMatch(4);
-  debugAddPoints(r2, 15);
-  applyReward(r2, 0);
-  assert.equal(r2.deck.length, 21);
-  assert.equal(r2.deck.at(-1).source, "reward");
-
-  // Upgrades never offered at the cap.
-  const r3 = newRun(8);
-  for (const p of r3.lineup) for (const k of Object.keys(p.ratings)) p.ratings[k] = 5;
-  assert.equal(generateRewards(r3).some((o) => o.kind === "upgrade"), false);
 });
 
 test("player replacement removes only that player's signature instances", () => {

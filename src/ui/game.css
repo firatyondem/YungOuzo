@@ -316,3 +316,12 @@
 .fx-caption.warn { border-color: #FFB800; }
 .opp-trait.mini span { display: none; }
 .opp-trait.mini { padding: 1px 8px; }
+.chem-chip.perk { border-left-color: var(--yellow); }
+.chem-chip.perk .ico { color: var(--yellow); }
+
+/* Optional image slots (src/ui/images.js) */
+.team-logo { object-fit: contain; vertical-align: middle; }
+.bug-logo { width: 28px; height: 28px; margin-right: 6px; }
+.bnode-logo { width: 30px; height: 30px; margin-right: 8px; }
+.av { position: relative; }
+.av-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }

@@ -21,6 +21,11 @@ export const CONFIG = {
   MAX_ENERGY: 24, // the shot clock: always 24. Card costs are sized so a turn fits two or three cards.
   // Unspent seconds do not carry over, except that up to CARRY_MAX are banked for the next turn.
   CARRY_MAX: 8,
+  // Rewards: an upgraded card costs this many seconds less; cutting cards stops at
+  // MIN_DECK cards and MIN_SHOTS shot cards.
+  UPGRADE_DISCOUNT: 4,
+  MIN_DECK: 12,
+  MIN_SHOTS: 4,
   // Opponents adapt to repeated habits (see src/engine/adapt.js). `at` = turns in a row
   // before an adjustment applies (a team's `adaptAt` overrides it); the rest are the
   // sizes of each adjustment in %. Set to null to switch adaptation off.

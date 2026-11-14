@@ -186,3 +186,43 @@
 .page-actions .plan-btn { font-size: var(--fs-20); padding: 8px 16px 6px; border-width: 3px; box-shadow: 0 5px 0 #0A1120; max-width: 420px; }
 .page-actions .plan-btn span { font-size: var(--fs-14); }
 .page-actions .plan-btn small { font-size: var(--fs-16); }
+
+/* Rewards (hard mode): deck bar, four choices, deals, card picker */
+.deck-bar { display: flex; align-items: center; gap: 18px; width: min(1180px, 100%); background: var(--surface); border: 3px solid var(--line-soft); border-radius: var(--r-panel); padding: 8px 16px; }
+.deck-size { display: flex; flex-direction: column; align-items: center; line-height: 1; padding-right: 18px; border-right: 3px solid var(--line-soft); }
+.deck-size b { font-family: var(--display); font-size: var(--fs-64); font-weight: 400; color: var(--yellow); line-height: 0.9; }
+.deck-size span { font-size: var(--fs-12); font-weight: 800; letter-spacing: 0.08em; color: var(--muted); }
+.deck-mix { display: flex; flex-direction: column; gap: 6px; min-width: 0; text-align: left; }
+.deck-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.deck-chip { background: var(--surface-2); border-radius: 999px; padding: 3px 10px; font-size: var(--fs-12); font-weight: 700; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+.deck-chip b { color: var(--white); font-size: var(--fs-14); }
+.deck-lean { font-size: var(--fs-14); color: var(--muted); margin-left: 6px; }
+.deck-lean b { color: var(--white); }
+.deck-hint { display: flex; align-items: center; gap: 7px; font-size: var(--fs-14); font-weight: 700; color: var(--good); }
+.deck-hint.lack { color: var(--yellow); }
+.deck-hint .ico { width: 16px; height: 16px; flex: 0 0 16px; }
+.rewards.four { gap: 14px; }
+.rewards.four .reward { padding: 0 12px 14px; }
+.rewards.four .reward-kind { margin: 0 -12px; font-size: var(--fs-20, 20px); }
+.rewards.four .reward-body { min-height: 236px; }
+.rewards.four .reward-body .card { zoom: 0.86; }
+.rewards.four .reward-body .pcard { zoom: 0.8; }
+.reward:nth-child(4) { animation-delay: 0.24s; }
+.reward-desc em { display: block; font-style: normal; color: var(--yellow); font-weight: 700; margin-top: 3px; }
+.reward-big { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.reward-big .ico { width: 54px; height: 54px; color: var(--orange); }
+.reward-big b { font-family: var(--display); font-weight: 400; font-size: var(--fs-64); line-height: 0.95; color: var(--white); }
+.reward-big span { text-transform: uppercase; letter-spacing: 0.1em; font-size: var(--fs-12); font-weight: 700; color: var(--muted); }
+.deal { display: flex; flex-direction: column; gap: 10px; width: 100%; text-align: left; }
+.deal-name { font-family: var(--display); font-size: var(--fs-28); line-height: 1; color: var(--white); text-align: center; margin-bottom: 4px; }
+.deal-row { display: flex; gap: 8px; align-items: flex-start; border-radius: 8px; padding: 8px 10px; font-size: var(--fs-14); line-height: 1.3; font-weight: 700; color: var(--navy-ink); }
+.deal-row .ico { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 2px; }
+.deal-row.gain { background: var(--good); }
+.deal-row.price { background: var(--yellow); }
+.deck-grid.pick { max-height: 52vh; width: min(1180px, 100%); }
+.deck-grid.pick .card { zoom: 0.84; }
+.card.clickable { cursor: pointer; }
+.card.clickable:hover { outline: 4px solid var(--yellow); outline-offset: 3px; }
+.perk-line { font-size: var(--fs-14); color: var(--muted); margin: 6px 0 0; }
+.perk-line b { color: var(--yellow); margin-right: 6px; }
+.overlay-box .deck-bar { width: 100%; margin-bottom: 4px; }

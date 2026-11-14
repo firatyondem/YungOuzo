@@ -225,8 +225,8 @@ const TEAMS = [
 // set here: every intent gets +pct and the team gets +def, per tier, as found with
 // tools/tune.js against the simulator (see README, Balance). ADJUST evens out teams
 // whose mechanics make them stronger or weaker than their tier.
-const TUNE = { 1: { pct: 13, def: 6 }, 2: { pct: 13, def: 6 }, 3: { pct: 12, def: 6 }, boss: { pct: -1, def: 0 } };
-const ADJUST = { gulls: -5, volts: -7, rafters: 7, gators: 5, hawks: 3, rams: 6, swans: -3, tides: -6, forge: -6, rockets: -4, kings: 1 };
+const TUNE = { 1: { pct: 13, def: 6 }, 2: { pct: 15, def: 7 }, 3: { pct: 14, def: 7 }, boss: { pct: 2, def: 1 } };
+const ADJUST = { gulls: -5, volts: -7, rafters: 7, gators: 5, hawks: 2, rams: 8, swans: -3, tides: -7, forge: -6, owls: -5, rockets: -4, kings: 1 };
 for (const t of TEAMS) {
   const tune = TUNE[t.tier];
   const p = tune.pct + (ADJUST[t.id] || 0);
@@ -247,6 +247,7 @@ const teams = TEAMS.map((t) => {
   const players = makeRoster(t.id);
   const out = {
     id: t.id, name: t.name, tier: t.tier, identity: t.identity, tagline: t.tagline,
+    logo: `assets/teams/${t.id}.png`,
     defense: t.defense, adaptAt: ADAPT_TEAM[t.id] ?? ADAPT_AT[t.tier], color: primary, colors: { primary, secondary },
     coach: t.coach,
   };

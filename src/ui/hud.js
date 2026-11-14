@@ -1,5 +1,6 @@
 // HUD rendering: broadcast score bug, shot clock, segmented meters, lineup tiles,
 // chemistry, opponent intent lower-third, play-by-play ticker, piles.
+import { logoHTML } from "./images.js";
 import { adaptStatus } from "../engine/adapt.js";
 import { getActiveChemistry, getTeam, opponentPreview, passiveContest, passiveOpenness } from "../engine/rules.js";
 import { $, esc, ARCHETYPE_LABEL, lastName } from "./dom.js";
@@ -51,7 +52,7 @@ export function renderScore(app, score = app.run.match.score) {
   bug.innerHTML = `
     <div class="bug-team bug-you${upP ? " flash" : ""}"><span class="bug-name">${esc(run.config.TEAM_NAME)}</span><span class="bug-score" id="bug-p">${score.player}</span></div>
     <div class="bug-mid"><span>FIRST TO</span><b>${m.target}</b></div>
-    <div class="bug-team bug-opp${upO ? " flash" : ""}" style="--team:${tc.primary};--team2:${tc.secondary}"><span class="bug-score" id="bug-o">${score.opp}</span><span class="bug-name">${esc(team.name)}</span></div>`;
+    <div class="bug-team bug-opp${upO ? " flash" : ""}" style="--team:${tc.primary};--team2:${tc.secondary}"><span class="bug-score" id="bug-o">${score.opp}</span>${logoHTML(team, "bug-logo")}<span class="bug-name">${esc(team.name)}</span></div>`;
   if (upP) countUp($("#bug-p"), shownScore.player, score.player);
   if (upO) countUp($("#bug-o"), shownScore.opp, score.opp);
   shownScore = { ...score };
@@ -144,7 +145,8 @@ export function renderChem(app) {
   // The Chemistry heading only shows when a bonus is active (saves room for the opponent panel).
   const shapes = activeShapes(run);
   const title = $("#g-chem").previousElementSibling;
-  if (title) title.hidden = !chem.length && !shapes.length;
+  const perks = run.perks || [];
+  if (title) title.hidden = !chem.length && !shapes.length && !perks.length;
   const passive = `<div class="chem-passive">Each turn: <b>+${Math.round(passiveOpenness(run))}</b> Openness, <b>+${Math.round(passiveContest(run))}</b> Contest</div>`;
   $("#g-chem").innerHTML =
     (chem.length
@@ -155,6 +157,7 @@ export function renderChem(app) {
           .join("")
       : "") +
     shapes.map((s) => `<div class="chem-chip on shape" title="${esc(s.text)}">${icon("users")}<div><b>${esc(s.name)}</b><span>${esc(s.text)}</span></div></div>`).join("") +
+    perks.map((p) => `<div class="chem-chip on perk" title="${esc(p.text)}">${icon("star")}<div><b>${esc(p.name)}</b></div></div>`).join("") +
     passive;
 }
 

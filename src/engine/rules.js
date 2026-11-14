@@ -21,8 +21,25 @@ export function getTeam(run) {
   return run.content.teams.find((t) => t.id === run.match.teamId);
 }
 
+/** The card an instance stands for. An upgraded instance (inst.up) costs
+ *  UPGRADE_DISCOUNT seconds less, or uses the card's own `upgrade` patch from cards.json. */
 export function getCard(run, inst) {
-  return run.content.cards[inst.cardId];
+  const base = run.content.cards[inst.cardId];
+  if (!base || !inst.up) return base;
+  const cache = (run.content.upgradedCards ||= {});
+  if (!cache[base.id]) {
+    const off = run.config.UPGRADE_DISCOUNT ?? 4;
+    const patch = base.upgrade || {};
+    cache[base.id] = {
+      ...base,
+      cost: Math.max(0, base.cost - off),
+      text: `${base.text} Upgraded: ${off}s cheaper.`,
+      ...patch,
+      name: `${base.name}+`,
+      upgraded: true,
+    };
+  }
+  return cache[base.id];
 }
 
 export function lineupAverage(run, rating) {
