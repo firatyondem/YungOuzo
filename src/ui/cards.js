@@ -1,6 +1,7 @@
 // Card rendering: hand cards with live cost / playability / shot %.
 import { calcShot, canPlay, getCard, getCardCost, getShootEffect } from "../engine/rules.js";
 import { $, esc, lastName } from "./dom.js";
+import { avatarHTML } from "./avatar.js";
 
 export const TYPE_ICON = { Offense: "⚡", Shot: "🏀", Defense: "🛡️", Buff: "🔥", Utility: "⏱️" };
 
@@ -30,7 +31,7 @@ export function cardHTML(card, opts = {}) {
       ${art}
       <div class="card-text">${esc(card.text || "")}</div>
       <div class="card-foot">
-        <span class="card-owner">${opts.owner ? esc(opts.owner) : ""}</span>
+        <span class="card-owner">${opts.ownerPlayer ? avatarHTML(opts.ownerPlayer, { size: "xs" }) : ""}${opts.owner ? esc(opts.owner) : ""}</span>
         ${opts.hotkey ? `<span class="card-key">${opts.hotkey}</span>` : ""}
       </div>
       ${opts.reason ? `<div class="card-reason">${esc(opts.reason)}</div>` : ""}
@@ -68,6 +69,7 @@ export function renderHand(app) {
         sub: shot ? lastName(shot.shooter.name) : "",
         tip: shot ? shotTip(shot) : "",
         owner: owner ? `#${owner.jersey} ${lastName(owner.name)}` : "",
+        ownerPlayer: owner || null,
         hotkey: i < 9 ? i + 1 : "",
       });
     })

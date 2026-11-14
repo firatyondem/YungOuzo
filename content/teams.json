@@ -5,6 +5,18 @@
     "intents": [
       { "name": "Drive", "points": 2, "pct": 55 },
       { "name": "Mid-Range", "points": 2, "pct": 50 }
+    ],
+    "players": [
+      { "id": "rookies_1", "name": "Kip Lowell", "position": "PG", "jersey": 2,
+        "look": { "skinTone": 2, "hair": "buzz", "beard": "none", "build": "lean", "accessories": ["headband"], "shoes": "#ffffff" } },
+      { "id": "rookies_2", "name": "Jory Pell", "position": "SG", "jersey": 12,
+        "look": { "skinTone": 5, "hair": "afro", "beard": "none", "build": "lean", "accessories": [], "shoes": "#facc15" } },
+      { "id": "rookies_3", "name": "Wes Harrow", "position": "C", "jersey": 50,
+        "look": { "skinTone": 1, "hair": "bun", "beard": "stubble", "build": "tall", "accessories": [], "shoes": "#111827" } },
+      { "id": "rookies_4", "name": "Dmitri Solano", "position": "SF", "jersey": 21,
+        "look": { "skinTone": 3, "hair": "long", "beard": "none", "build": "average", "accessories": ["wristband"], "shoes": "#f97316" } },
+      { "id": "rookies_5", "name": "Nnamdi Abara", "position": "PF", "jersey": 33,
+        "look": { "skinTone": 6, "hair": "braids", "beard": "none", "build": "strong", "accessories": ["sleeve"], "shoes": "#ffffff" } }
     ]
   },
   {
@@ -14,6 +26,18 @@
       { "name": "Three", "points": 3, "pct": 50 },
       { "name": "Three", "points": 3, "pct": 50 },
       { "name": "Transition Three", "points": 3, "pct": 65 }
+    ],
+    "players": [
+      { "id": "run_and_gun_1", "name": "Zane Kessler", "position": "PG", "jersey": 0,
+        "look": { "skinTone": 1, "hair": "long", "beard": "stubble", "build": "lean", "accessories": ["headband"], "shoes": "#f43f5e" } },
+      { "id": "run_and_gun_2", "name": "Tyree Okonjo", "position": "SG", "jersey": 4,
+        "look": { "skinTone": 6, "hair": "buzz", "beard": "full", "build": "average", "accessories": ["sleeve"], "shoes": "#ffffff" } },
+      { "id": "run_and_gun_3", "name": "Finn Albrecht", "position": "PF", "jersey": 41,
+        "look": { "skinTone": 2, "hair": "bald", "beard": "full", "build": "tall", "accessories": [], "shoes": "#38bdf8" } },
+      { "id": "run_and_gun_4", "name": "Luca Ferrand", "position": "SG", "jersey": 9,
+        "look": { "skinTone": 3, "hair": "bun", "beard": "none", "build": "lean", "accessories": ["goggles"], "shoes": "#facc15" } },
+      { "id": "run_and_gun_5", "name": "Sami Lehto", "position": "SF", "jersey": 16,
+        "look": { "skinTone": 4, "hair": "afro", "beard": "stubble", "build": "average", "accessories": ["wristband"], "shoes": "#111827" } }
     ]
   },
   {
@@ -25,6 +49,18 @@
       { "name": "Three", "points": 3, "pct": 60 },
       { "name": "Iso", "points": 2, "pct": 75 },
       { "name": "SUPERTEAM", "points": 3, "pct": 90, "unblockableBySteal": true }
+    ],
+    "players": [
+      { "id": "dynasty_1", "name": "Victor Stroud", "position": "PG", "jersey": 1,
+        "look": { "skinTone": 5, "hair": "braids", "beard": "full", "build": "average", "accessories": ["headband", "wristband"], "shoes": "#e4b53a" } },
+      { "id": "dynasty_2", "name": "Elias Montrose", "position": "SG", "jersey": 13,
+        "look": { "skinTone": 2, "hair": "buzz", "beard": "stubble", "build": "lean", "accessories": ["sleeve"], "shoes": "#ffffff" } },
+      { "id": "dynasty_3", "name": "Roman Castellan", "position": "C", "jersey": 55,
+        "look": { "skinTone": 3, "hair": "long", "beard": "full", "build": "tall", "accessories": [], "shoes": "#111827" } },
+      { "id": "dynasty_4", "name": "Darius Whitlock", "position": "SF", "jersey": 23,
+        "look": { "skinTone": 6, "hair": "bald", "beard": "full", "build": "strong", "accessories": ["goggles"], "shoes": "#e4b53a" } },
+      { "id": "dynasty_5", "name": "Kwame Adeyo", "position": "PF", "jersey": 34,
+        "look": { "skinTone": 4, "hair": "afro", "beard": "none", "build": "strong", "accessories": ["headband"], "shoes": "#ef4444" } }
     ]
   }
 ]

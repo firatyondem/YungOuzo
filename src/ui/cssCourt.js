@@ -1,6 +1,7 @@
 // CSS half-court: the always-available court (and the fallback if Three.js fails).
 // Same interface as the Three.js court: setTeams(), shoot(), setVisible().
 import { esc } from "./dom.js";
+import { generatePlayerAvatar } from "./avatar.js";
 
 // Offense spots (x%, y%) per lineup slot; hoop is top-centre.
 const SPOTS = [
@@ -33,12 +34,13 @@ export function createCssCourt(host) {
     let html = "";
     lineup.forEach((p, i) => {
       const [x, y] = SPOTS[i % SPOTS.length];
-      html += `<div class="cc-token me" data-side="player" data-slot="${i}" style="left:${x}%;top:${y}%;--pc:${p.color}" title="${esc(p.name)}">${p.jersey}</div>`;
+      html += `<div class="cc-token me" data-side="player" data-slot="${i}" style="left:${x}%;top:${y}%;--pc:${p.color}" title="${esc(p.name)}">${generatePlayerAvatar(p)}<i class="cc-num">${esc(p.jersey)}</i></div>`;
     });
     SPOTS.forEach(([x, y], i) => {
       const dx = lerp(x, HOOP[0], 0.3);
       const dy = lerp(y, HOOP[1], 0.3);
-      html += `<div class="cc-token opp" data-side="opp" data-slot="${i}" style="left:${dx}%;top:${dy}%;--pc:${team.color}"></div>`;
+      const op = (team.players || [])[i];
+      html += `<div class="cc-token opp" data-side="opp" data-slot="${i}" style="left:${dx}%;top:${dy}%;--pc:${team.color}" title="${op ? esc(op.name) : ""}">${op ? generatePlayerAvatar(op, { color: team.color }) : ""}</div>`;
     });
     tokens.innerHTML = html;
   }

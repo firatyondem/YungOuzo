@@ -1,5 +1,6 @@
 // Player card used on the map, reward and picker screens.
 import { esc, ARCHETYPE_LABEL } from "./dom.js";
+import { avatarHTML } from "./avatar.js";
 
 const RATING_INFO = [
   ["SHT", "Shooting: +5% per point on this player's 3PT shots"],
@@ -25,7 +26,7 @@ export function playerCardHTML(p, content, opts = {}) {
     <div class="pcard" style="--pc:${p.color}" ${opts.slot != null ? `data-slot="${opts.slot}"` : ""}>
       ${opts.tag ? `<div class="pcard-tag">${esc(opts.tag)}</div>` : ""}
       <div class="pcard-head">
-        <span class="pcard-num">${p.jersey}</span>
+        ${avatarHTML(p, { size: "lg", badge: true })}
         <div class="pcard-id">
           <div class="pcard-name">${esc(p.name)}</div>
           <div class="pcard-arch">${esc(p.position)} · ${esc(ARCHETYPE_LABEL[p.archetype] || p.archetype)}</div>

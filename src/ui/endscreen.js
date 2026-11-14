@@ -1,5 +1,6 @@
 // Victory and Game Over screens with run stats.
-import { $, esc } from "./dom.js";
+import { $, esc, lastName } from "./dom.js";
+import { avatarHTML } from "./avatar.js";
 
 export function renderEnd(app) {
   const run = app.run;
@@ -30,6 +31,9 @@ export function renderEnd(app) {
             return `<div class="end-result ${r.won ? "w" : "l"}"><span>${esc(t.round)}</span><b>${r.player}–${r.opp}</b><span>${r.won ? "W" : "L"} vs ${esc(t.name)}</span></div>`;
           })
           .join("")}
+      </div>
+      <div class="end-squad">
+        ${run.lineup.map((p) => `<div class="end-player">${avatarHTML(p, { size: "lg", badge: true })}<span>${esc(lastName(p.name))}</span></div>`).join("")}
       </div>
       <div class="stats">
         ${stat(s.wins, "Wins")}

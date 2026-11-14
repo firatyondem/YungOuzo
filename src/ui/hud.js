@@ -1,6 +1,7 @@
 // HUD rendering: score bug, shot clock, bars, lineup, chemistry, intent, log, piles.
 import { getActiveChemistry, getTeam, opponentPreview, passiveContest, passiveOpenness } from "../engine/rules.js";
-import { $, esc, ARCHETYPE_LABEL } from "./dom.js";
+import { $, esc, ARCHETYPE_LABEL, lastName } from "./dom.js";
+import { avatarHTML } from "./avatar.js";
 
 let shownScore = { player: -1, opp: -1 };
 
@@ -57,7 +58,7 @@ export function renderLineup(app) {
     .map(
       (p, i) => `
     <div class="lp" data-slot="${i}" style="--pc:${p.color}">
-      <span class="lp-num">${p.jersey}</span>
+      ${avatarHTML(p, { size: "md", badge: true })}
       <div class="lp-info">
         <div class="lp-name">${esc(p.name)}</div>
         <div class="lp-arch">${esc(p.position)} · ${esc(ARCHETYPE_LABEL[p.archetype] || p.archetype)}</div>
@@ -95,10 +96,19 @@ export function renderIntent(app) {
   const base = Math.round(Math.min(run.config.PCT_MAX, pre.basePct));
   const eff = Math.round(pre.pct);
   const lowered = eff < base;
+  // Which opponent takes this attempt (presentation only; matches the court animation).
+  const roster = team.players || [];
+  const shooter = roster.length ? roster[run.match.intentIndex % roster.length] : null;
   $("#g-intent").innerHTML = `
     <div class="intent-box${pre.clutch ? " clutch" : ""}" style="--team:${team.color}">
       <div class="intent-head">${esc(team.name)} WILL TRY</div>
-      <div class="intent-name">${esc(pre.intent.name)} <span class="intent-pts">${pre.intent.points} PTS</span></div>
+      <div class="intent-who">
+        ${shooter ? avatarHTML(shooter, { color: team.color, size: "md" }) : ""}
+        <div>
+          <div class="intent-name">${esc(pre.intent.name)} <span class="intent-pts">${pre.intent.points} PTS</span></div>
+          ${shooter ? `<div class="intent-shooter">#${esc(shooter.jersey)} ${esc(lastName(shooter.name))}</div>` : ""}
+        </div>
+      </div>
       <div class="intent-pct">
         ${lowered ? `<s>${base}%</s>` : ""}<b class="${lowered ? "lowered" : ""}">${eff}%</b>
         <span>to score</span>

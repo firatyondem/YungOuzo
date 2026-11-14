@@ -1,0 +1,4 @@
+#!/bin/sh
+# Blocks commits that would include the private roster.
+# Enable once per clone:  git config core.hooksPath .githooks
+node tools/check-private.js

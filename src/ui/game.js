@@ -96,7 +96,7 @@ export function createGame(app) {
             break;
           case "opp_attempt": {
             if (!ev.stolen) {
-              const slot = run.match.intentIndex % 5;
+              const slot = (((run.match.intentIndex - 1) % 5) + 5) % 5; // the intent that was just resolved
               await app.court?.shoot({ side: "opp", slot, made: ev.made, points: ev.points }, cfg.OPP_ANIM_MS);
               if (ev.made) {
                 fx.pop(`${getTeam(run).name.toUpperCase()} +${ev.points}`, "opp");

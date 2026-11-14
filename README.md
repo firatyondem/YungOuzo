@@ -66,12 +66,16 @@ src/
     turnLoop.js      match flow    rules.js   shot %, costs, chemistry, playability
     effects.js       data-driven card effects  deck.js  piles  rng.js  seeded RNG
     rewards.js       rewards + player replacement
-  ui/                screens, cards, HUD, tutorial, CSS court, debug panel
-  scene/             Three.js court, figurines, ball, trophy (optional)
+  roster.js          roster selection (league by default, private with ?roster=real)
+  look.js            player appearance data: allowed values, defaults, normalizeLook()
+  ui/                screens, cards, HUD, tutorial, CSS court, debug panel, avatar.js (SVG portraits)
+  scene/             Three.js court, procedural figurines, ball, trophy (optional)
   audio/AudioManager.js
 content/             cards, players, teams, chemistry, rewards, announcer (all JSON)
 assets/              models/ + audio/ + manifest.json
-tests/engine.test.js tools/ (serve, sim, update-assets)
+tests/               engine.test.js, roster.test.js
+tools/               serve, sim, update-assets, check-private
+.githooks/pre-commit blocks commits that include the private roster
 ```
 
 ## Adding content (JSON only)
@@ -97,19 +101,76 @@ tests/engine.test.js tools/ (serve, sim, update-assets)
 
 15 fictional players, three per archetype (`Sniper`, `Slasher`, `Big`, `FloorGeneral`, `Lockdown`), ratings 1–5, two `signatureCards` each. `model` can name a specific GLB in `assets/models/`. Add the id to `rewards.json` → `players` to make a player draftable. The starting five and starter cards are set in `src/config.js`.
 
-**Switching the player file:** `players.real.json` has the same ids and stats with every name set to `"TODO"`. Fill in the names, then set `PLAYER_FILE: "real"` in `src/config.js`.
+Every player also has a `look` that drives both the 2D portrait and the 3D figurine:
+
+```json
+"look": { "skinTone": 1, "hair": "buzz", "beard": "none", "build": "lean", "accessories": ["headband"], "shoes": "#ff8800" }
+```
+
+| Field | Allowed values |
+|---|---|
+| `skinTone` | integer 1–6 |
+| `hair` | `buzz`, `afro`, `braids`, `bald`, `long`, `bun` |
+| `beard` | `none`, `stubble`, `full` |
+| `build` | `lean`, `average`, `strong`, `tall` |
+| `accessories` | any of `headband`, `sleeve`, `goggles`, `wristband` |
+| `shoes` | hex colour |
+
+Missing or invalid fields fall back to defaults (`normalizeLook` in `src/look.js`), so a broken look never breaks the game. Portraits are generated locally as SVG (`generatePlayerAvatar` in `src/ui/avatar.js`): no image files, no network requests.
 
 ### Teams — `content/teams.json`
 
 Array order is the tournament order. Each team has `defense`, `color`, an `intents` cycle (`name`, `points`, `pct`, optional `unblockableBySteal`) and an optional `clutch: { "within": 2, "bonus": 10 }`.
+Each team also lists five `players` (`id`, `name`, `position`, `jersey`, `look`). They are visual only (portraits, figurines, who takes the shot in the intent bubble) and do not affect the rules.
 
 ### Chemistry — `content/chemistry.json`
 
 Keyed by archetype: `threshold`, `name`, `text`, and one `effect` of type `shot_bonus`, `draw_on_opponent_fail`, `tag_cost_reduction`, `extra_draw` or `passive_contest`.
 
+## Rosters: public league and private roster
+
+| Mode | File | When it loads |
+|---|---|---|
+| `league` | `content/players.league.json` (fictional, committed) | Always, by default |
+| `real` | `content/players.real.json` (private, local only) | Only when the URL contains `?roster=real` **and** the file exists and is valid |
+
+- Without `?roster=real` the game never requests `players.real.json`. Any other value (`?roster=league`, `?roster=REAL`, ...) loads the league roster.
+- If `?roster=real` is set but the file is missing or invalid, the league roster loads and a small notice appears in the corner. The game keeps working.
+- All of this lives in one place: `loadRoster()` in `src/roster.js`. The old `PLAYER_FILE` config value is ignored.
+
+**Setting up the private roster on your machine**
+
+1. Copy `content/players.real.example.json` to `content/players.real.json`.
+2. Replace every `"TODO"` name and adjust the `look` of each player. Keep the ids, and keep the five starting ids from `src/config.js`. A file that still contains a `TODO` name is rejected.
+3. Open the game with `?roster=real`, for example `http://localhost:3000/?roster=real`.
+
+The example file is only a template. The game never loads it.
+
+**Keeping it private**
+
+- `content/players.real.json` is in `.gitignore`. GitHub Pages publishes only what is in git, so an untracked file is never deployed.
+- Enable the pre-commit check once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+  From then on every commit runs `tools/check-private.js`, which aborts the commit if the private roster is staged or tracked. You can also run it by hand:
+
+```bash
+node tools/check-private.js
+```
+
+- If the file ever gets tracked: `git rm --cached content/players.real.json` (the file stays on disk).
+- **After every deploy**, check that the private file is not public. This URL must return 404:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" https://firatyondem.github.io/YungOuzo/content/players.real.json
+```
+
 ## Assets (all optional)
 
-The game is complete without any asset files: capsule figurines, synthesized sound effects and captions cover everything.
+The game is complete without any asset files: procedural figurines built from each player's `look`, synthesized sound effects and captions cover everything. A GLB for an archetype replaces the procedural figurine for those players; if procedural generation ever fails, a plain capsule is used.
 
 | File | Used for |
 |---|---|
@@ -136,7 +197,7 @@ This rewrites `assets/manifest.json`. The game only requests files listed there,
 node --test tests/*.test.js
 ```
 
-20 engine tests: shot %, clamping, energy, draw and reshuffle, one-shot rule, intents and Clutch, steals, win/loss, rewards, player replacement, chemistry, seeded reproducibility.
+33 tests. Engine (20): shot %, clamping, energy, draw and reshuffle, one-shot rule, intents and Clutch, steals, win/loss, rewards, player replacement, chemistry, seeded reproducibility. Roster and appearance (13): roster selection with a mocked fetch (the private file is never requested without `?roster=real`, missing and invalid files fall back), `normalizeLook` defaults, portraits stay valid SVG for broken data, and the private-file check.
 
 ```bash
 node tools/sim.js 2000
@@ -165,10 +226,11 @@ Add `?css=1` to the URL to force the CSS court (the automatic fallback when Thre
 - Desktop only (built for 1366×768 and 1920×1080, mouse and keyboard). No touch or mobile layout.
 - Opponents follow a fixed intent cycle; there is no adaptive AI.
 - Balance was checked with bot simulations only, not with human playtests. Round 1 is deliberately forgiving.
-- No voice, music or 3D model files are in the repo yet; until they are added you get synthesized sound effects, captions and capsule figurines.
+- No voice, music or 3D model files are in the repo yet; until they are added you get synthesized sound effects, captions and procedural figurines.
 - GLB models are treated as static meshes (no skeletal animation) and are auto-scaled by bounding box. `court.glb` support is basic and opt-in.
 - Fonts and Three.js load from CDNs. Offline, the game falls back to system fonts and the CSS court.
-- `players.real.json` names are placeholders (`TODO`).
+- Opponent players are visual only: there are no individual matchups, and opponents have no ratings.
+- The private roster is protected by `.gitignore` plus an opt-in pre-commit hook. A clone that has not run `git config core.hooksPath .githooks` only has the `.gitignore` protection.
 
 ## Credits
 

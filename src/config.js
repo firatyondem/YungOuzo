@@ -1,7 +1,9 @@
 // Global tuning + setup. Everything gameplay-related that is not card/player/team
 // data lives here so it can be tweaked without touching the engine.
 export const CONFIG = {
-  // Which player file to load: "league" (fictional names) or "real" (fill in yourself).
+  // Legacy setting, kept for compatibility. The roster is chosen in src/roster.js:
+  // the public league roster by default, the private one only with ?roster=real
+  // in the URL. This value can never load the private roster.
   PLAYER_FILE: "league",
 
   // One player of each archetype. IDs must exist in the chosen player file.

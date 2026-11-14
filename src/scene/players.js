@@ -1,5 +1,8 @@
-// Player figurines: coloured capsules with jersey-number sprites, optionally
-// replaced by GLB models (assets/models/<archetype>.glb) when they exist.
+// Player figurines. Order of preference per player:
+//   1. GLB model (assets/models/<archetype>.glb) when it exists
+//   2. procedural figurine built from the player's `look` (scene/figurine.js)
+//   3. plain coloured capsule (if procedural generation fails)
+import { buildFigurineBody } from "./figurine.js";
 
 // Offense spots as (x%, y%) of the half-court, shared with the CSS court.
 export const SPOTS = [
@@ -47,8 +50,8 @@ export function createFigurines(THREE, scene, court) {
     return new THREE.Vector3(x, 0, z);
   }
 
-  function makeFigure({ color, number, isOpp }) {
-    const g = new THREE.Group();
+  /** Fallback body: the original capsule figurine. */
+  function capsuleBody({ color, isOpp }) {
     const body = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05 });
     const capsule = new THREE.Mesh(new THREE.CapsuleGeometry(0.44, 1.0, 6, 14), mat);
@@ -59,6 +62,18 @@ export function createFigurines(THREE, scene, court) {
     );
     head.position.y = 2.16;
     body.add(capsule, head);
+    return { body, height: 2.46 };
+  }
+
+  function makeFigure({ color, number, look, isOpp }) {
+    const g = new THREE.Group();
+    let built;
+    try {
+      built = buildFigurineBody(THREE, { color, number, look });
+    } catch {
+      built = capsuleBody({ color, isOpp });
+    }
+    const body = built.body;
     g.add(body);
 
     // Soft blob shadow + (for your players) a white ring on the floor.
@@ -79,7 +94,7 @@ export function createFigurines(THREE, scene, court) {
       g.add(ring);
       const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: numberTexture(THREE, number, color), depthTest: false }));
       sprite.scale.set(0.95, 0.95, 1);
-      sprite.position.y = 3.05;
+      sprite.position.y = built.height + 0.62;
       sprite.renderOrder = 5;
       g.add(sprite);
     } else {
@@ -131,11 +146,12 @@ export function createFigurines(THREE, scene, court) {
     figs = [];
     const token = (setTeams.token = (setTeams.token || 0) + 1);
     lineup.forEach((p, i) => {
-      const f = makeFigure({ color: p.color, number: p.jersey, isOpp: false });
-      f.group.position.copy(spotToWorld(i));
-      f.group.lookAt(court.hoop.x, 0, court.hoop.z);
+      const f = makeFigure({ color: p.color, number: p.jersey, look: p.look, isOpp: false });
+      const pos = spotToWorld(i);
+      f.group.position.copy(pos);
+      // Figurines face the camera so their looks are visible; they turn to the hoop to shoot.
+      const fig = { side: "player", slot: i, ...f, phase: i * 1.3, jumpAt: -1, ...facing(f.group, pos.x * 0.55, pos.z + 22) };
       root.add(f.group);
-      const fig = { side: "player", slot: i, ...f, phase: i * 1.3, jumpAt: -1 };
       figs.push(fig);
       const url = modelUrlFor(p);
       if (url) {
@@ -145,6 +161,7 @@ export function createFigurines(THREE, scene, court) {
             const clone = model.clone(true);
             if (!normalize(clone, 2.45)) return;
             fig.body.clear();
+            fig.body.scale.set(1, 1, 1);
             fig.body.add(clone);
           } catch {
             /* keep the capsule */
@@ -153,12 +170,21 @@ export function createFigurines(THREE, scene, court) {
       }
     });
     for (let i = 0; i < SPOTS.length; i++) {
-      const f = makeFigure({ color: team.color, isOpp: true });
+      const op = (team.players || [])[i] || {};
+      const f = makeFigure({ color: team.color, number: op.jersey, look: op.look, isOpp: true });
       f.group.position.copy(spotToWorld(i, 0.3));
-      f.group.lookAt(spotToWorld(i).x, 0, spotToWorld(i).z);
+      const guard = spotToWorld(i);
       root.add(f.group);
-      figs.push({ side: "opp", slot: i, ...f, phase: i * 2.1 + 1, jumpAt: -1 });
+      figs.push({ side: "opp", slot: i, ...f, phase: i * 2.1 + 1, jumpAt: -1, ...facing(f.group, guard.x, guard.z + 6) });
     }
+  }
+
+  /** Point the figure at (x, z) and remember that pose plus the pose facing the hoop. */
+  function facing(group, x, z) {
+    group.lookAt(court.hoop.x, group.position.y, court.hoop.z);
+    const hoopQuat = group.quaternion.clone();
+    group.lookAt(x, group.position.y, z);
+    return { baseQuat: group.quaternion.clone(), hoopQuat };
   }
 
   function find(side, slot) {
@@ -169,7 +195,7 @@ export function createFigurines(THREE, scene, court) {
   function releasePoint(side, slot) {
     const f = find(side, slot);
     const p = f ? f.group.position.clone() : spotToWorld(slot);
-    p.y = 2.7;
+    p.y = 2.8;
     return p;
   }
 
@@ -183,9 +209,16 @@ export function createFigurines(THREE, scene, court) {
     for (const f of figs) {
       let y = Math.abs(Math.sin(t * 2.2 + f.phase)) * 0.06; // idle bounce
       if (f.jumpAt >= 0) {
-        const jt = (now - f.jumpAt) / 520;
-        if (jt >= 1) f.jumpAt = -1;
-        else y += Math.sin(jt * Math.PI) * 0.75;
+        const jt = (now - f.jumpAt) / 620;
+        if (jt >= 1) {
+          f.jumpAt = -1;
+          f.group.quaternion.copy(f.baseQuat);
+        } else {
+          y += Math.sin(Math.min(1, jt * 1.2) * Math.PI) * 0.75;
+          // Turn to the hoop for the shot, then back.
+          const k = jt < 0.75 ? Math.min(1, jt * 6) : (1 - jt) * 4;
+          f.group.quaternion.copy(f.baseQuat).slerp(f.hoopQuat, k);
+        }
       }
       f.body.position.y = y;
     }

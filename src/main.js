@@ -17,6 +17,7 @@ import { renderTitle, renderHowTo, showHowToOverlay, soundButtonHTML } from "./u
 import { createTutorial } from "./ui/tutorial.js";
 import { loadManifest } from "./assets.js";
 import { AudioManager } from "./audio/AudioManager.js";
+import { loadRoster } from "./roster.js";
 
 function readMuted() {
   try {
@@ -38,6 +39,7 @@ const app = {
   audio: null,
   locked: false,
   muted: readMuted(),
+  roster: { source: "league", warning: "" },
   /** Short sound effect (swish, clank, buzzer...). Never throws. */
   sfx(name) {
     try {
@@ -60,14 +62,16 @@ async function loadJson(path) {
 }
 
 async function loadContent() {
-  const [cards, players, teams, chemistry, rewards] = await Promise.all([
+  // Roster selection lives in src/roster.js: league by default, private only with ?roster=real.
+  const [cards, roster, teams, chemistry, rewards] = await Promise.all([
     loadJson("content/cards.json"),
-    loadJson(`content/players.${CONFIG.PLAYER_FILE}.json`),
+    loadRoster({ requiredIds: CONFIG.STARTING_LINEUP }),
     loadJson("content/teams.json"),
     loadJson("content/chemistry.json"),
     loadJson("content/rewards.json"),
   ]);
-  return buildContent({ cards, players, teams, chemistry, rewards });
+  app.roster = { source: roster.source, warning: roster.warning || "" };
+  return buildContent({ cards, players: roster.players, teams, chemistry, rewards });
 }
 
 // ---------- Flow ----------
@@ -137,6 +141,17 @@ app.toggleMute = () => {
   for (const b of $$(".sound-toggle")) b.textContent = app.muted ? "🔇" : "🔊";
   app.audio?.setMuted(app.muted);
 };
+
+/** Small non-blocking message in the corner. */
+function showNotice(text, ms = 9000) {
+  const el = $("#notice");
+  if (!el) return;
+  el.textContent = text;
+  el.hidden = false;
+  clearTimeout(showNotice.timer);
+  showNotice.timer = setTimeout(() => (el.hidden = true), ms);
+  el.onclick = () => (el.hidden = true);
+}
 
 function confirmQuit() {
   const o = showOverlay(`
@@ -253,6 +268,8 @@ async function boot() {
   });
 
   app.goTitle();
+  if (app.roster.warning) showNotice(app.roster.warning);
+  else if (app.roster.source === "real") showNotice("Private roster loaded (local only).", 5000);
   initAudio(); // async, never blocks the game
   initThreeCourt(); // async, never blocks the game
 }

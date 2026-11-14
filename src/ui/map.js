@@ -3,6 +3,7 @@ import { getActiveChemistry } from "../engine/rules.js";
 import { $, esc, ARCHETYPE_LABEL } from "./dom.js";
 import { playerCardHTML } from "./playerCard.js";
 import { cardHTML } from "./cards.js";
+import { avatarHTML } from "./avatar.js";
 import { showOverlay, hideOverlay } from "./screens.js";
 
 const TYPE_ORDER = ["Shot", "Offense", "Defense", "Buff", "Utility"];
@@ -17,7 +18,7 @@ export function showDeck(app) {
      <div class="deck-grid">${cards
        .map(({ inst, card }) => {
          const owner = run.lineup.find((p) => p.id === inst.source);
-         return cardHTML(card, { owner: owner ? `#${owner.jersey} ${owner.name.split(" ").slice(-1)[0]}` : "" });
+         return cardHTML(card, { owner: owner ? `#${owner.jersey} ${owner.name.split(" ").slice(-1)[0]}` : "", ownerPlayer: owner || null });
        })
        .join("")}</div>
      <button class="btn" id="ov-close">CLOSE</button>`,
@@ -48,6 +49,7 @@ export function renderMap(app) {
         <ul class="bnode-intents">
           ${t.intents.map((it) => `<li><span>${esc(it.name)}</span><b>${it.points}PT · ${it.pct}%</b></li>`).join("")}
         </ul>
+        <div class="bnode-roster">${(t.players || []).map((p) => avatarHTML(p, { color: t.color, size: "sm" })).join("")}</div>
         <div class="bnode-state">${
           state === "done" && result ? `✔ WON ${result.player}–${result.opp}` : state === "current" ? "NEXT GAME" : "LOCKED"
         }</div>

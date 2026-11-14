@@ -4,6 +4,7 @@ import { getTeam } from "../engine/rules.js";
 import { $, $$, esc, ARCHETYPE_LABEL } from "./dom.js";
 import { cardHTML } from "./cards.js";
 import { playerCardHTML } from "./playerCard.js";
+import { avatarHTML } from "./avatar.js";
 
 const RATING_NAME = { SHT: "Shooting", INS: "Inside scoring", DEF: "Defense", PLY: "Playmaking" };
 
@@ -42,7 +43,7 @@ export function renderRewards(app) {
         <div class="reward-kind">TRAINING</div>
         <div class="reward-body">
           <div class="upgrade" style="--pc:${p.color}">
-            <span class="upgrade-num">${p.jersey}</span>
+            ${avatarHTML(p, { size: "xl", badge: true })}
             <div class="upgrade-name">${esc(p.name)}</div>
             <div class="upgrade-rating">${opt.rating} <s>${from}</s> → <b>${from + opt.amount}</b></div>
             <div class="upgrade-what">${RATING_NAME[opt.rating]}</div>
