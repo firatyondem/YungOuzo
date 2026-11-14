@@ -1,5 +1,6 @@
 // HUD rendering: broadcast score bug, shot clock, segmented meters, lineup tiles,
 // chemistry, opponent intent lower-third, play-by-play ticker, piles.
+import { adaptStatus } from "../engine/adapt.js";
 import { getActiveChemistry, getTeam, opponentPreview, passiveContest, passiveOpenness } from "../engine/rules.js";
 import { $, esc, ARCHETYPE_LABEL, lastName } from "./dom.js";
 import { avatarHTML } from "./avatar.js";
@@ -215,10 +216,19 @@ export function renderOpponent(app) {
   if (!el) return;
   const phase = team.phases && team.phases[m.opp ? m.opp.phase : 0];
   const row = (ico, name, text, cls = "") => `<div class="opp-trait ${cls}" title="${esc(text)}">${icon(ico)}<div><b>${esc(name)}</b><span>${esc(text)}</span></div></div>`;
+  // Their adjustments to your habits come first: active ones, then warnings.
+  const status = adaptStatus(run);
+  const adapt = status
+    .slice(0, 3)
+    .map((a) => row(a.icon, a.state === "active" ? a.name : `Warning: ${a.name}`, a.text, a.state === "active" ? "adapt-on" : "adapt-warn"))
+    .join("");
+  // With adjustments on screen the fixed traits shrink to their names (full text on hover).
+  const mini = adapt ? "mini" : "";
   el.innerHTML =
-    (team.star ? row("star", team.star.name, team.star.text) : "") +
-    (team.signature ? row("relic", team.signature.name, team.signature.text) : "") +
-    (phase && team.phases.length > 1 ? row("clutch", `Phase: ${phase.name}`, phase.text, "phase") : "") +
+    adapt +
+    (status.length >= 3 ? "" : team.star ? row("star", team.star.name, team.star.text, mini) : "") +
+    (status.length >= 3 ? "" : team.signature ? row("relic", team.signature.name, team.signature.text, mini) : "") +
+    (phase && team.phases.length > 1 ? row("clutch", `Phase: ${phase.name}`, phase.text, `phase ${mini}`) : "") +
     (m.notes || []).map((n) => row("mismatch", "Scouted", n, "scout")).join("") ||
     `<div class="opp-trait"><div><span>No special rules.</span></div></div>`;
 }

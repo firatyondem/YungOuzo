@@ -307,3 +307,12 @@
 .fx-caption.good { border-color: #1FD18A; }
 @keyframes caption-in { from { opacity: 0; transform: translate(-50%, -6px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @media (prefers-reduced-motion: reduce) { .fx-caption { animation: none; } }
+
+/* Opponent adjustments (adapt.js): active = red fill, warning = yellow fill */
+.opp-trait.adapt-on { background: var(--bad); border-left-color: var(--white); color: var(--navy-ink); }
+.opp-trait.adapt-on b, .opp-trait.adapt-on .ico { color: var(--navy-ink); }
+.opp-trait.adapt-warn { background: var(--yellow); border-left-color: var(--navy-ink); color: var(--navy-ink); }
+.opp-trait.adapt-warn b, .opp-trait.adapt-warn .ico { color: var(--navy-ink); }
+.fx-caption.warn { border-color: #FFB800; }
+.opp-trait.mini span { display: none; }
+.opp-trait.mini { padding: 1px 8px; }

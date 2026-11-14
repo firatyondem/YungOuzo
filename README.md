@@ -53,6 +53,8 @@ If you add audio or models, run `node tools/update-assets.js` and commit `assets
 - **Offense** cards add **Openness** (+1% per point on your next shot). **Shot** cards score 2 or 3; the live make % is printed on the card. One shot per turn. A shot uses up all Openness.
 - `make % = base (45 for 2PT, 30 for 3PT) + Openness + shooter rating × 5 − opponent DEF`, clamped to 5–95%.
   3PT shots use SHT, 2PT shots use INS. A signature card is shot by the player who owns it; other shots go to your best-rated player.
+- **Misses matter:** a missed three is a long rebound (their play is at +5%) unless you played Box Out; a missed two can be an offensive rebound (10% per Big in your five, +25% after a Box Out) that lets you shoot again this turn. Every consequence is explained on screen in one line.
+- **Opponents adapt:** they count five habits: threes, Drive cards, shots without a Pass card, turns without a Defense card, and steal attempts. A habit counts up on a turn you do it and down on a turn you don't. One short of the team's threshold you get a yellow warning in the Opponent panel; at the threshold the adjustment applies from your next turn (threes -10%, twos -8%, unassisted shots -8%, their plays +6%, steals -20%) and it relaxes as soon as you change it up. Teams adapt at different speeds (`adaptAt` in `content/teams.json`: 5 for loose teams, 2 for film-room teams and the Dynasty). Knobs: `ADAPT` and `MISS` in `src/config.js`.
 - The opponent always shows its next **intent**. **Defense** cards add **Contest**, which is subtracted from their %. They shoot when you end your turn.
 - No shot in a turn = **shot-clock violation** (no points, they still shoot).
 - Lineup averages give passive bonuses each turn: average PLY → Openness, average DEF → Contest.

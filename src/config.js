@@ -21,6 +21,13 @@ export const CONFIG = {
   MAX_ENERGY: 24, // the shot clock: always 24. Card costs are sized so a turn fits two or three cards.
   // Unspent seconds do not carry over, except that up to CARRY_MAX are banked for the next turn.
   CARRY_MAX: 8,
+  // Opponents adapt to repeated habits (see src/engine/adapt.js). `at` = turns in a row
+  // before an adjustment applies (a team's `adaptAt` overrides it); the rest are the
+  // sizes of each adjustment in %. Set to null to switch adaptation off.
+  ADAPT: { at: 3, three: -10, paint: -8, double: -8, attack: 6, steal: -20 },
+  // What a missed shot leads to: a missed three is a long rebound (+% on their play),
+  // a missed two can be an offensive rebound (% per Big, + Box Out, capped). null = off.
+  MISS: { longRebound: 5, orebPerBig: 10, orebBoxOut: 25, orebMax: 45, orebSeconds: 8 },
   // At the end of your turn you may hold this many unplayed cards instead of discarding them.
   HOLD_MAX: 1,
   HAND_SIZE: 5,

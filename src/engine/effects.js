@@ -1,5 +1,6 @@
 // Generic, data-driven effect system. Cards list effects in cards.json;
 // each effect type has one handler here. No per-card logic.
+import { missConsequence } from "./adapt.js";
 import { drawCards, discardHand } from "./deck.js";
 import { roll100 } from "./rng.js";
 import { calcShot, checkCondition, getCard } from "./rules.js";
@@ -47,7 +48,7 @@ const HANDLERS = {
 
   // Rolled when the opponent attempts; see turnLoop.resolveOpponent.
   steal_attempt(run, e, ctx) {
-    const chance = Math.min(95, e.chance + rulesOf(run, "steal_bonus").reduce((s, r) => s + r.value, 0));
+    const chance = Math.max(0, Math.min(95, e.chance + rulesOf(run, "steal_bonus").reduce((s, r) => s + r.value, 0)));
     run.match.steals.push({ chance, onSuccess: e.onSuccess || [], onFail: e.onFail || [] });
     ctx.events.push({ type: "steal_set", chance });
   },
@@ -155,6 +156,13 @@ const HANDLERS = {
     });
     // A miss can cost you: the card says how (turnover, long rebound...).
     if (!made && card.onMiss) applyEffects(run, card.onMiss, ctx);
+    // Every other miss has a basketball consequence too (long rebound, offensive rebound).
+    if (!made) {
+      for (const ev of missConsequence(run, shot, card)) {
+        log(run, ev.text);
+        ctx.events.push(ev);
+      }
+    }
   },
 };
 

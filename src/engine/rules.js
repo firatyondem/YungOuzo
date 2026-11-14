@@ -189,6 +189,7 @@ export function calcShot(run, inst) {
   for (const r of rulesOf(run, "shot_mod")) {
     if (r.points && r.points !== points) continue;
     if (r.tag && !tags.includes(r.tag)) continue;
+    if (r.noPass && m.playedTags.includes("Pass")) continue; // double teams punish shots without ball movement
     if (r.archetype && shooter.archetype !== r.archetype) continue;
     if (r.star != null && r.star !== (shooter.id === (run.strategy && run.strategy.starId))) continue;
     ruleBonus += r.value;

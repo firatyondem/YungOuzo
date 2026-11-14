@@ -59,7 +59,7 @@ export const league = loadContent();
 // Tests use exact hand sizes and fixed opponents, so the "no dead hands" redraw
 // league scouting and lives are off unless a test enables them.
 const REAL_CONFIG = CONFIG;
-const TEST_CONFIG = { ...CONFIG, NO_SHOT_REDRAWS: 0, LEAGUE_SCOUTING: null, LIVES: 0 };
+const TEST_CONFIG = { ...CONFIG, NO_SHOT_REDRAWS: 0, LEAGUE_SCOUTING: null, LIVES: 0, ADAPT: null, MISS: null };
 export { TEST_CONFIG as CONFIG, REAL_CONFIG };
 
 export function newRun(seed = 12345, round = 0, config = TEST_CONFIG, withContent = content) {

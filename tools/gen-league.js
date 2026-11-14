@@ -225,7 +225,7 @@ const TEAMS = [
 // set here: every intent gets +pct and the team gets +def, per tier, as found with
 // tools/tune.js against the simulator (see README, Balance). ADJUST evens out teams
 // whose mechanics make them stronger or weaker than their tier.
-const TUNE = { 1: { pct: 14, def: 7 }, 2: { pct: 15, def: 7 }, 3: { pct: 16, def: 8 }, boss: { pct: 5, def: 2 } };
+const TUNE = { 1: { pct: 13, def: 6 }, 2: { pct: 13, def: 6 }, 3: { pct: 12, def: 6 }, boss: { pct: -1, def: 0 } };
 const ADJUST = { gulls: -5, volts: -7, rafters: 7, gators: 5, hawks: 3, rams: 6, swans: -3, tides: -6, forge: -6, rockets: -4, kings: 1 };
 for (const t of TEAMS) {
   const tune = TUNE[t.tier];
@@ -237,12 +237,17 @@ for (const t of TEAMS) {
   for (const src of [t.star, t.signature]) for (const e of src.effects) if (e.intent) bump(e.intent);
 }
 
+// How fast a team adapts to your habits (turns in a row; see src/engine/adapt.js).
+// Young, loose teams are slow; veteran and film-room teams are quick; the Dynasty is quickest.
+const ADAPT_AT = { 1: 4, 2: 3, 3: 3, boss: 2 };
+const ADAPT_TEAM = { owls: 2, forge: 2, volts: 5, gators: 5, solar: 2 };
+
 const teams = TEAMS.map((t) => {
   const [primary, secondary] = t.colors;
   const players = makeRoster(t.id);
   const out = {
     id: t.id, name: t.name, tier: t.tier, identity: t.identity, tagline: t.tagline,
-    defense: t.defense, color: primary, colors: { primary, secondary },
+    defense: t.defense, adaptAt: ADAPT_TEAM[t.id] ?? ADAPT_AT[t.tier], color: primary, colors: { primary, secondary },
     coach: t.coach,
   };
   if (t.clutch) out.clutch = t.clutch;

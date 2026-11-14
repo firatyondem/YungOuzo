@@ -98,6 +98,18 @@ export function createGame(app) {
             fx.caption(ev.text, ev.good ? "good" : "bad");
             await sleep(350);
             break;
+          case "adjust":
+            fx.pop(ev.on ? ev.name.toUpperCase() : "THEY RELAX", ev.on ? "bad small" : "good small");
+            fx.caption(ev.text, ev.on ? "bad" : "good");
+            if (ev.on) app.sfx("buzzer");
+            hud.renderOpponent(app);
+            await sleep(650);
+            break;
+          case "adjust_warn":
+            fx.caption(ev.text, "warn");
+            hud.renderOpponent(app);
+            await sleep(450);
+            break;
           case "status_added":
             fx.pop(`${String(ev.name).toUpperCase()} ADDED`, "bad small");
             await sleep(300);

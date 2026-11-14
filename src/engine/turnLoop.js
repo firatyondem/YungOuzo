@@ -19,6 +19,7 @@ import { winsNeeded } from "./gameState.js";
 import { firstRule, rulesOf, intentMatches, tipOffRules, phaseIntents } from "./teamRules.js";
 import { cardInfo } from "./plays.js";
 import { ensureStar } from "./strategy.js";
+import { freshAdapt, noteCard, observeTurn, refreshAdapt } from "./adapt.js";
 
 /** Per-turn coach modifiers (timeouts and closing options). Reset every turn. */
 const freshMods = () => ({ ice: 0, foul: null, shotBonus: 0, endAfterShot: false, endNow: false, oppBonus: [] });
@@ -59,6 +60,7 @@ export function startMatch(run) {
     bank: 0, // seconds carried into the next turn (max CARRY_MAX)
     banked: 0, // seconds that were carried into this turn
     held: [], // iids you chose to keep at the end of this turn (max HOLD_MAX)
+    adapt: freshAdapt(), // their read of your habits (adapt.js)
     timeouts: run.config.TIMEOUTS_PER_MATCH ?? 3,
     usedActions: [], // closing options already used this game
     mods: freshMods(),
@@ -136,6 +138,7 @@ function startTurn(run, events) {
   run.stats.turns++;
   checkPhase(run, events);
   chooseIntent(run);
+  refreshAdapt(run, events, log);
   const pace = firstRule(run, "pace");
   const sum = (type) => rulesOf(run, type).reduce((s, r) => s + r.value, 0);
   m.maxEnergy = run.config.MAX_ENERGY;
@@ -277,6 +280,7 @@ export function playCard(run, iid) {
   }
 
   m.playedTags.push(...tags);
+  noteCard(run, card);
   let effects = card.effects;
   const negated = rulesOf(run, "negate_tag").find((r) => tags.includes(r.tag));
   if (negated) {
@@ -463,6 +467,7 @@ export function endTurn(run) {
   }
   // Unspent seconds are lost, except a small bank (CARRY_MAX) for the next turn.
   m.bank = Math.min(run.config.CARRY_MAX ?? 0, m.energy);
+  observeTurn(run);
   resolveOpponent(run, events);
   // Discard the hand, keeping the cards you chose to hold.
   const keep = new Set(m.held.slice(0, run.config.HOLD_MAX ?? 0));

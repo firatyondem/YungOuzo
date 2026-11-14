@@ -47,6 +47,7 @@
 // Your own lineup shape (content/lineups.json) uses the same rule types, so a
 // shape's bonus and its weakness combine with opponent rules in one place.
 
+import { adaptRules } from "./adapt.js";
 import { strategyRules } from "./strategy.js";
 
 function teamOf(run) {
@@ -94,6 +95,7 @@ export function activeRules(run) {
   rules.push(...(m.extraRules || []));
   for (const shape of activeShapes(run)) rules.push(...withLabel(shape.effects, shape.name));
   rules.push(...strategyRules(run)); // your offensive system, defensive scheme and pace
+  rules.push(...adaptRules(run)); // their adjustments to your habits (adapt.js)
   return rules;
 }
 
