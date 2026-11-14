@@ -14,7 +14,8 @@ export async function mountTrophy(container, url) {
   const pivot = new THREE.Group();
   pivot.add(model);
 
-  const px = Math.max(140, Math.min(300, Math.round(window.innerHeight * 0.26)));
+  // Sized so the whole victory page (trophy, results, stats, RUN AGAIN) fits a 768px-high screen.
+  const px = Math.max(104, Math.min(240, Math.round(window.innerHeight * 0.15)));
   const canvas = document.createElement("canvas");
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));

@@ -231,3 +231,7 @@
 .end-verdict { display: inline-flex; align-items: center; gap: 8px; margin: 2px auto 6px; padding: 8px 16px; border-radius: 10px; background: var(--yellow); color: var(--navy-ink); font-size: var(--fs-16); font-weight: 800; max-width: 760px; }
 .end-verdict .ico { width: 18px; height: 18px; flex: 0 0 18px; }
 .end-again { font-size: var(--fs-36, 36px); padding: 12px 44px; }
+
+/* The end screen always fits: tighter spacing on short screens, and it scrolls rather than clips if it ever does not. */
+#screen-end .page { overflow-y: auto; }
+@media (max-height: 800px) { #screen-end .end-title { font-size: 76px; line-height: 0.95; } #screen-end .end-results, #screen-end .end-squad, #screen-end .stats { margin-top: 6px; margin-bottom: 6px; } #screen-end .end-again { font-size: 30px; padding: 8px 36px; } }
