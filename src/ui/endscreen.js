@@ -20,7 +20,7 @@ export function renderEnd(app) {
         won
           ? "You ran the full court and took down The Dynasty. The title is yours."
           : lastTeam
-            ? `Knocked out in the ${esc(lastTeam.round)} by ${esc(lastTeam.name)}, ${last.opp}–${last.player}.`
+            ? `Eliminated by ${esc(lastTeam.name)} (${esc(lastTeam.round)}), ${last.opp}–${last.player}.`
             : "The run ends here."
       }</p>
       <div class="end-results">
