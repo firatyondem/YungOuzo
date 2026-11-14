@@ -34,7 +34,7 @@ If you add audio or models, run `node tools/update-assets.js` and commit `assets
 
 ## How it plays
 
-- **First to 15** wins a game. Three games: Round 1 (Rookies), Semifinals (Run & Gun), Finals (The Dynasty).
+- **First to 15** wins a game. Three games: Round 1 (Rookies, DEF 5), Semifinals (Run & Gun, DEF 12), Finals (The Dynasty, DEF 22).
 - Each turn you get **24 seconds** of shot clock and draw 5 cards. Every card costs seconds.
 - **Offense** cards add **Openness** (+1% per point on your next shot). **Shot** cards score 2 or 3; the live make % is printed on the card. One shot per turn. A shot uses up all Openness.
 - `make % = base (45 for 2PT, 30 for 3PT) + Openness + shooter rating × 5 − opponent DEF`, clamped to 5–95%.
@@ -134,12 +134,14 @@ node --test tests/*.test.js
 node tools/sim.js 2000
 ```
 
-A bot plays seeded tournaments and prints win rates per round (useful when changing numbers).
+A bot plays seeded tournaments and prints win rates per round (useful when changing numbers). Add `casual` for a bot that plays like a first-timer: `node tools/sim.js 2000 casual`.
 
 **Debug panel (`D`)**: +5 points, +5 opponent, win the game, add any card to hand, start a run with a given seed, live state. Every run is seeded; the seed is shown in the panel and on the end screen. Same seed + same actions = same game.
 Add `?css=1` to the URL to force the CSS court (the automatic fallback when Three.js or WebGL is unavailable).
 
 ## Design decisions
+
+- **Difficulty curve**: Round 1 uses the original design numbers and is forgiving. The Semifinals and Finals were made harder after bot simulations showed the original numbers were almost unlosable: Run & Gun is DEF 12 with threes at 50 / 50 / 65% (was DEF 10, 40 / 40 / 55%), The Dynasty is DEF 22 with 75 / 60 / 75 / 90% (was DEF 18, 60 / 45 / 60 / 75%). With these values a thorough bot wins the title about 86% of the time and a casual bot about 50%. All of it lives in `content/teams.json`.
 
 - **Passive bonuses** are the plain lineup average (about +3 each). `PASSIVE_*_MULT` in the config scales them.
 - **No dead hands**: if a new hand has no shot card, you draw up to 3 extra cards until one appears (same seeded draw order). Set `NO_SHOT_REDRAWS: 0` for strict 5-card hands.
@@ -154,7 +156,7 @@ Add `?css=1` to the URL to force the CSS court (the automatic fallback when Thre
 - No save or resume: refreshing the page returns to the title screen.
 - Desktop only (built for 1366×768 and 1920×1080, mouse and keyboard). No touch or mobile layout.
 - Opponents follow a fixed intent cycle; there is no adaptive AI.
-- Balance was checked with bot simulations only. Round 1 is deliberately forgiving, and a player who always spends leftover seconds on defense will win most runs.
+- Balance was checked with bot simulations only, not with human playtests. Round 1 is deliberately forgiving.
 - No voice, music or 3D model files are in the repo yet; until they are added you get synthesized sound effects, captions and capsule figurines.
 - GLB models are treated as static meshes (no skeletal animation) and are auto-scaled by bounding box. `court.glb` support is basic and opt-in.
 - Fonts and Three.js load from CDNs. Offline, the game falls back to system fonts and the CSS court.

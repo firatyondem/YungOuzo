@@ -91,7 +91,8 @@ export function renderIntent(app) {
   const run = app.run;
   const team = getTeam(run);
   const pre = opponentPreview(run);
-  const base = Math.round(pre.basePct);
+  // Cap the displayed base at the max % so a clamped value is not shown as "lowered".
+  const base = Math.round(Math.min(run.config.PCT_MAX, pre.basePct));
   const eff = Math.round(pre.pct);
   const lowered = eff < base;
   $("#g-intent").innerHTML = `

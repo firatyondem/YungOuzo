@@ -173,16 +173,18 @@ test("opponent intents cycle, contest lowers their %, clutch adds +10", () => {
   const team = content.teams[2];
   m.contest = 0;
   assert.equal(opponentPreview(run).intent.name, team.intents[0].name);
-  assert.equal(opponentPreview(run).pct, 60);
+  const first = team.intents[0].pct;
+  assert.equal(opponentPreview(run).pct, first);
   m.contest = 15;
-  assert.equal(opponentPreview(run).pct, 45);
+  assert.equal(opponentPreview(run).pct, first - 15);
   m.contest = 0;
 
   // Clutch when either side is within 2 of 15.
   m.score.player = 13;
   let pre = opponentPreview(run);
   assert.equal(pre.clutch, true);
-  assert.equal(pre.pct, 70);
+  assert.equal(pre.basePct, first + team.clutch.bonus);
+  assert.equal(pre.pct, Math.min(95, first + team.clutch.bonus));
   m.score.player = 12;
   m.score.opp = 13;
   assert.equal(opponentPreview(run).clutch, true);

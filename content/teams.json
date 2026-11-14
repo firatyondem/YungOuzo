@@ -8,23 +8,23 @@
     ]
   },
   {
-    "id": "run_and_gun", "name": "Run & Gun", "round": "Semifinals", "defense": 10, "color": "#60a5fa",
+    "id": "run_and_gun", "name": "Run & Gun", "round": "Semifinals", "defense": 12, "color": "#60a5fa",
     "tagline": "They only shoot threes. Contest everything.",
     "intents": [
-      { "name": "Three", "points": 3, "pct": 40 },
-      { "name": "Three", "points": 3, "pct": 40 },
-      { "name": "Transition Three", "points": 3, "pct": 55 }
+      { "name": "Three", "points": 3, "pct": 50 },
+      { "name": "Three", "points": 3, "pct": 50 },
+      { "name": "Transition Three", "points": 3, "pct": 65 }
     ]
   },
   {
-    "id": "dynasty", "name": "The Dynasty", "round": "Finals", "defense": 18, "color": "#e4b53a",
+    "id": "dynasty", "name": "The Dynasty", "round": "Finals", "defense": 22, "color": "#e4b53a",
     "tagline": "Stacked, disciplined, and deadly in the clutch.",
     "clutch": { "within": 2, "bonus": 10 },
     "intents": [
-      { "name": "Post-Up", "points": 2, "pct": 60 },
-      { "name": "Three", "points": 3, "pct": 45 },
-      { "name": "Iso", "points": 2, "pct": 60 },
-      { "name": "SUPERTEAM", "points": 3, "pct": 75, "unblockableBySteal": true }
+      { "name": "Post-Up", "points": 2, "pct": 75 },
+      { "name": "Three", "points": 3, "pct": 60 },
+      { "name": "Iso", "points": 2, "pct": 75 },
+      { "name": "SUPERTEAM", "points": 3, "pct": 90, "unblockableBySteal": true }
     ]
   }
 ]

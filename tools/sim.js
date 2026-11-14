@@ -1,10 +1,13 @@
 // Balance simulator: a simple bot plays many seeded tournaments.
-// Usage: node tools/sim.js [runs]
+// Usage: node tools/sim.js [runs] [casual]
+//   default bot: plays every useful card.  casual: one setup card, first shot, one defense card.
 import { content, REAL_CONFIG as CONFIG } from "../tests/helpers.js";
 import { createRun } from "../src/engine/gameState.js";
 import { startMatch, playCard, endTurn } from "../src/engine/turnLoop.js";
 import { canPlay, calcShot, getCard, getCardCost, getShootEffect } from "../src/engine/rules.js";
 import { applyReward } from "../src/engine/rewards.js";
+
+const CASUAL = process.argv.includes("casual");
 
 function botTurn(run) {
   const m = run.match;
@@ -27,9 +30,10 @@ function botTurn(run) {
     });
     if (!next || m.shotsTaken > 0) break;
     playCard(run, next.iid);
+    if (CASUAL) break;
   }
   // 2) Shoot.
-  const shot = bestShot();
+  const shot = CASUAL ? shots()[0] : bestShot();
   if (shot && !m.over) playCard(run, shot.iid);
   // 3) Dump the rest into defense (and any extra shot).
   guard = 0;
@@ -37,6 +41,7 @@ function botTurn(run) {
     const next = playable().find((c) => ["Defense", "Shot"].includes(getCard(run, c).type));
     if (!next) break;
     playCard(run, next.iid);
+    if (CASUAL) break;
   }
   if (!m.over) endTurn(run);
 }
@@ -64,7 +69,7 @@ for (let seed = 1; seed <= runs; seed++) {
   reached[0]++;
 }
 const avg = (a) => (a.length ? (a.reduce((s, x) => s + x, 0) / a.length).toFixed(1) : "-");
-console.log(`runs: ${runs}`);
+console.log(`runs: ${runs}  bot: ${CASUAL ? "casual" : "thorough"}`);
 content.teams.forEach((t, i) => {
   const played = turns[i].length;
   console.log(
