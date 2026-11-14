@@ -150,3 +150,15 @@
 .card.tx-l .card-art { flex-basis: 52px; }
 .card.tx-l .card-text { font-size: 12px; line-height: 1.2; }
 .card.tx-l .card-name, .card.tx-m .card-name { padding-top: 5px; }
+
+/* Smooth hover: transform only. No margin change (that re-laid-out the whole hand and moved
+   cards under the cursor), no tilt, a lighter shadow, and no always-running foil animation. */
+.card { transition: transform 0.12s ease-out; }
+.hand .card { will-change: transform; }
+.hand .card:hover, .hand .card.kbd {
+  transform: translateY(-64px) scale(1.25);
+  margin-left: var(--ov, 8px); margin-right: 0;
+  box-shadow: 0 16px 26px rgba(0, 0, 0, 0.55), 0 0 0 2px var(--navy-ink), 0 0 0 6px var(--tc);
+}
+.hand .card:first-child:hover { margin-left: 0; }
+.card.rar-legendary { animation: none; }

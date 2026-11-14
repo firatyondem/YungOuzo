@@ -289,7 +289,7 @@ export async function createThreeCourt({ canvas, wrap, manifest = null, config =
     const h = Math.max(1, wrap.clientHeight);
     const rect = wrap.getBoundingClientRect();
     const zoom = rect.width / w || 1;
-    renderer.setPixelRatio(Math.min(2.5, (window.devicePixelRatio || 1) * zoom));
+    renderer.setPixelRatio(Math.min(1.5, (window.devicePixelRatio || 1) * zoom));
     renderer.setSize(w, h, false);
     const aspect = w / h;
     camera.aspect = aspect;

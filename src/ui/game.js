@@ -363,14 +363,8 @@ export function createGame(app) {
       hovered = cardEl;
       hud.spotlightActor(cardEl ? cardEl.dataset.actor : null);
     }
-    if (!cardEl) return;
-    const r = cardEl.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width;
-    const py = (e.clientY - r.top) / r.height;
-    cardEl.style.setProperty("--ry", `${((px - 0.5) * 16).toFixed(1)}deg`);
-    cardEl.style.setProperty("--rx", `${((0.5 - py) * 12).toFixed(1)}deg`);
-    cardEl.style.setProperty("--mx", `${(px * 100).toFixed(0)}%`);
-    cardEl.style.setProperty("--my", `${(py * 100).toFixed(0)}%`);
+    // (The card used to tilt toward the cursor here. Writing styles on every mouse move
+    // restarted its transition and made hovering stutter, so hover is now a plain lift.)
   });
   handEl.addEventListener("mouseleave", () => {
     if (hovered) {
