@@ -112,6 +112,7 @@ export function createGame(app) {
             break;
           }
           case "match_end":
+            fx.pop(ev.winner === "player" ? "YOU WIN!" : "DEFEAT", ev.winner === "player" ? "good big" : "bad big");
             app.sfx("buzzer");
             app.announce(ev.winner === "player" ? "win" : "loss");
             break;
@@ -127,7 +128,7 @@ export function createGame(app) {
       app.announce("gamepoint");
     }
     if (m && m.over) {
-      await sleep(900);
+      await sleep(1300);
       setLocked(false);
       app.onMatchEnd();
       return;

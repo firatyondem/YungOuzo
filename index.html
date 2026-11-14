@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/styles.css">
+  <link rel="stylesheet" href="src/pages.css">
   <script type="importmap">
     {
       "imports": {
@@ -22,6 +23,11 @@
 <body>
   <div id="app">
     <div id="boot" class="boot">Loading the arena…</div>
+
+    <!-- MAP / REWARD / END (rendered by JS) -->
+    <section id="screen-map" class="screen" hidden></section>
+    <section id="screen-reward" class="screen" hidden></section>
+    <section id="screen-end" class="screen" hidden></section>
 
     <!-- GAME -->
     <section id="screen-game" class="screen" hidden>

@@ -30,6 +30,7 @@
 //     deck:   [{ iid, cardId, source }],   // source: "starter" | "reward" | playerId
 //     nextIid,
 //     rewards: null | [{ kind: "card"|"player"|"upgrade", ... }],
+//     results: [{ teamId, player, opp, won }],   // finished matches
 //     stats: { wins, turns, shots, makes, threes, pointsFor, pointsAgainst, cardsPlayed, steals },
 //     match: null | {
 //       teamId, target,
@@ -90,6 +91,7 @@ export function createRun(content, config, seed) {
     deck: [],
     nextIid: 1,
     rewards: null,
+    results: [],
     stats: {
       wins: 0,
       turns: 0,

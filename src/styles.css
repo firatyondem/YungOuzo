@@ -245,13 +245,13 @@ code { background: #000; padding: 2px 6px; border-radius: 4px; }
 .card-cost { width: 34px; height: 34px; border-radius: 50%; background: #05070b; border: 3px solid var(--tc); display: grid; place-items: center; font-family: var(--display); font-size: 23px; line-height: 1; }
 .card-cost.discounted { color: var(--green); border-color: var(--green); }
 .card-type { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tc); }
-.card-name { font-family: var(--display); font-size: 23px; line-height: 1; letter-spacing: 0.03em; margin-top: 3px; }
-.card-art { flex: 0 0 46px; display: grid; place-items: center; font-size: 30px; }
+.card-name { font-family: var(--display); font-size: 22px; line-height: 0.95; letter-spacing: 0.03em; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-art { flex: 0 0 44px; display: grid; place-items: center; font-size: 30px; }
 .card-art .pts { font-family: var(--display); font-weight: 400; font-size: 34px; color: var(--tc); }
-.card-pct { flex: 0 0 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.card-pct { flex: 0 0 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
 .card-pct b { font-family: var(--display); font-weight: 400; font-size: 42px; color: #fff; text-shadow: 0 0 14px color-mix(in srgb, var(--tc) 70%, transparent); }
 .card-pct span { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: var(--tc); text-transform: uppercase; white-space: nowrap; }
-.card-text { font-size: 14.5px; line-height: 1.12; color: #d9dfec; flex: 1; overflow: hidden; }
+.card-text { font-size: 14px; line-height: 1.1; color: #d9dfec; flex: 1; overflow: hidden; }
 .card-foot { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); min-height: 16px; }
 .card-owner { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-key { border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; font-weight: 700; }

@@ -79,6 +79,7 @@ function finishMatch(run, winner, events) {
   const m = run.match;
   m.over = true;
   m.winner = winner;
+  run.results.push({ teamId: m.teamId, player: m.score.player, opp: m.score.opp, won: winner === "player" });
   if (winner === "player") {
     run.stats.wins++;
     if (run.round >= run.content.teams.length - 1) {

@@ -2,12 +2,16 @@
 import { CONFIG } from "./config.js";
 import { buildContent, createRun } from "./engine/gameState.js";
 import { startMatch } from "./engine/turnLoop.js";
+import { skipReward } from "./engine/rewards.js";
 import { randomSeed } from "./engine/rng.js";
-import { getTeam } from "./engine/rules.js";
 import { $, esc } from "./ui/dom.js";
-import { showScreen, showOverlay, hideOverlay } from "./ui/screens.js";
+import { showScreen, hideOverlay } from "./ui/screens.js";
 import { createGame } from "./ui/game.js";
 import { createCssCourt } from "./ui/cssCourt.js";
+import { renderMap } from "./ui/map.js";
+import { renderRewards } from "./ui/rewards.js";
+import { renderEnd } from "./ui/endscreen.js";
+import { createDebug } from "./ui/debug.js";
 
 const app = {
   config: CONFIG,
@@ -16,10 +20,10 @@ const app = {
   court: null,
   game: null,
   tutorial: null,
+  debug: null,
   locked: false,
   sfx() {},
   announce() {},
-  onMatchEnd() {},
 };
 window.fcr = app; // handy in the console
 
@@ -40,41 +44,68 @@ async function loadContent() {
   return buildContent({ cards, players, teams, chemistry, rewards });
 }
 
-function newRun(seed = CONFIG.SEED ?? randomSeed()) {
-  app.run = createRun(app.content, CONFIG, seed);
-  beginMatch();
-}
+// ---------- Flow ----------
 
-function beginMatch() {
+app.startRun = (seed = CONFIG.SEED ?? randomSeed()) => {
+  app.run = createRun(app.content, CONFIG, seed);
+  app.locked = false;
+  app.goMap();
+};
+
+app.goMap = () => {
+  hideOverlay();
+  renderMap(app);
+  showScreen("map");
+  app.debug?.render();
+};
+
+app.beginMatch = () => {
   hideOverlay();
   startMatch(app.run);
   showScreen("game");
   app.game.begin();
-}
+  app.debug?.render();
+};
 
 app.onMatchEnd = () => {
   const run = app.run;
-  const m = run.match;
-  const team = getTeam(run);
-  const won = m.winner === "player";
-  const o = showOverlay(`
-    <h2 class="${won ? "good" : "bad"}">${won ? "YOU WIN!" : "GAME OVER"}</h2>
-    <p>${esc(CONFIG.TEAM_NAME)} ${m.score.player} – ${m.score.opp} ${esc(team.name)}</p>
-    <button class="btn btn-primary" id="ov-again">PLAY AGAIN</button>`);
-  $("#ov-again", o).addEventListener("click", () => newRun());
+  if (run.phase === "reward") {
+    renderRewards(app);
+    showScreen("reward");
+  } else {
+    renderEnd(app);
+    showScreen("end");
+  }
+  app.debug?.render();
 };
+
+app.skipReward = () => {
+  skipReward(app.run);
+  app.goMap();
+};
+
+app.goTitle = () => app.startRun();
+
+// ---------- Boot ----------
 
 async function boot() {
   try {
     app.content = await loadContent();
   } catch (err) {
-    $("#boot").innerHTML = `Could not load game data.<br><small>${esc(err.message)}</small><br><small>Serve the folder over HTTP: <code>npx serve .</code></small>`;
+    $("#boot").innerHTML = `<div>Could not load game data.<br><small>${esc(err.message)}</small><br><small>Serve the folder over HTTP: <code>npx serve .</code></small></div>`;
     console.error(err);
     return;
   }
   app.court = createCssCourt($("#css-court"));
   app.game = createGame(app);
-  newRun();
+  app.debug = createDebug(app);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.target.matches?.("input, select, textarea")) return;
+    if (e.key === "d" || e.key === "D") app.debug.toggle();
+  });
+
+  app.startRun();
 }
 
 boot();
