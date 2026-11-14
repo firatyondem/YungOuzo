@@ -55,8 +55,28 @@ const app = {
 };
 window.fcr = app; // handy in the console
 
+/**
+ * fetch with a couple of retries for transient failures (network errors, 5xx).
+ * A 404 is returned as-is: a missing file is an answer, not something to retry.
+ */
+async function fetchRetry(url, tries = 3) {
+  let lastErr;
+  for (let i = 0; i < tries; i++) {
+    if (i) await new Promise((r) => setTimeout(r, 400 * i * i));
+    try {
+      const res = await fetch(url);
+      if (res.status < 500) return res;
+      lastErr = new Error(`${url} (${res.status})`);
+      if (i === tries - 1) return res;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr;
+}
+
 async function loadJson(path) {
-  const res = await fetch(path);
+  const res = await fetchRetry(path);
   if (!res.ok) throw new Error(`Could not load ${path} (${res.status})`);
   return res.json();
 }
@@ -65,7 +85,7 @@ async function loadContent() {
   // Roster selection lives in src/roster.js: league by default, private only with ?roster=real.
   const [cards, roster, teams, chemistry, rewards] = await Promise.all([
     loadJson("content/cards.json"),
-    loadRoster({ requiredIds: CONFIG.STARTING_LINEUP }),
+    loadRoster({ requiredIds: CONFIG.STARTING_LINEUP, fetchFn: fetchRetry }),
     loadJson("content/teams.json"),
     loadJson("content/chemistry.json"),
     loadJson("content/rewards.json"),
@@ -239,7 +259,8 @@ async function boot() {
   try {
     app.content = await loadContent();
   } catch (err) {
-    $("#boot").innerHTML = `<div>Could not load game data.<br><small>${esc(err.message)}</small><br><small>Serve the folder over HTTP: <code>npx serve .</code></small></div>`;
+    $("#boot").innerHTML = `<div>Could not load game data.<br><small>${esc(err.message)}</small><br><button class="btn btn-primary" id="boot-retry" style="margin:14px 0">TRY AGAIN</button><br><small>Running locally? Serve the folder over HTTP: <code>npx serve .</code></small></div>`;
+    $("#boot-retry").addEventListener("click", () => location.reload());
     console.error(err);
     return;
   }
