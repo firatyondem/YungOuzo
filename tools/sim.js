@@ -1,6 +1,6 @@
 // Balance simulator: a simple bot plays many seeded tournaments.
 // Usage: node tools/sim.js [runs]
-import { content, CONFIG } from "../tests/helpers.js";
+import { content, REAL_CONFIG as CONFIG } from "../tests/helpers.js";
 import { createRun } from "../src/engine/gameState.js";
 import { startMatch, playCard, endTurn } from "../src/engine/turnLoop.js";
 import { canPlay, calcShot, getCard, getCardCost, getShootEffect } from "../src/engine/rules.js";

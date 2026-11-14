@@ -397,6 +397,28 @@ test("card rules: heat check streak, fast break, alley-oop, timeout exhausts", (
   assert.equal(m.discard.some((c) => c.iid === to.iid), false);
 });
 
+test("no dead hands: a hand without a shot card draws extra until one appears", () => {
+  const cfg = { ...CONFIG, NO_SHOT_REDRAWS: 3 };
+  const isShot = (c) => content.cards[c.cardId].effects.some((e) => e.type === "shoot");
+  let redraws = 0;
+  for (let seed = 0; seed < 300; seed++) {
+    const run = newRun(seed, 0, cfg);
+    startMatch(run);
+    const m = run.match;
+    assert.ok(m.hand.length >= 5 && m.hand.length <= 8);
+    if (m.hand.length > 5) {
+      redraws++;
+      assert.ok(m.hand.slice(0, 5).every((c) => !isShot(c)), "only redraw when the first 5 hold no shot");
+      // Stops at the first shot card (or after 3 extra).
+      assert.ok(isShot(m.hand.at(-1)) || m.hand.length === 8);
+    } else {
+      assert.ok(m.hand.some(isShot));
+    }
+    assert.equal(new Set(allIids(m)).size, 20);
+  }
+  assert.ok(redraws > 5, `redraws: ${redraws}`);
+});
+
 test("seeded RNG is reproducible", () => {
   const a = { rngState: hashSeed("abc") };
   const b = { rngState: hashSeed("abc") };

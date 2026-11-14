@@ -133,3 +133,11 @@
   .page-head p { font-size: 17px; }
   .btn-big { font-size: 32px; padding: 9px 36px; }
 }
+
+/* Big screens (1920x1080 and up): scale the whole UI so type stays large. */
+@media (min-width: 1800px) and (min-height: 980px) {
+  #screen-game, #screen-map, #screen-reward, #screen-end, #screen-howto, .overlay { zoom: 1.25; }
+}
+@media (min-width: 2400px) and (min-height: 1300px) {
+  #screen-game, #screen-map, #screen-reward, #screen-end, #screen-howto, .overlay { zoom: 1.6; }
+}

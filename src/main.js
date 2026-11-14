@@ -4,14 +4,24 @@ import { buildContent, createRun } from "./engine/gameState.js";
 import { startMatch } from "./engine/turnLoop.js";
 import { skipReward } from "./engine/rewards.js";
 import { randomSeed } from "./engine/rng.js";
-import { $, esc } from "./ui/dom.js";
-import { showScreen, hideOverlay } from "./ui/screens.js";
+import { $, $$, esc } from "./ui/dom.js";
+import { showScreen, showOverlay, hideOverlay, currentScreen } from "./ui/screens.js";
 import { createGame } from "./ui/game.js";
 import { createCssCourt } from "./ui/cssCourt.js";
 import { renderMap } from "./ui/map.js";
 import { renderRewards } from "./ui/rewards.js";
 import { renderEnd } from "./ui/endscreen.js";
 import { createDebug } from "./ui/debug.js";
+import { renderTitle, renderHowTo, showHowToOverlay, soundButtonHTML } from "./ui/title.js";
+import { createTutorial } from "./ui/tutorial.js";
+
+function readMuted() {
+  try {
+    return localStorage.getItem("fcr_muted") === "1";
+  } catch {
+    return false;
+  }
+}
 
 const app = {
   config: CONFIG,
@@ -20,10 +30,23 @@ const app = {
   court: null,
   game: null,
   tutorial: null,
+  tutorialDone: false, // per page load: a fresh visitor always gets the tips once
   debug: null,
+  audio: null,
   locked: false,
-  sfx() {},
-  announce() {},
+  muted: readMuted(),
+  /** Short sound effect (swish, clank, buzzer...). Never throws. */
+  sfx(name) {
+    try {
+      app.audio?.play(name);
+    } catch {}
+  },
+  /** Announcer line: audio if available + on-screen caption. Never throws. */
+  announce(name) {
+    try {
+      app.audio?.announce(name);
+    } catch {}
+  },
 };
 window.fcr = app; // handy in the console
 
@@ -46,7 +69,21 @@ async function loadContent() {
 
 // ---------- Flow ----------
 
+app.goTitle = () => {
+  hideOverlay();
+  app.tutorial?.stop(false);
+  renderTitle(app);
+  showScreen("title");
+  app.audio?.setScene("title");
+};
+
+app.goHowTo = () => {
+  renderHowTo(app);
+  showScreen("howto");
+};
+
 app.startRun = (seed = CONFIG.SEED ?? randomSeed()) => {
+  app.tutorial?.stop(false);
   app.run = createRun(app.content, CONFIG, seed);
   app.locked = false;
   app.goMap();
@@ -56,6 +93,7 @@ app.goMap = () => {
   hideOverlay();
   renderMap(app);
   showScreen("map");
+  app.audio?.setScene("map");
   app.debug?.render();
 };
 
@@ -64,11 +102,14 @@ app.beginMatch = () => {
   startMatch(app.run);
   showScreen("game");
   app.game.begin();
+  app.audio?.setScene("game");
+  if (app.run.round === 0 && !app.tutorialDone) app.tutorial.start();
   app.debug?.render();
 };
 
 app.onMatchEnd = () => {
   const run = app.run;
+  app.tutorial?.stop(false);
   if (run.phase === "reward") {
     renderRewards(app);
     showScreen("reward");
@@ -76,6 +117,7 @@ app.onMatchEnd = () => {
     renderEnd(app);
     showScreen("end");
   }
+  app.audio?.setScene(run.phase);
   app.debug?.render();
 };
 
@@ -84,7 +126,26 @@ app.skipReward = () => {
   app.goMap();
 };
 
-app.goTitle = () => app.startRun();
+app.toggleMute = () => {
+  app.muted = !app.muted;
+  try {
+    localStorage.setItem("fcr_muted", app.muted ? "1" : "0");
+  } catch {}
+  for (const b of $$(".sound-toggle")) b.textContent = app.muted ? "🔇" : "🔊";
+  app.audio?.setMuted(app.muted);
+};
+
+function confirmQuit() {
+  const o = showOverlay(`
+    <h3 class="ov-title">QUIT THIS RUN?</h3>
+    <p>Your tournament progress will be lost.</p>
+    <div class="page-actions">
+      <button class="btn" id="ov-no">KEEP PLAYING</button>
+      <button class="btn btn-primary" id="ov-yes">QUIT TO TITLE</button>
+    </div>`);
+  $("#ov-no", o).addEventListener("click", hideOverlay);
+  $("#ov-yes", o).addEventListener("click", () => app.goTitle());
+}
 
 // ---------- Boot ----------
 
@@ -98,14 +159,29 @@ async function boot() {
   }
   app.court = createCssCourt($("#css-court"));
   app.game = createGame(app);
+  app.tutorial = createTutorial(app);
   app.debug = createDebug(app);
 
+  $("#g-tools").innerHTML = `
+    <button class="btn icon-btn" id="tool-help" title="How to play">?</button>
+    ${soundButtonHTML(app)}
+    <button class="btn icon-btn" id="tool-quit" title="Quit to title">✕</button>`;
+  $("#tool-help").addEventListener("click", () => showHowToOverlay(app));
+  $("#tool-quit").addEventListener("click", confirmQuit);
+
+  document.addEventListener("click", (e) => {
+    if (e.target.closest?.(".sound-toggle")) app.toggleMute();
+  });
   document.addEventListener("keydown", (e) => {
-    if (e.target.matches?.("input, select, textarea")) return;
-    if (e.key === "d" || e.key === "D") app.debug.toggle();
+    if (e.target.matches?.("input, select, textarea") || e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (k === "d") app.debug.toggle();
+    else if (k === "m") app.toggleMute();
+    else if (k === "escape" && !$("#overlay").hidden) hideOverlay();
+    else if (k === "enter" && currentScreen() === "title") app.startRun();
   });
 
-  app.startRun();
+  app.goTitle();
 }
 
 boot();

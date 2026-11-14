@@ -6,6 +6,7 @@ import {
   canPlay,
   getCard,
   getCardCost,
+  getShootEffect,
   getTeam,
   opponentPreview,
   passiveContest,
@@ -72,7 +73,12 @@ function startTurn(run, events) {
   m.pending = { draw: 0, openness: 0 };
   events.push({ type: "turn_start", turn: m.turn });
   const drawn = drawCards(run, n);
-  events.push({ type: "draw", count: drawn.length });
+  // No dead hands: keep drawing (a few) until the hand holds a shot card.
+  let extra = 0;
+  const hasShot = () => m.hand.some((c) => getShootEffect(getCard(run, c)));
+  while (extra < (run.config.NO_SHOT_REDRAWS || 0) && !hasShot() && drawCards(run, 1).length) extra++;
+  if (extra) log(run, `No shot in hand: drew ${extra} extra card${extra > 1 ? "s" : ""}.`);
+  events.push({ type: "draw", count: drawn.length + extra, extra });
 }
 
 function finishMatch(run, winner, events) {

@@ -34,7 +34,16 @@ export function cardHTML(card, opts = {}) {
         ${opts.hotkey ? `<span class="card-key">${opts.hotkey}</span>` : ""}
       </div>
       ${opts.reason ? `<div class="card-reason">${esc(opts.reason)}</div>` : ""}
+      ${opts.tip ? `<div class="card-tip">${opts.tip}</div>` : ""}
     </div>`;
+}
+
+/** "45 base +13 open +25 INS -5 DEF" breakdown shown when hovering a shot card. */
+function shotTip(s) {
+  const r = Math.round;
+  let t = `${s.base} <i>base</i> +${r(s.openness)} <i>open</i> +${s.ratingBonus} <i>${s.ratingKey}</i> −${s.defense} <i>DEF</i>`;
+  if (s.bonus) t += ` +${r(s.bonus)} <i>bonus</i>`;
+  return t;
 }
 
 export function renderHand(app) {
@@ -57,6 +66,7 @@ export function renderHand(app) {
         reason: check.ok ? "" : check.reason,
         pct: shot ? shot.pct : null,
         sub: shot ? lastName(shot.shooter.name) : "",
+        tip: shot ? shotTip(shot) : "",
         owner: owner ? `#${owner.jersey} ${lastName(owner.name)}` : "",
         hotkey: i < 9 ? i + 1 : "",
       });

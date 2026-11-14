@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/styles.css">
   <link rel="stylesheet" href="src/pages.css">
+  <link rel="stylesheet" href="src/title.css">
   <script type="importmap">
     {
       "imports": {
@@ -23,6 +24,10 @@
 <body>
   <div id="app">
     <div id="boot" class="boot">Loading the arena…</div>
+
+    <!-- TITLE / HOW TO PLAY (rendered by JS) -->
+    <section id="screen-title" class="screen" hidden></section>
+    <section id="screen-howto" class="screen" hidden></section>
 
     <!-- MAP / REWARD / END (rendered by JS) -->
     <section id="screen-map" class="screen" hidden></section>
@@ -54,10 +59,8 @@
         </div>
 
         <aside class="side right-col">
-          <div class="clock-row">
-            <div class="shotclock" id="g-clock"></div>
-            <div class="bars" id="g-bars"></div>
-          </div>
+          <div class="shotclock" id="g-clock"></div>
+          <div class="bars" id="g-bars"></div>
           <h3 class="side-title">Play-by-play</h3>
           <div class="log" id="g-log"></div>
         </aside>

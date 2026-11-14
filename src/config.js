@@ -18,6 +18,9 @@ export const CONFIG = {
   TARGET_SCORE: 15,
   MAX_ENERGY: 24, // the shot clock
   HAND_SIZE: 5,
+  // No dead hands: if a new hand has no shot card, draw up to this many extra
+  // cards until one shows up (still the normal seeded draw order). 0 = off.
+  NO_SHOT_REDRAWS: 3,
 
   // makePct = BASE_PCT[points] + openness + rating * RATING_MULT - opponentDefense
   BASE_PCT: { 2: 45, 3: 30 },

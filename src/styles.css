@@ -182,20 +182,20 @@ code { background: #000; padding: 2px 6px; border-radius: 4px; }
 @keyframes capin { 0% { opacity: 0; transform: translateY(12px); } 8% { opacity: 1; transform: none; } 82% { opacity: 1; } 100% { opacity: 0; } }
 
 /* Right column */
-.clock-row { display: grid; grid-template-columns: 124px 1fr; gap: 10px; align-items: center; }
-.shotclock svg { width: 124px; height: 124px; display: block; }
+.shotclock { display: grid; place-items: center; }
+.shotclock svg { width: clamp(104px, 15vh, 150px); height: clamp(104px, 15vh, 150px); display: block; }
 .ring-bg { fill: #05070b; stroke: #252c3d; stroke-width: 9; }
 .ring { fill: none; stroke: var(--orange); stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 0.35s ease, stroke 0.2s; }
 .shotclock .low .ring { stroke: var(--red); }
 .clock-num { font-family: var(--display); font-size: 54px; fill: #fff; }
 .shotclock .low .clock-num { fill: var(--red); }
 .clock-label { font-family: var(--body); font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; fill: var(--muted); }
-.bars { display: flex; flex-direction: column; gap: 8px; }
+.bars { display: flex; flex-direction: column; gap: 5px; }
 .bar-head { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--display); letter-spacing: 0.08em; font-size: 18px; }
 .bar-head b { font-size: 24px; font-weight: 400; }
 .bar-track { height: 12px; border-radius: 6px; background: #05070b; border: 1px solid var(--line); overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 6px; transition: width 0.3s ease; }
-.bar-hint { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+.bar-hint { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; line-height: 1.1; }
 .bar.openness b, .bar.openness .bar-head span { color: var(--orange2); }
 .bar.openness .bar-fill { background: linear-gradient(90deg, #ff7a1a, #ffd23f); }
 .bar.contest b, .bar.contest .bar-head span { color: #7cc3ff; }
@@ -245,7 +245,7 @@ code { background: #000; padding: 2px 6px; border-radius: 4px; }
 .card-cost { width: 34px; height: 34px; border-radius: 50%; background: #05070b; border: 3px solid var(--tc); display: grid; place-items: center; font-family: var(--display); font-size: 23px; line-height: 1; }
 .card-cost.discounted { color: var(--green); border-color: var(--green); }
 .card-type { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tc); }
-.card-name { font-family: var(--display); font-size: 22px; line-height: 0.95; letter-spacing: 0.03em; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-name { font-family: var(--display); font-size: 22px; line-height: 0.95; letter-spacing: 0.03em; margin-top: 3px; }
 .card-art { flex: 0 0 44px; display: grid; place-items: center; font-size: 30px; }
 .card-art .pts { font-family: var(--display); font-weight: 400; font-size: 34px; color: var(--tc); }
 .card-pct { flex: 0 0 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
@@ -281,6 +281,10 @@ code { background: #000; padding: 2px 6px; border-radius: 4px; }
 }
 @media (max-width: 1500px) {
   .sb-team { min-width: 170px; }
-  .card { width: 142px; }
+  .card { width: 144px; }
+  .card-name { font-size: 20px; }
+  .card-text { font-size: 13.5px; }
+  .card-pct { flex-basis: 42px; }
+  .card-pct b { font-size: 38px; }
   .handbar { grid-template-columns: 150px minmax(0, 1fr) 170px; }
 }

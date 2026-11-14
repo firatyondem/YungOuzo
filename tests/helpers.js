@@ -20,10 +20,13 @@ export function loadContent(playerFile = CONFIG.PLAYER_FILE) {
 }
 
 export const content = loadContent();
-export { CONFIG };
+// Tests use exact hand sizes, so the "no dead hands" redraw is off unless a test enables it.
+const REAL_CONFIG = CONFIG;
+const TEST_CONFIG = { ...CONFIG, NO_SHOT_REDRAWS: 0 };
+export { TEST_CONFIG as CONFIG, REAL_CONFIG };
 
-export function newRun(seed = 12345, round = 0) {
-  const run = createRun(content, CONFIG, seed);
+export function newRun(seed = 12345, round = 0, config = TEST_CONFIG) {
+  const run = createRun(content, config, seed);
   run.round = round;
   return run;
 }
