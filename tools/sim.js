@@ -1,12 +1,23 @@
 // Balance simulator: bots play many seeded seasons against the league.
-// Usage: node tools/sim.js [runs] [thorough|casual|random] [teams] [cards]
+// Usage: node tools/sim.js [runs] [thorough|casual|random] [teams] [cards] [policy=mix] [seed=N]
+//   seed=N: replay that one seed and print it game by game (same seed as ?seed=N in the browser).
 //   thorough (default): plans each turn by expected value - it understands costs,
 //       risk (turnovers, fatigue, exhaust), the opponent's intent and its own Contest,
 //       uses timeouts, holds a card, and picks the recommended game plan.
 //   casual: one setup card, the first shot it sees, one defense card. No coaching.
 //   random: plays random playable cards, random rewards. The floor.
 //   teams: per-team table.   cards: top cards in winning decks.
-import { league as content, REAL_CONFIG as CONFIG } from "../tests/helpers.js";
+// The bots (botTurn, pickReward) only use the engine, so this module also loads in a
+// browser (the debug check plays a seeded run with them). The league content is read
+// from disk, so it is only loaded under Node.
+const IN_NODE = typeof process !== "undefined" && !!(process.versions && process.versions.node);
+let content = null;
+let CONFIG = null;
+if (IN_NODE) {
+  const helpers = await import("../tests/helpers.js");
+  content = helpers.league;
+  CONFIG = helpers.REAL_CONFIG;
+}
 import { createRun } from "../src/engine/gameState.js";
 import { startMatch, playCard, endTurn, toggleHold } from "../src/engine/turnLoop.js";
 import { canPlay, calcShot, checkCondition, getCard, getCardCost, getShootEffect, opponentPreview } from "../src/engine/rules.js";
@@ -15,7 +26,7 @@ import { canUseAction, useAction, isClosingTime } from "../src/engine/actions.js
 import { recommended, setStrategy } from "../src/engine/strategy.js";
 import { nextFloat } from "../src/engine/rng.js";
 
-const ARG = process.argv.slice(2);
+const ARG = IN_NODE ? process.argv.slice(2) : [];
 const MODE = ARG.includes("random") ? "random" : ARG.includes("casual") ? "casual" : "thorough";
 const PER_TEAM = ARG.includes("teams");
 const TOP_CARDS = ARG.includes("cards");
@@ -124,7 +135,7 @@ function planValue(run, picks) {
   value -= oppEV;
   value += draws * 0.12;
   value -= fatigue * 0.22;
-  value += Math.min(CONFIG.CARRY_MAX || 0, m.energy - cost) * 0.012; // banked seconds are worth a little
+  value += Math.min(run.config.CARRY_MAX || 0, m.energy - cost) * 0.012; // banked seconds are worth a little
   return value;
 }
 
@@ -223,7 +234,7 @@ export function botTurn(run, mode = MODE, dice = null) {
 // ---------- Seasons ----------
 
 /** Play `runs` seasons. Returns per-stop and per-team tallies. */
-export function simulate(runs, { mode = MODE, teams = content.teams, config = CONFIG, casual = false, policy = POLICY } = {}) {
+export function simulate(runs, { mode = MODE, teams = content ? content.teams : [], config = CONFIG, casual = false, policy = POLICY, from = 1, onRun = null } = {}) {
   if (casual) mode = "casual";
   const c = { ...content, teams };
   const stops = {};
@@ -237,7 +248,7 @@ export function simulate(runs, { mode = MODE, teams = content.teams, config = CO
   let champions = 0;
   let matches = 0;
   let turns = 0;
-  for (let seed = 1; seed <= runs; seed++) {
+  for (let seed = from; seed < from + runs; seed++) {
     const run = createRun(c, config, seed);
     const dice = { rngState: seed * 7919 + 13 }; // the random bot's own dice: never the game's RNG
     let guard = 0;
@@ -285,6 +296,7 @@ export function simulate(runs, { mode = MODE, teams = content.teams, config = CO
     }
     stat.shots += run.stats.shots;
     stat.makes += run.stats.makes;
+    if (onRun) onRun(seed, run);
   }
   return { runs, mode, stops, byTeam, plans, winCards, winUpgrades, winPerks, rewardsTaken, stat, champions, matches, turns };
 }
@@ -365,7 +377,19 @@ function report(r) {
   }
 }
 
-if (process.argv[1] && process.argv[1].replace(/\\/g, "/").endsWith("tools/sim.js")) {
-  const runs = Number(ARG.find((a) => /^\d+$/.test(a))) || 2000;
-  report(simulate(runs));
+if (IN_NODE && process.argv[1] && process.argv[1].replace(/\\/g, "/").endsWith("tools/sim.js")) {
+  const one = ARG.find((a) => a.startsWith("seed="));
+  if (one) {
+    simulate(1, {
+      from: Number(one.slice(5)),
+      onRun: (seed, run) => {
+        console.log(`seed ${seed}, ${MODE} bot: ${run.phase === "victory" ? "CHAMPIONS" : "run over"}`);
+        for (const r of run.results) console.log(`  ${String(r.label).padEnd(7)} game ${r.game}  ${r.won ? "W" : "L"} ${r.player}-${r.opp}  vs ${content.teams.find((t) => t.id === r.teamId).name}`);
+        console.log(`  deck ${run.deck.length} cards, upgraded: ${run.deck.filter((d) => d.up).map((d) => d.cardId).join(", ") || "-"}, deals: ${(run.perks || []).map((p) => p.name).join(", ") || "-"}`);
+      },
+    });
+  } else {
+    const runs = Number(ARG.find((a) => /^\d+$/.test(a))) || 2000;
+    report(simulate(runs));
+  }
 }
