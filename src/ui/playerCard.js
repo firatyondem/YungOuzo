@@ -1,6 +1,7 @@
 // Player card used on the map, reward and picker screens.
 import { esc, ARCHETYPE_LABEL } from "./dom.js";
 import { avatarHTML } from "./avatar.js";
+import { icon, TYPE_ICON } from "./icons.js";
 
 const RATING_INFO = [
   ["SHT", "Shooting: +5% per point on this player's 3PT shots"],
@@ -20,7 +21,7 @@ export function playerCardHTML(p, content, opts = {}) {
   const sigs = p.signatureCards
     .map((id) => content.cards[id])
     .filter(Boolean)
-    .map((c) => `<span class="sig type-${c.type.toLowerCase()}" title="${esc(c.text || "")}">${esc(c.name)}</span>`)
+    .map((c) => `<span class="sig type-${c.type.toLowerCase()}" title="${esc(c.text || "")}">${icon(TYPE_ICON[c.type] || "utility")}${esc(c.name)}</span>`)
     .join("");
   return `
     <div class="pcard" style="--pc:${p.color}" ${opts.slot != null ? `data-slot="${opts.slot}"` : ""}>
@@ -29,7 +30,7 @@ export function playerCardHTML(p, content, opts = {}) {
         ${avatarHTML(p, { size: "lg", badge: true })}
         <div class="pcard-id">
           <div class="pcard-name">${esc(p.name)}</div>
-          <div class="pcard-arch">${esc(p.position)} · ${esc(ARCHETYPE_LABEL[p.archetype] || p.archetype)}</div>
+          <div class="pcard-arch">${esc(p.position)} / ${esc(ARCHETYPE_LABEL[p.archetype] || p.archetype)}</div>
         </div>
       </div>
       <div class="pcard-ratings">

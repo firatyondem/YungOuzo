@@ -1,12 +1,14 @@
 // Title screen and the one-screen How to Play page.
 import { $, esc } from "./dom.js";
 import { cardHTML } from "./cards.js";
+import { icon } from "./icons.js";
+import { confetti } from "./fx.js";
 import { showScreen, showOverlay, hideOverlay } from "./screens.js";
 
 const FAN = ["contest", "swing_pass", "pull_up_jumper", "catch_and_shoot_3", "lockdown"];
 
 export function soundButtonHTML(app) {
-  return `<button class="btn icon-btn sound-toggle" title="Sound on/off (M)">${app.muted ? "🔇" : "🔊"}</button>`;
+  return `<button class="btn icon-btn sound-toggle" title="Sound on/off (M)">${icon(app.muted ? "soundOff" : "soundOn")}</button>`;
 }
 
 export function renderTitle(app) {
@@ -32,13 +34,14 @@ export function renderTitle(app) {
         <button class="btn btn-howto" id="title-howto">HOW TO PLAY</button>
       </div>
       <div class="title-feats">
-        <span>🃏 Play cards to get open and score</span>
-        <span>🛡️ Read the opponent, then defend</span>
-        <span>🏆 Win, draft rewards, face tougher teams</span>
+        <span>${icon("deck")}Play cards to get open and score</span>
+        <span>${icon("defense")}Read the opponent, then defend</span>
+        <span>${icon("trophy")}Win, draft rewards, face tougher teams</span>
       </div>
     </div>
     <div class="title-fan">${fan.map((c, i) => `<div class="fan-slot" style="--i:${i - (fan.length - 1) / 2}">${cardHTML(c)}</div>`).join("")}</div>
     <div class="title-foot">Mouse to play · Space ends your turn · 1–9 play a card · M mute</div>`;
+  confetti($(".title-bg", host), 46);
   $("#title-play", host).addEventListener("click", () => app.startRun());
   $("#title-howto", host).addEventListener("click", () => app.goHowTo());
 }
@@ -78,7 +81,7 @@ export function renderHowTo(app) {
       ${howtoHTML(app)}
       <div class="page-actions">
         <button class="btn btn-primary btn-big" id="how-play">PLAY</button>
-        <button class="btn" id="how-back">← BACK</button>
+        <button class="btn" id="how-back">${icon("arrowLeft")}BACK</button>
       </div>
     </div>`;
   $("#how-play", host).addEventListener("click", () => app.startRun());

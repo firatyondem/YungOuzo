@@ -309,6 +309,14 @@ export async function createThreeCourt({ canvas, wrap, manifest = null, config =
           else rimShake = performance.now();
         });
     },
+    /** Screen position of a figurine's chest, for effects. */
+    screenPoint(side, slot) {
+      const p = figs.releasePoint(side, slot);
+      p.y = 1.5;
+      p.project(camera);
+      const r = canvas.getBoundingClientRect();
+      return { x: r.left + ((p.x + 1) / 2) * r.width, y: r.top + ((1 - p.y) / 2) * r.height };
+    },
     setVisible(v) {
       active = v;
       canvas.hidden = !v;

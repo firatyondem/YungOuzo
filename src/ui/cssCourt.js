@@ -108,6 +108,13 @@ export function createCssCourt(host) {
     kind: "css",
     setTeams,
     shoot,
+    /** Screen position of a player token, for effects. */
+    screenPoint(side, slot) {
+      const t = tokens.querySelector(`.cc-token[data-side="${side}"][data-slot="${slot % SPOTS.length}"]`);
+      if (!t) return null;
+      const r = t.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    },
     setVisible(v) {
       host.classList.toggle("tokens-hidden", !v);
     },

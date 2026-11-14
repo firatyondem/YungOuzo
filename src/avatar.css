@@ -1,5 +1,5 @@
 /* ---------- Player portraits (generated SVG, see src/ui/avatar.js) ---------- */
-.av { position: relative; display: inline-block; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--pc, #8892a8); background: #0b0d12; vertical-align: middle; box-sizing: border-box; }
+.av { position: relative; display: inline-block; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--pc, #8892a8); background: var(--navy-ink); vertical-align: middle; box-sizing: border-box; }
 .av svg { width: 100%; height: 100%; display: block; border-radius: 50%; }
 .av-xs { width: 18px; height: 18px; border-width: 1px; margin-right: 4px; }
 .av-sm { width: 30px; height: 30px; }
@@ -11,7 +11,6 @@
 .av-xl .av-num { min-width: 34px; height: 34px; font-size: 26px; line-height: 31px; border-radius: 17px; right: -8px; bottom: -4px; }
 
 /* Lineup strip */
-.lp { grid-template-columns: 40px 1fr; }
 .lp > .av { grid-row: 1 / 3; }
 
 /* Player cards + training reward */

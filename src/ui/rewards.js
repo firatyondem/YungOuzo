@@ -5,6 +5,7 @@ import { $, $$, esc, ARCHETYPE_LABEL } from "./dom.js";
 import { cardHTML } from "./cards.js";
 import { playerCardHTML } from "./playerCard.js";
 import { avatarHTML } from "./avatar.js";
+import { icon } from "./icons.js";
 
 const RATING_NAME = { SHT: "Shooting", INS: "Inside scoring", DEF: "Defense", PLY: "Playmaking" };
 
@@ -20,7 +21,7 @@ export function renderRewards(app) {
       const card = content.cards[opt.cardId];
       return `
         <div class="reward" data-index="${i}">
-          <div class="reward-kind">NEW CARD</div>
+          <div class="reward-kind">${icon("deck")}NEW CARD</div>
           <div class="reward-body">${cardHTML(card)}</div>
           <div class="reward-desc">Add <b>${esc(card.name)}</b> to your deck.</div>
           <button class="btn btn-primary reward-btn">ADD CARD</button>
@@ -30,7 +31,7 @@ export function renderRewards(app) {
       const p = content.players[opt.playerId];
       return `
         <div class="reward" data-index="${i}">
-          <div class="reward-kind">NEW PLAYER</div>
+          <div class="reward-kind">${icon("users")}NEW PLAYER</div>
           <div class="reward-body">${playerCardHTML(p, content)}</div>
           <div class="reward-desc">Sign <b>${esc(p.name)}</b>. Replaces one starter and brings two signature cards.</div>
           <button class="btn btn-primary reward-btn">SIGN PLAYER</button>
@@ -40,12 +41,12 @@ export function renderRewards(app) {
     const from = p.ratings[opt.rating];
     return `
       <div class="reward" data-index="${i}">
-        <div class="reward-kind">TRAINING</div>
+        <div class="reward-kind">${icon("stamina")}TRAINING</div>
         <div class="reward-body">
           <div class="upgrade" style="--pc:${p.color}">
             ${avatarHTML(p, { size: "xl", badge: true })}
             <div class="upgrade-name">${esc(p.name)}</div>
-            <div class="upgrade-rating">${opt.rating} <s>${from}</s> → <b>${from + opt.amount}</b></div>
+            <div class="upgrade-rating">${opt.rating} <s>${from}</s>${icon("arrowRight")}<b>${from + opt.amount}</b></div>
             <div class="upgrade-what">${RATING_NAME[opt.rating]}</div>
           </div>
         </div>
@@ -94,10 +95,10 @@ function renderSlotPicker(app, index) {
       </header>
       <div class="picker">
         <div class="picker-in">${playerCardHTML(incoming, content, { tag: "INCOMING" })}</div>
-        <div class="picker-arrow">⇄</div>
+        <div class="picker-arrow">${icon("swap")}</div>
         <div class="pc-row">${run.lineup.map((p, i) => playerCardHTML(p, content, { slot: i, action: "REPLACE" })).join("")}</div>
       </div>
-      <div class="page-actions"><button class="btn btn-small" id="picker-back">← BACK</button></div>
+      <div class="page-actions"><button class="btn btn-small" id="picker-back">${icon("arrowLeft")}BACK</button></div>
     </div>`;
   for (const el of $$(".pcard[data-slot]", host)) {
     el.classList.add("clickable");

@@ -2,7 +2,7 @@
 import { playCard, endTurn } from "../engine/turnLoop.js";
 import { canPlay, getTeam } from "../engine/rules.js";
 import { $, sleep } from "./dom.js";
-import { renderHand } from "./cards.js";
+import { renderHand, resetHandMemory, layoutHand } from "./cards.js";
 import * as hud from "./hud.js";
 import * as fx from "./fx.js";
 
@@ -11,6 +11,7 @@ export function createGame(app) {
   const handEl = $("#g-hand");
   const endBtn = $("#btn-endturn");
   let gamePointCalled = false;
+  let makeStreak = 0; // consecutive made shots (presentation only: "ON FIRE")
 
   function render() {
     const run = app.run;
@@ -29,6 +30,7 @@ export function createGame(app) {
     const anyPlayable = m.hand.some((c) => canPlay(run, c.iid).ok);
     endBtn.classList.toggle("pulse", !m.over && (!anyPlayable || m.shotsTaken > 0));
     endBtn.disabled = m.over;
+    hud.setOnFire(makeStreak >= 3);
     app.tutorial?.onRender();
   }
 
@@ -36,7 +38,9 @@ export function createGame(app) {
   function begin() {
     const run = app.run;
     hud.resetScoreMemory();
+    resetHandMemory();
     gamePointCalled = false;
+    makeStreak = 0;
     app.court?.setTeams(run.lineup, getTeam(run));
     render();
   }
@@ -63,21 +67,26 @@ export function createGame(app) {
             const slot = Math.max(0, run.lineup.findIndex((p) => p.id === ev.shooterId));
             await app.court?.shoot({ side: "player", slot, made: ev.made, points: ev.points }, cfg.SHOT_ANIM_MS);
             if (ev.made) {
-              const three = ev.points === 3;
-              fx.pop(three ? "SPLASH! +3" : "BUCKET! +2", three ? "good big" : "good");
+              makeStreak++;
+              const three = ev.points >= 3;
+              fx.pop(three ? `SPLASH! +${ev.points}` : "BUCKET! +2", three ? "good big" : "good");
               fx.shake(three ? "hard" : "soft");
+              if (three) fx.flash("flash-crowd");
               app.sfx("swish");
               if (three) app.sfx("crowd");
               app.announce(ev.audio || (three ? "made3" : "made2"));
             } else {
+              makeStreak = 0;
               fx.pop("CLANK!", "bad");
               app.sfx("clank");
               app.announce("miss");
             }
             hud.renderScore(app, ev.score);
+            hud.setOnFire(makeStreak >= 3);
             break;
           }
           case "violation":
+            makeStreak = 0;
             fx.pop("SHOT-CLOCK VIOLATION", "bad small");
             app.sfx("buzzer");
             app.announce("shotclock");
@@ -130,6 +139,7 @@ export function createGame(app) {
     if (m && m.over) {
       await sleep(1300);
       setLocked(false);
+      hud.spotlightActor(null);
       app.onMatchEnd();
       return;
     }
@@ -144,8 +154,22 @@ export function createGame(app) {
       fx.nudge(cardEl);
       return;
     }
-    fx.flyCard(cardEl);
+    // The card flies to the player who performs it (or to mid-court for team plays).
+    let target = null;
+    const actor = cardEl?.dataset.actor;
+    if (actor) {
+      const slot = run.lineup.findIndex((p) => p.id === actor);
+      if (slot >= 0) {
+        try {
+          target = app.court?.screenPoint?.("player", slot) || null;
+        } catch {
+          target = null;
+        }
+      }
+    }
+    fx.flyCard(cardEl, target);
     if (cardEl) cardEl.style.visibility = "hidden";
+    hud.spotlightActor(null);
     const events = playCard(run, iid);
     processEvents(events);
   }
@@ -162,6 +186,40 @@ export function createGame(app) {
     if (cardEl) tryPlay(cardEl.dataset.iid, cardEl);
   });
   endBtn.addEventListener("click", tryEndTurn);
+
+  // Hover: tilt the card toward the cursor, move the foil highlight, and
+  // spotlight the lineup tile of the player who will perform the card.
+  let hovered = null;
+  handEl.addEventListener("mousemove", (e) => {
+    const cardEl = e.target.closest(".card");
+    if (cardEl !== hovered) {
+      if (hovered) {
+        hovered.style.removeProperty("--rx");
+        hovered.style.removeProperty("--ry");
+      }
+      hovered = cardEl;
+      hud.spotlightActor(cardEl ? cardEl.dataset.actor : null);
+    }
+    if (!cardEl) return;
+    const r = cardEl.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    cardEl.style.setProperty("--ry", `${((px - 0.5) * 16).toFixed(1)}deg`);
+    cardEl.style.setProperty("--rx", `${((0.5 - py) * 12).toFixed(1)}deg`);
+    cardEl.style.setProperty("--mx", `${(px * 100).toFixed(0)}%`);
+    cardEl.style.setProperty("--my", `${(py * 100).toFixed(0)}%`);
+  });
+  handEl.addEventListener("mouseleave", () => {
+    if (hovered) {
+      hovered.style.removeProperty("--rx");
+      hovered.style.removeProperty("--ry");
+    }
+    hovered = null;
+    hud.spotlightActor(null);
+  });
+  window.addEventListener("resize", () => {
+    if (!root.hidden) layoutHand(handEl);
+  });
 
   document.addEventListener("keydown", (e) => {
     if (root.hidden || e.target.matches?.("input, select, textarea")) return;

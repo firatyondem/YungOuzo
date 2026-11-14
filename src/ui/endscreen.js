@@ -1,6 +1,8 @@
 // Victory and Game Over screens with run stats.
 import { $, esc, lastName } from "./dom.js";
 import { avatarHTML } from "./avatar.js";
+import { icon } from "./icons.js";
+import { confetti } from "./fx.js";
 
 export function renderEnd(app) {
   const run = app.run;
@@ -15,7 +17,7 @@ export function renderEnd(app) {
   host.className = `screen ${won ? "end-win" : "end-loss"}`;
   host.innerHTML = `
     <div class="page page-center">
-      <div class="end-icon">${won ? "🏆" : "🏀"}</div>
+      <div class="end-icon">${icon(won ? "trophy" : "ball")}</div>
       <h1 class="end-title ${won ? "gold" : "bad"}">${won ? "CHAMPIONS!" : "RUN OVER"}</h1>
       <p class="end-sub">${
         won
@@ -51,7 +53,10 @@ export function renderEnd(app) {
       </div>
       <div class="end-seed">Seed ${esc(run.seed)}</div>
     </div>`;
-  if (won) app.mountTrophy?.($(".end-icon", host));
+  if (won) {
+    confetti($(".page", host), 70);
+    app.mountTrophy?.($(".end-icon", host));
+  }
   $("#end-again", host).addEventListener("click", () => app.startRun());
   $("#end-title", host).addEventListener("click", () => app.goTitle());
 }

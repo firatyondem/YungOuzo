@@ -1,0 +1,128 @@
+/* ---------- Cards: the hero component. Anatomy documented in DESIGN.md ---------- */
+.card {
+  --tc: var(--t-utility);
+  --frame: var(--rar-common);
+  position: relative; flex: 0 0 auto; width: 180px; height: 252px; padding: 4px;
+  border-radius: var(--r-card); background: var(--frame);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5), 0 0 0 2px var(--navy-ink);
+  cursor: pointer; transform-origin: 50% 100%;
+  transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 0.16s, margin 0.16s, filter 0.16s;
+  text-align: left; color: var(--ink);
+}
+.card.type-offense { --tc: var(--t-offense); }
+.card.type-shot { --tc: var(--t-shot); }
+.card.type-defense { --tc: var(--t-defense); }
+.card.type-buff { --tc: var(--t-buff); }
+.card.type-utility { --tc: var(--t-utility); }
+.card.type-hustle { --tc: var(--t-hustle); }
+
+/* Rarity frames: silver / blue foil / animated holographic foil */
+.card.rar-common { --frame: linear-gradient(160deg, #F2F5FA, #AEB9CC 45%, #E7ECF4 70%, #98A4B8); }
+.card.rar-rare { --frame: linear-gradient(140deg, #9BD8FF, #1B7FE0 35%, #D6F0FF 52%, #1F6FD0 70%, #7CC8FF); }
+.card.rar-legendary {
+  --frame: conic-gradient(from calc(var(--holo, 0) * 1turn) at var(--mx, 50%) var(--my, 50%), #FFD23F, #FF6B1A, #FF3B9A, #9B5CFF, #2EA8FF, #1FD18A, #FFD23F);
+  animation: holo 3.2s linear infinite;
+}
+@property --holo { syntax: "<number>"; inherits: false; initial-value: 0; }
+@keyframes holo { to { --holo: 1; } }
+
+.card-frame { position: relative; height: 100%; border-radius: 10px; overflow: hidden; background: var(--white); display: flex; flex-direction: column; }
+
+/* 1. Type band */
+.card-band { flex: 0 0 28px; background: var(--tc); color: var(--navy-ink); display: flex; align-items: center; justify-content: flex-end; gap: 5px; padding: 0 9px 0 48px; font-size: var(--fs-12); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.card-band .ico { width: 16px; height: 16px; stroke-width: 2.4; }
+
+/* 2. Cost badge: a little shot clock */
+.card-cost {
+  position: absolute; left: -9px; top: -9px; z-index: 3; width: 48px; height: 48px; border-radius: 50%;
+  background: var(--navy-ink); color: var(--white); border: 4px solid var(--tc);
+  box-shadow: 0 0 0 2px var(--navy-ink), 0 4px 8px rgba(0, 0, 0, 0.45);
+  display: grid; place-items: center; font-family: var(--display); font-size: 30px; line-height: 1; padding-top: 2px;
+}
+.card-cost.discounted { color: var(--good); border-color: var(--good); }
+
+/* 3. Art window: chalkboard play diagram on a type-tinted board */
+.card-art { flex: 0 0 104px; position: relative; overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--tc) 46%, #0E1B33), color-mix(in srgb, var(--tc) 16%, #0A1426) 80%); border-bottom: 3px solid var(--navy-ink); }
+.card-art .play-diagram { width: 100%; height: 100%; display: block; }
+
+/* 4. Name */
+.card-name { flex: 0 0 auto; font-family: var(--display); font-size: 20px; line-height: 1; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink); padding: 7px 9px 0; white-space: nowrap; }
+.card-name.nm-m { font-size: 18px; padding-top: 8px; }
+.card-name.nm-s { font-size: 16px; padding-top: 9px; }
+.card-name.nm-xs { font-size: 14px; padding-top: 10px; letter-spacing: 0.01em; }
+
+/* 5. Effect text on the cream face */
+.card-text { flex: 1 1 auto; min-height: 0; overflow: hidden; padding: 3px 9px 0; font-size: 13px; line-height: 1.24; color: var(--ink); }
+.card-text .num { font-weight: 800; color: color-mix(in srgb, var(--tc) 62%, #101010); }
+.kw { display: inline-block; padding: 0 5px; border-radius: var(--r-pill); font-weight: 700; font-size: 12px; line-height: 1.35; color: var(--navy-ink); background: #E4D9C3; }
+.kw-openness { background: #FFD9A8; }
+.kw-contest { background: #B5F0D8; }
+.kw-pass { background: #BFE4FF; }
+.kw-drive { background: #FFE49A; }
+
+/* 6. Live % badge */
+.card-pct {
+  position: absolute; right: 7px; top: 96px; z-index: 2; min-width: 62px; height: 34px; padding: 2px 10px 0; border-radius: var(--r-pill);
+  background: var(--navy-ink); color: var(--white); border: 3px solid var(--white);
+  display: flex; align-items: baseline; justify-content: center; gap: 4px;
+  font-family: var(--display); font-size: 25px; line-height: 27px; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+}
+.card-pct small { font-family: var(--body); font-size: 12px; font-weight: 800; letter-spacing: 0.04em; }
+.card-pct.pct-red { background: var(--bad); color: var(--navy-ink); border-color: var(--navy-ink); }
+.card-pct.pct-yellow { background: var(--warn); color: var(--navy-ink); border-color: var(--navy-ink); }
+.card-pct.pct-green { background: var(--good); color: var(--navy-ink); border-color: var(--navy-ink); }
+.card-pct.bump { animation: pctbump 0.36s ease-out; }
+@keyframes pctbump { 0% { transform: scale(1); } 40% { transform: scale(1.32) rotate(-4deg); } 100% { transform: scale(1); } }
+
+/* 7. Owner strip */
+.card-owner { flex: 0 0 24px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border-top: 2px solid #E4D9C3; font-size: 12px; font-weight: 600; color: #4A4335; white-space: nowrap; overflow: hidden; }
+.card-owner .av-xs { margin-right: 0; width: 18px; height: 18px; }
+.card-owner .owner-name { overflow: hidden; text-overflow: ellipsis; }
+.card-key { margin-left: auto; min-width: 18px; text-align: center; border: 1.5px solid #B9AD93; border-radius: 4px; padding: 0 4px; font-weight: 700; font-size: 12px; line-height: 15px; color: #6B6250; }
+
+/* Unplayable: desaturated + lock + reason (never just dimmed) */
+.card.unplayable { cursor: not-allowed; }
+.card.unplayable .card-frame { filter: saturate(0.3) brightness(0.86); }
+.card.unplayable .card-cost { border-color: #8A93A6; color: #C9CFDB; }
+.card-lock {
+  position: absolute; left: 50%; top: 54px; transform: translateX(-50%); z-index: 4;
+  display: flex; align-items: center; gap: 5px; white-space: nowrap;
+  background: var(--navy-ink); color: var(--white); border: 2px solid var(--white); border-radius: var(--r-pill);
+  padding: 4px 11px 4px 9px; font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+.card-lock .ico { width: 14px; height: 14px; }
+
+/* Shot breakdown tooltip */
+.card-tip { display: none; position: absolute; left: 50%; top: -34px; transform: translateX(-50%); z-index: 6; background: var(--navy-ink); color: var(--white); border: 2px solid var(--yellow); border-radius: var(--r-panel); padding: 3px 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.card-tip i { font-style: normal; color: var(--muted); font-weight: 400; }
+
+/* ---------- Hand: a fanned arc ---------- */
+.hand { display: flex; justify-content: center; align-items: flex-end; min-width: 0; height: 280px; padding-bottom: 22px; perspective: 900px; }
+.hand .card { --i: 0; margin-left: var(--ov, 8px); transform: translateY(calc(var(--i) * var(--i) * 1.5px)) rotate(calc(var(--i) * 1.7deg)); }
+.hand .card:first-child { margin-left: 0; }
+.hand .card.playable { box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5), 0 0 0 2px var(--navy-ink), 0 0 22px color-mix(in srgb, var(--tc) 70%, transparent); }
+.hand .card:hover, .hand .card.kbd {
+  transform: translateY(-64px) scale(1.25) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  z-index: 40; margin-left: calc(var(--ov, 8px) + 22px); margin-right: 22px;
+  box-shadow: 0 26px 44px rgba(0, 0, 0, 0.6), 0 0 0 2px var(--navy-ink), 0 0 0 6px var(--tc), 0 0 34px var(--tc);
+}
+.hand .card:first-child:hover { margin-left: 0; }
+.hand .card.playable:hover .card-tip { display: block; }
+.hand .card.dealt { animation: deal 0.34s cubic-bezier(0.2, 0.9, 0.3, 1.2) backwards; animation-delay: calc(var(--d, 0) * 55ms); }
+@keyframes deal { from { transform: translate(-260px, 140px) rotate(-26deg) scale(0.6); opacity: 0; } }
+.locked .hand .card { pointer-events: none; }
+.locked .hand .card .card-frame { filter: brightness(0.82); }
+.card.nudge { animation: nudge 0.3s linear; }
+@keyframes nudge { 0%, 100% { translate: 0 0; } 25% { translate: -7px 0; } 75% { translate: 7px 0; } }
+.card-ghost { box-shadow: 0 0 36px var(--tc) !important; }
+
+/* Cards shown outside the hand (rewards, deck viewer, how-to, title fan) */
+.reward-body .card, .deck-grid .card, .how-card .card, .fan-slot .card { cursor: default; }
+
+/* Particles when a card resolves */
+.fx-spark { position: fixed; z-index: 70; width: 10px; height: 10px; border-radius: 2px; pointer-events: none; background: var(--c, #fff); box-shadow: 0 0 10px var(--c, #fff); animation: spark 0.38s ease-out forwards; }
+@keyframes spark { to { transform: translate(var(--dx), var(--dy)) rotate(200deg) scale(0.2); opacity: 0; } }
+
+@media (max-height: 800px) {
+  .hand { zoom: 0.86; }
+}

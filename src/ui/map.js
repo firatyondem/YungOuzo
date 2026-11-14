@@ -4,6 +4,8 @@ import { $, esc, ARCHETYPE_LABEL } from "./dom.js";
 import { playerCardHTML } from "./playerCard.js";
 import { cardHTML } from "./cards.js";
 import { avatarHTML } from "./avatar.js";
+import { icon } from "./icons.js";
+import { teamColors } from "./hud.js";
 import { showOverlay, hideOverlay } from "./screens.js";
 
 const TYPE_ORDER = ["Shot", "Offense", "Defense", "Buff", "Utility"];
@@ -18,7 +20,7 @@ export function showDeck(app) {
      <div class="deck-grid">${cards
        .map(({ inst, card }) => {
          const owner = run.lineup.find((p) => p.id === inst.source);
-         return cardHTML(card, { owner: owner ? `#${owner.jersey} ${owner.name.split(" ").slice(-1)[0]}` : "", ownerPlayer: owner || null });
+         return cardHTML(card, { performer: owner || null });
        })
        .join("")}</div>
      <button class="btn" id="ov-close">CLOSE</button>`,
@@ -38,9 +40,9 @@ export function renderMap(app) {
     const result = run.results[i];
     const state = i < run.round ? "done" : i === run.round ? "current" : "locked";
     return `
-      <div class="bnode ${state}" style="--team:${t.color}">
-        <div class="bnode-round">${esc(t.round)}</div>
-        <div class="bnode-name">${esc(t.name)}</div>
+      <div class="bnode ${state}" style="--team:${teamColors(t).primary}">
+        <div class="bnode-top"><div class="bnode-round">${esc(t.round)}</div><div class="bnode-name">${esc(t.name)}</div></div>
+        <div class="bnode-body">
         <div class="bnode-tag">${esc(t.tagline || "")}</div>
         <div class="bnode-stats">
           <span class="bnode-def" title="Subtracted from all your shot percentages">DEF ${t.defense}</span>
@@ -51,8 +53,13 @@ export function renderMap(app) {
         </ul>
         <div class="bnode-roster">${(t.players || []).map((p) => avatarHTML(p, { color: t.color, size: "sm" })).join("")}</div>
         <div class="bnode-state">${
-          state === "done" && result ? `✔ WON ${result.player}–${result.opp}` : state === "current" ? "NEXT GAME" : "LOCKED"
+          state === "done" && result
+            ? `${icon("check")}WON ${result.player}–${result.opp}`
+            : state === "current"
+              ? `${icon("play")}NEXT GAME`
+              : `${icon("lock")}LOCKED`
         }</div>
+        </div>
       </div>`;
   };
 
@@ -64,7 +71,7 @@ export function renderMap(app) {
       </header>
       <div class="bracket">
         ${teams.map((t, i) => node(t, i) + `<div class="bline${i < run.round ? " done" : ""}"></div>`).join("")}
-        <div class="btrophy">🏆<span>CHAMPION</span></div>
+        <div class="btrophy">${icon("trophy")}<span>CHAMPION</span></div>
       </div>
       <section class="map-team">
         <div class="map-team-head">
@@ -72,11 +79,11 @@ export function renderMap(app) {
           <div class="map-chem">
             ${
               chem.length
-                ? chem.map((c) => `<span class="chem-pill on" title="${esc(c.text)}"><b>${esc(c.name)}</b> ${c.count}× ${esc(ARCHETYPE_LABEL[c.archetype] || c.archetype)}: ${esc(c.text)}</span>`).join("")
+                ? chem.map((c) => `<span class="chem-pill on" title="${esc(c.text)}">${icon("star")}<b>${esc(c.name)}</b> ${c.count}× ${esc(ARCHETYPE_LABEL[c.archetype] || c.archetype)}: ${esc(c.text)}</span>`).join("")
                 : `<span class="chem-pill">No chemistry yet: two players of the same archetype unlock a bonus</span>`
             }
           </div>
-          <button class="btn btn-small" id="map-deck">VIEW DECK (${run.deck.length})</button>
+          <button class="btn btn-small" id="map-deck">${icon("deck")}VIEW DECK (${run.deck.length})</button>
         </div>
         <div class="pc-row">${run.lineup.map((p) => playerCardHTML(p, run.content)).join("")}</div>
       </section>

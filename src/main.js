@@ -18,6 +18,7 @@ import { createTutorial } from "./ui/tutorial.js";
 import { loadManifest } from "./assets.js";
 import { AudioManager } from "./audio/AudioManager.js";
 import { loadRoster } from "./roster.js";
+import { icon } from "./ui/icons.js";
 
 function readMuted() {
   try {
@@ -158,7 +159,7 @@ app.toggleMute = () => {
   try {
     localStorage.setItem("fcr_muted", app.muted ? "1" : "0");
   } catch {}
-  for (const b of $$(".sound-toggle")) b.textContent = app.muted ? "🔇" : "🔊";
+  for (const b of $$(".sound-toggle")) b.innerHTML = icon(app.muted ? "soundOff" : "soundOn");
   app.audio?.setMuted(app.muted);
 };
 
@@ -270,9 +271,9 @@ async function boot() {
   app.debug = createDebug(app);
 
   $("#g-tools").innerHTML = `
-    <button class="btn icon-btn" id="tool-help" title="How to play">?</button>
+    <button class="btn icon-btn" id="tool-help" title="How to play">${icon("help")}</button>
     ${soundButtonHTML(app)}
-    <button class="btn icon-btn" id="tool-quit" title="Quit to title">✕</button>`;
+    <button class="btn icon-btn" id="tool-quit" title="Quit to title">${icon("close")}</button>`;
   $("#tool-help").addEventListener("click", () => showHowToOverlay(app));
   $("#tool-quit").addEventListener("click", confirmQuit);
 

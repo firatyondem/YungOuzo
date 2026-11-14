@@ -68,12 +68,15 @@ src/
     rewards.js       rewards + player replacement
   roster.js          roster selection (league by default, private with ?roster=real)
   look.js            player appearance data: allowed values, defaults, normalizeLook()
-  ui/                screens, cards, HUD, tutorial, CSS court, debug panel, avatar.js (SVG portraits)
+  ui/                screens, cards, HUD, tutorial, CSS court, debug panel
+                     theme.css (design tokens), cards.css, game.css, icons.js (SVG icon set),
+                     playDiagram.js (chalkboard play diagrams), avatar.js (SVG portraits)
   scene/             Three.js court, procedural figurines, ball, trophy (optional)
   audio/AudioManager.js
 content/             cards, players, teams, chemistry, rewards, announcer (all JSON)
 assets/              models/ + audio/ + manifest.json
-tests/               engine.test.js, roster.test.js
+tests/               engine.test.js, roster.test.js, design.test.js
+DESIGN.md            the design system: tokens, card anatomy, components
 tools/               serve, sim, update-assets, check-private
 .githooks/pre-commit blocks commits that include the private roster
 ```
@@ -90,7 +93,8 @@ tools/               serve, sim, update-assets, check-private
 }
 ```
 
-- `type`: `Offense`, `Shot`, `Defense`, `Buff`, `Utility` (controls colour only).
+- `type`: `Offense`, `Shot`, `Defense`, `Buff`, `Utility` (controls colour and icon only).
+- `rarity`: `common`, `rare` or `legendary` (the card frame). The art on each card is a play diagram drawn from the card's own data, so new cards get one automatically.
 - Optional: `requires` (list of conditions), `exhaust: true` (once per game), `ignoresShotLimit: true`, `audio` (announcer event for a made shot).
 - Effect types: `add_openness`, `add_contest`, `draw`, `discard_hand`, `gain_energy`, `add_buff`, `steal_attempt` (`chance`, `onSuccess`), `on_opponent_fail` (`effects`), `next_turn_draw`, `next_turn_openness`, `shoot`.
 - `shoot` takes `points` (2 or 3) and `modifiers`: `bonus` (`value`), `ignore_defense` (`value`), `rating_multiplier` (`value`).
@@ -197,7 +201,7 @@ This rewrites `assets/manifest.json`. The game only requests files listed there,
 node --test tests/*.test.js
 ```
 
-33 tests. Engine (20): shot %, clamping, energy, draw and reshuffle, one-shot rule, intents and Clutch, steals, win/loss, rewards, player replacement, chemistry, seeded reproducibility. Roster and appearance (13): roster selection with a mocked fetch (the private file is never requested without `?roster=real`, missing and invalid files fall back), `normalizeLook` defaults, portraits stay valid SVG for broken data, and the private-file check.
+41 tests. Design system (8): token values, WCAG AA contrast of the main colour pairs, no emoji, no text under 12px, icon coverage, valid play diagrams and card markup. Engine (20): shot %, clamping, energy, draw and reshuffle, one-shot rule, intents and Clutch, steals, win/loss, rewards, player replacement, chemistry, seeded reproducibility. Roster and appearance (13): roster selection with a mocked fetch (the private file is never requested without `?roster=real`, missing and invalid files fall back), `normalizeLook` defaults, portraits stay valid SVG for broken data, and the private-file check.
 
 ```bash
 node tools/sim.js 2000

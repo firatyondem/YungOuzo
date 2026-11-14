@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Full Court Run</title>
   <meta name="description" content="Full Court Run - a basketball roguelike deckbuilder. Build a team, beat the shot clock, win the tournament.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏀</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23FF6B1A' stroke='%230B1426' stroke-width='7'/><path d='M5 50h90M50 5v90M19 17c17 18 17 48 0 66M81 17c-17 18-17 48 0 66' fill='none' stroke='%230B1426' stroke-width='6'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="src/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/ui/theme.css">
+  <link rel="stylesheet" href="src/ui/game.css">
+  <link rel="stylesheet" href="src/ui/cards.css">
   <link rel="stylesheet" href="src/pages.css">
   <link rel="stylesheet" href="src/title.css">
   <link rel="stylesheet" href="src/avatar.css">
@@ -24,7 +26,7 @@
 </head>
 <body>
   <div id="app">
-    <div id="boot" class="boot">Loading the arena…</div>
+    <div id="boot" class="boot">Loading the arena...</div>
 
     <!-- TITLE / HOW TO PLAY (rendered by JS) -->
     <section id="screen-title" class="screen" hidden></section>
