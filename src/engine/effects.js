@@ -61,6 +61,7 @@ const HANDLERS = {
   // Their play this possession gets easier because of something you did (turnover, failed steal).
   opp_bonus(run, e) {
     run.match.mods.oppBonus.push({ label: e.label || "Mistake", value: e.value });
+    run.stats.turnovers = (run.stats.turnovers || 0) + 1;
   },
 
   // Fatigue: a status card (dead weight) joins your deck for the rest of this game.
@@ -110,6 +111,7 @@ const HANDLERS = {
     const m = run.match;
     const card = getCard(run, ctx.inst);
     const shot = calcShot(run, ctx.inst);
+    const gamePoint = m.score.player + shot.points >= m.target; // this shot can end the game
     const made = roll100(run) < shot.pct;
     const long = shot.points >= 3;
     if (long) m.threeCold = 0; // a cold spell lasts one attempt
@@ -149,6 +151,8 @@ const HANDLERS = {
       made,
       points: shot.points,
       pct: shot.pct,
+      openness: shot.openness,
+      gamePoint,
       shooterId: shot.shooter.id,
       cardId: card.id,
       audio: card.audio || null,

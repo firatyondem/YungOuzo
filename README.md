@@ -28,12 +28,21 @@ git push origin main:gh-pages
 All paths are relative, so the game works under `https://<user>.github.io/<repo>/` with no build step.
 If you add audio or models, run `node tools/update-assets.js` and commit `assets/manifest.json` before pushing.
 
+## Feel
+
+- The **Openness meter** glows from +20 and pulses from +35; every card's make % ticks when it changes.
+- A **combo counter** (x2, x3...) counts the cards chained in a turn; a make with 25+ Openness is a **WIDE OPEN** hit with a flash and a hard shake.
+- A shot that can end the game gets about 300 ms of slow motion first. No single effect holds input for more than 800 ms, and all motion is off with `prefers-reduced-motion`.
+- The end screen says in one line what decided the run (violations, cold shooting, defense, predictability, turnovers or a coin-flip finish).
+- `?seed=123` fixes a run: same opponents, same draws, same dice for the same choices.
+
 ## Controls
 
 | Input | Action |
 |---|---|
 | Click a card | Play it |
 | `1`–`9` | Play the card in that hand slot |
+| `Shift` + `1`–`9`, right-click, or the HOLD tab | Hold that card for next turn (one card) |
 | `Space` | End turn |
 | `M` | Mute / unmute |
 | `T` | Coach's call: timeouts and closing-time options |
@@ -222,10 +231,10 @@ The game is complete without any asset files: procedural figurines built from ea
 | `assets/models/sniper.glb`, `slasher.glb`, `big.glb`, `floorgeneral.glb`, `lockdown.glb` | Player figurines by archetype |
 | `assets/models/ball.glb`, `trophy.glb` | Ball, victory-screen trophy |
 | `assets/models/court.glb` | Replaces the 3D floor (opt-in: `USE_COURT_MODEL: true`) |
-| `assets/audio/<event>_<n>.mp3` | Announcer lines and SFX, e.g. `made3_1.mp3`, `made3_2.mp3` |
+| `assets/audio/<event>_<n>.mp3` | Announcer lines and SFX, e.g. `made3_1.mp3`, `made3_2.mp3`. The full list with trigger, length and loop flag is in [assets/audio/README.md](assets/audio/README.md) |
 | `assets/audio/music_loop.mp3` | Background music |
 
-Audio events: `made2`, `made3`, `deep3`, `miss`, `block`, `steal`, `alleyoop`, `shotclock`, `gamepoint`, `win`, `loss`, `title` (announcer) and `swish`, `clank`, `buzzer`, `squeak`, `crowd` (SFX).
+Audio events: `made2`, `made3`, `deep3`, `miss`, `block`, `steal`, `alleyoop`, `shotclock`, `gamepoint`, `win`, `loss`, `title` (announcer) and `swish`, `clank`, `buzzer`, `squeak`, `crowd`, `card_play`, `combo_tick`, `reward_pick`, `gamepoint_tension` (SFX). Every one falls back to a synthesized sound when its file is missing.
 `content/announcer.json` pairs each file with its caption, so it is also the voice-over script. Add more variations by adding lines there.
 
 **After adding or removing files, run:**

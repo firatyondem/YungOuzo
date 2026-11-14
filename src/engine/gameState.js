@@ -110,6 +110,11 @@ export function createRun(content, config, seed) {
       pointsFor: 0,
       pointsAgainst: 0,
       cardsPlayed: 0,
+      violations: 0, // turns without a shot
+      turnovers: 0, // misses and failed gambles that helped their play
+      adjustments: 0, // times an opponent adapted to a habit
+      oppPlays: 0,
+      oppMakes: 0,
       steals: 0,
     },
     match: null,

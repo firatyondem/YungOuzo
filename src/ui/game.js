@@ -34,6 +34,7 @@ export function createGame(app) {
     hud.renderLog(app);
     hud.renderPiles(app);
     hud.renderEndHint(app);
+    hud.renderCombo(app);
     renderHand(app);
     const m = run.match;
     const anyPlayable = m.hand.some((c) => canPlay(run, c.iid).ok);
@@ -68,19 +69,24 @@ export function createGame(app) {
         app.tutorial?.onEvent(ev);
         switch (ev.type) {
           case "card_played":
-            if (ev.cardType !== "Shot") app.sfx("squeak");
+            app.sfx("card_play");
             // Live update of the HUD while the rest of the card resolves.
             hud.renderClock(app);
+            hud.renderBars(app);
+            hud.renderCombo(app);
             break;
           case "shot": {
             const slot = Math.max(0, run.lineup.findIndex((p) => p.id === ev.shooterId));
+            if (ev.gamePoint) await fx.slowMo(app); // a shot that can end the game gets a beat
             await app.court?.shoot({ side: "player", slot, made: ev.made, points: ev.points }, cfg.SHOT_ANIM_MS);
             if (ev.made) {
               makeStreak++;
               const three = ev.points >= 3;
-              fx.pop(three ? `SPLASH! +${ev.points}` : "BUCKET! +2", three ? "good big" : "good");
-              fx.shake(three ? "hard" : "soft");
+              const wideOpen = (ev.openness || 0) >= 25; // the payoff for a real setup
+              fx.pop(wideOpen ? `WIDE OPEN! +${ev.points}` : three ? `SPLASH! +${ev.points}` : "BUCKET! +2", three || wideOpen ? "good big" : "good");
+              fx.shake(three || wideOpen ? "hard" : "soft");
               if (three) fx.flash("flash-crowd");
+              if (wideOpen) fx.flash("flash-white");
               app.sfx("swish");
               if (three) app.sfx("crowd");
               app.announce(ev.audio || (three ? "made3" : "made2"));
@@ -145,7 +151,7 @@ export function createGame(app) {
           case "phase_shift":
             fx.banner(ev.name, ev.text);
             app.sfx("buzzer");
-            await sleep(1900);
+            await sleep(800);
             break;
           case "adapt":
             fx.pop("COACH ADJUSTS", "bad small");
@@ -189,6 +195,7 @@ export function createGame(app) {
               app.sfx(ev.ftMade ? "swish" : "clank");
             } else if (!ev.stolen) {
               const slot = (((run.match.intentIndex - 1) % 5) + 5) % 5; // the intent that was just resolved
+              if (ev.gamePoint) await fx.slowMo(app);
               await app.court?.shoot({ side: "opp", slot, made: ev.made, points: ev.points }, cfg.OPP_ANIM_MS);
               if (ev.made) {
                 fx.pop(`${getTeam(run).name.toUpperCase()} +${ev.points + (ev.extra || 0)}${ev.extra ? " AND-ONE" : ""}`, "opp");
@@ -222,7 +229,7 @@ export function createGame(app) {
       app.announce("gamepoint");
     }
     if (m && m.over) {
-      await sleep(1300);
+      await sleep(800);
       setLocked(false);
       hud.spotlightActor(null);
       app.onMatchEnd();

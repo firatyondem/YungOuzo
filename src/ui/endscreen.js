@@ -3,6 +3,7 @@ import { $, esc, lastName } from "./dom.js";
 import { avatarHTML } from "./avatar.js";
 import { icon } from "./icons.js";
 import { confetti } from "./fx.js";
+import { runVerdict } from "../engine/verdict.js";
 
 export function renderEnd(app) {
   const run = app.run;
@@ -26,6 +27,7 @@ export function renderEnd(app) {
             ? `Eliminated by ${esc(lastTeam.name)} (${esc(last.label || "")}), ${last.opp}–${last.player}.`
             : "The run ends here."
       }</p>
+      <p class="end-verdict">${icon(won ? "check" : "mismatch")}${esc(runVerdict(run).line)}</p>
       <div class="end-results">
         ${run.results
           .map((r) => {
@@ -48,7 +50,7 @@ export function renderEnd(app) {
         ${stat(s.turns, "Turns")}
       </div>
       <div class="page-actions">
-        <button class="btn btn-primary btn-big" id="end-again">PLAY AGAIN</button>
+        <button class="btn btn-primary btn-big end-again" id="end-again">RUN AGAIN</button>
         <button class="btn" id="end-title">TITLE SCREEN</button>
       </div>
       <div class="end-seed">Seed ${esc(run.seed)}</div>

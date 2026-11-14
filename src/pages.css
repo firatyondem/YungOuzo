@@ -226,3 +226,8 @@
 .perk-line { font-size: var(--fs-14); color: var(--muted); margin: 6px 0 0; }
 .perk-line b { color: var(--yellow); margin-right: 6px; }
 .overlay-box .deck-bar { width: 100%; margin-bottom: 4px; }
+
+/* End screen: what decided the run */
+.end-verdict { display: inline-flex; align-items: center; gap: 8px; margin: 2px auto 6px; padding: 8px 16px; border-radius: 10px; background: var(--yellow); color: var(--navy-ink); font-size: var(--fs-16); font-weight: 800; max-width: 760px; }
+.end-verdict .ico { width: 18px; height: 18px; flex: 0 0 18px; }
+.end-again { font-size: var(--fs-36, 36px); padding: 12px 44px; }

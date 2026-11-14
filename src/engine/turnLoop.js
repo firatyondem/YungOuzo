@@ -324,6 +324,7 @@ function resolveOpponent(run, events) {
   let stolen = false;
   let made = false;
   let extra = 0;
+  let gamePoint = false;
 
   if (m.mods.foul) {
     // Intentional foul: free throws replace their play.
@@ -362,7 +363,10 @@ function resolveOpponent(run, events) {
 
     if (!stolen) {
       pre = opponentPreview(run); // includes anything a failed steal just gave them
+      gamePoint = m.score.opp + intent.points >= m.target;
       made = roll100(run) < pre.pct;
+      run.stats.oppPlays = (run.stats.oppPlays || 0) + 1;
+      if (made) run.stats.oppMakes = (run.stats.oppMakes || 0) + 1;
       if (made) {
         m.score.opp += intent.points;
         run.stats.pointsAgainst += intent.points;
@@ -390,6 +394,7 @@ function resolveOpponent(run, events) {
       made,
       stolen,
       extra,
+      gamePoint,
       points: intent.points,
       score: { ...m.score },
     });
@@ -463,6 +468,7 @@ export function endTurn(run) {
   const events = [];
   if (m.shotsTaken === 0) {
     events.push({ type: "violation" });
+    run.stats.violations = (run.stats.violations || 0) + 1;
     log(run, "Shot-clock violation! No shot this turn.");
   }
   // Unspent seconds are lost, except a small bank (CARRY_MAX) for the next turn.

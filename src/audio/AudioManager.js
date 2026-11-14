@@ -14,6 +14,10 @@ const SYNTH_FOR = {
   buzzer: "buzzer",
   squeak: "squeak",
   crowd: "crowd",
+  card_play: "squeak",
+  combo_tick: "tick",
+  reward_pick: "chime",
+  gamepoint_tension: "tension",
   // announcer events without a voice file still get a little colour
   alleyoop: "crowd",
   steal: "whoosh",
@@ -252,6 +256,17 @@ export class AudioManager {
         break;
       case "crowd":
         this._filteredNoise(1.3, "bandpass", 700, 1300, 0.5, 0.42, 0.3, t);
+        break;
+      case "tick":
+        this._tone("square", 880, t, 0.05, 0.1, 1320);
+        break;
+      case "chime":
+        this._tone("triangle", 784, t, 0.14, 0.25);
+        this._tone("triangle", 1175, t + 0.11, 0.3, 0.25);
+        break;
+      case "tension":
+        this._tone("sawtooth", 98, t, 0.45, 0.16, 147);
+        this._filteredNoise(0.45, "bandpass", 300, 1400, 0.8, 0.18, 0.2, t);
         break;
       case "whoosh":
         this._filteredNoise(0.3, "bandpass", 400, 2600, 1.4, 0.4, 0.1, t);

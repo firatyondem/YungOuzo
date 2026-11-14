@@ -98,7 +98,7 @@ export function renderBars(app) {
     let segs = "";
     for (let i = 0; i < SEGMENTS; i++) segs += `<i class="${i < lit ? "on" : ""}"></i>`;
     return `
-      <div class="meter ${cls}" title="${hint}">
+      <div class="meter ${cls}${cls === "m-open" && value >= 35 ? " blaze" : cls === "m-open" && value >= 20 ? " hot" : ""}" title="${hint}">
         <div class="meter-head">${icon(ico)}<span>${label}</span></div>
         <div class="meter-track"><div class="meter-segs">${segs}</div><b class="meter-num">${sign}${Math.round(value)}</b></div>
         <div class="meter-hint">${hint}</div>
@@ -219,21 +219,59 @@ export function renderOpponent(app) {
   if (!el) return;
   const phase = team.phases && team.phases[m.opp ? m.opp.phase : 0];
   const row = (ico, name, text, cls = "") => `<div class="opp-trait ${cls}" title="${esc(text)}">${icon(ico)}<div><b>${esc(name)}</b><span>${esc(text)}</span></div></div>`;
-  // Their adjustments to your habits come first: active ones, then warnings.
-  const status = adaptStatus(run);
-  const adapt = status
-    .slice(0, 3)
-    .map((a) => row(a.icon, a.state === "active" ? a.name : `Warning: ${a.name}`, a.text, a.state === "active" ? "adapt-on" : "adapt-warn"))
-    .join("");
-  // With adjustments on screen the fixed traits shrink to their names (full text on hover).
-  const mini = adapt ? "mini" : "";
+  renderAdapt(app);
   el.innerHTML =
-    adapt +
-    (status.length >= 3 ? "" : team.star ? row("star", team.star.name, team.star.text, mini) : "") +
-    (status.length >= 3 ? "" : team.signature ? row("relic", team.signature.name, team.signature.text, mini) : "") +
-    (phase && team.phases.length > 1 ? row("clutch", `Phase: ${phase.name}`, phase.text, `phase ${mini}`) : "") +
+    (team.star ? row("star", team.star.name, team.star.text) : "") +
+    (team.signature ? row("relic", team.signature.name, team.signature.text) : "") +
+    (phase && team.phases.length > 1 ? row("clutch", `Phase: ${phase.name}`, phase.text, "phase") : "") +
     (m.notes || []).map((n) => row("mismatch", "Scouted", n, "scout")).join("") ||
     `<div class="opp-trait"><div><span>No special rules.</span></div></div>`;
+}
+
+/** Their adjustments to your habits, on the court: icon + one line each. Red = applies now, yellow = one step away. */
+export function renderAdapt(app) {
+  const court = $("#g-court");
+  if (!court) return;
+  let el = $("#g-adapt");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "g-adapt";
+    el.className = "adapt-strip";
+    court.appendChild(el);
+  }
+  el.innerHTML = adaptStatus(app.run)
+    .slice(0, 4)
+    .map((a) => `<div class="adapt-row ${a.state === "active" ? "on" : "warn"}">${icon(a.icon)}<b>${esc(a.state === "active" ? a.name : "Warning")}</b><span>${esc(a.text)}</span></div>`)
+    .join("");
+}
+
+/** "x3 COMBO": cards chained this turn. Pops (and ticks) each time it grows. */
+let shownCombo = 0;
+export function renderCombo(app) {
+  const court = $("#g-court");
+  if (!court) return;
+  let el = $("#g-combo");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "g-combo";
+    el.className = "combo";
+    court.appendChild(el);
+  }
+  const m = app.run.match;
+  const n = m.over ? 0 : (m.turnCards || []).length;
+  if (n >= 2) {
+    el.innerHTML = `<b>x${n}</b><span>COMBO</span>`;
+    el.hidden = false;
+    if (n > shownCombo) {
+      el.classList.remove("tick");
+      void el.offsetWidth;
+      el.classList.add("tick");
+      app.sfx("combo_tick");
+    }
+  } else {
+    el.hidden = true;
+  }
+  shownCombo = n;
 }
 
 /** Playbook: named plays and how close this turn's cards are to completing each. */

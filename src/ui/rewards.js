@@ -100,7 +100,7 @@ export function renderRewards(app) {
 
   const done = () => {
     app.sfx("swish");
-    app.audioHook?.("reward_pick");
+    app.sfx("reward_pick");
     app.goMap();
   };
   for (const el of $$(".reward", host)) {

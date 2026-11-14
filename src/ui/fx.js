@@ -32,6 +32,23 @@ export function caption(text, cls = "bad") {
   captionTimer = setTimeout(() => el.remove(), 3200);
 }
 
+/**
+ * About 300 ms of held breath before a shot that can end the game: the screen
+ * dims and the court leans in. Skipped with prefers-reduced-motion.
+ */
+export function slowMo(app) {
+  const el = $("#screen-game");
+  if (!el || reduced()) return Promise.resolve();
+  app?.sfx?.("gamepoint_tension");
+  el.classList.add("slowmo");
+  return new Promise((resolve) =>
+    setTimeout(() => {
+      el.classList.remove("slowmo");
+      resolve();
+    }, 300)
+  );
+}
+
 /** Screen shake scaled by the points scored (2 = soft, 3+ = hard). */
 export function shake(strength = "soft") {
   const el = $("#screen-game");

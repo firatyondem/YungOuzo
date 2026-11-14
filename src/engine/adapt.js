@@ -136,6 +136,7 @@ export function refreshAdapt(run, events, logFn) {
     const h = BY_KEY[key];
     logFn(run, `They adjust. ${h.name}: ${h.text(cfg)}`);
     events.push({ type: "adjust", key, on: true, name: h.name, text: h.text(cfg) });
+    run.stats.adjustments = (run.stats.adjustments || 0) + 1;
   }
   for (const key of was) {
     if (active.includes(key)) continue;

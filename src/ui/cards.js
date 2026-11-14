@@ -17,6 +17,14 @@ export const TYPE_COLOR = {
   Status: "#A9B8D6",
 };
 
+const CATEGORY_TIP = {
+  Setup: "Setup: builds Openness or draws cards. Makes the next shot better.",
+  Finishing: "Finishing: a shot. One per turn, and it uses up all your Openness.",
+  Defensive: "Defensive: adds Contest, which lowers their next shot.",
+  "High-risk": "High-risk: a big payoff, and a price when it fails.",
+  Status: "Status: dead weight added by Fatigue. Costs seconds to clear.",
+};
+
 // Keywords become small coloured chips with a tooltip.
 const KEYWORDS = {
   Openness: ["kw-openness", "Openness: every point adds +1% to your next shot"],
@@ -87,7 +95,7 @@ export function cardHTML(card, opts = {}) {
          ${opts.actorId ? `data-actor="${esc(opts.actorId)}"` : ""} ${style.length ? `style="${style.join(";")}"` : ""}>
       <div class="card-cost${discounted ? " discounted" : raised ? " raised" : ""}" title="Costs ${cost} seconds of the 24-second shot clock">${cost}<small>s</small></div>
       <div class="card-frame">
-        <div class="card-band">${icon(TYPE_ICON[type] || "utility")}<span>${esc(card.category || type)}</span></div>
+        <div class="card-band" title="${esc(CATEGORY_TIP[card.category] || type)}">${icon(TYPE_ICON[type] || "utility")}<span>${esc(card.category || type)}</span></div>
         <div class="card-art">${playDiagramSVG(card, color)}</div>
         <div class="card-name ${nameClass(card.name)}">${esc(card.name)}</div>
         <div class="card-text">${richText(card.text)}</div>
