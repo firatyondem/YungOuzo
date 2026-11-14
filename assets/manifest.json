@@ -9,7 +9,22 @@
     "sniper.glb",
     "trophy.glb"
   ],
-  "audio": [],
+  "audio": [
+    "buzzer_1.mp3",
+    "clank_1.mp3",
+    "clank_2.mp3",
+    "crowd_1.mp3",
+    "crowd_2.mp3",
+    "music_defeat.mp3",
+    "music_finals.mp3",
+    "music_match.mp3",
+    "music_menu.mp3",
+    "music_victory.mp3",
+    "squeak_1.mp3",
+    "squeak_2.mp3",
+    "swish_1.mp3",
+    "swish_2.mp3"
+  ],
   "teams": [],
   "players": []
 }
