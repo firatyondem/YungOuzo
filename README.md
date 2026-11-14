@@ -245,7 +245,7 @@ node tools/meshy-generate.mjs --group archetypes
 node tools/update-assets.js
 ```
 
-The key is read from the environment variable `MESHY_API_KEY` or from a `MESHY_API_KEY=...` line in a `.env` file (gitignored); it is never printed. The script stops starting jobs at 1,000 credits (`--budget`) and records every task in `tools/meshy-ledger.json`. Other groups: `stars`, `variants`, `props`. The five archetype models in `assets/models/` (`sniper`, `slasher`, `big`, `floorgeneral`, `lockdown`) were made in Meshy's web app (Agent mode: text to image, then Smart Topology at about 15,000 faces, textured, 120 credits in total). They are static meshes without animation clips, so they bob, turn and jump with the built-in motion. Stars, variants and props have not been generated.
+The key is read from the environment variable `MESHY_API_KEY` or from a `MESHY_API_KEY=...` line in a `.env` file (gitignored); it is never printed. The script stops starting jobs at 1,000 credits (`--budget`) and records every task in `tools/meshy-ledger.json`. Other groups: `stars`, `variants`, `props`. The five archetype models in `assets/models/` (`sniper`, `slasher`, `big`, `floorgeneral`, `lockdown`) were made in Meshy's web app (Agent mode: text to image, then Smart Topology at about 15,000 faces, textured, 120 credits in total). They are static meshes without animation clips, so they bob, turn and jump with the built-in motion. `ball.glb` and `trophy.glb` were made the same way (48 credits; about 6,000 faces each). Opponent stars, archetype variants, the hoop and the coach have not been generated.
 
 ## Assets (all optional)
 
