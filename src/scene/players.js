@@ -65,11 +65,11 @@ export function createFigurines(THREE, scene, court) {
     return { body, height: 2.46 };
   }
 
-  function makeFigure({ color, number, look, isOpp }) {
+  function makeFigure({ color, number, look, isOpp, position, name }) {
     const g = new THREE.Group();
     let built;
     try {
-      built = buildFigurineBody(THREE, { color, number, look });
+      built = buildFigurineBody(THREE, { color, number, look, position, name });
     } catch {
       built = capsuleBody({ color, isOpp });
     }
@@ -100,7 +100,7 @@ export function createFigurines(THREE, scene, court) {
     } else {
       g.scale.setScalar(0.9);
     }
-    return { group: g, body };
+    return { group: g, body, rig: built.rig || null };
   }
 
   async function loadModel(url) {
@@ -146,7 +146,7 @@ export function createFigurines(THREE, scene, court) {
     figs = [];
     const token = (setTeams.token = (setTeams.token || 0) + 1);
     lineup.forEach((p, i) => {
-      const f = makeFigure({ color: p.color, number: p.jersey, look: p.look, isOpp: false });
+      const f = makeFigure({ color: p.color, number: p.jersey, look: p.look, isOpp: false, position: p.position, name: p.name });
       const pos = spotToWorld(i);
       f.group.position.copy(pos);
       // Figurines face the camera so their looks are visible; they turn to the hoop to shoot.
@@ -163,6 +163,7 @@ export function createFigurines(THREE, scene, court) {
             fig.body.clear();
             fig.body.scale.set(1, 1, 1);
             fig.body.add(clone);
+            fig.rig = null; // a loaded model has no procedural rig
           } catch {
             /* keep the capsule */
           }
@@ -171,7 +172,7 @@ export function createFigurines(THREE, scene, court) {
     });
     for (let i = 0; i < SPOTS.length; i++) {
       const op = (team.players || [])[i] || {};
-      const f = makeFigure({ color: team.color, number: op.jersey, look: op.look, isOpp: true });
+      const f = makeFigure({ color: team.color, number: op.jersey, look: op.look, isOpp: true, position: op.position || ["PG", "SG", "SF", "PF", "C"][i], name: op.name });
       f.group.position.copy(spotToWorld(i, 0.3));
       const guard = spotToWorld(i);
       root.add(f.group);
@@ -221,7 +222,53 @@ export function createFigurines(THREE, scene, court) {
         }
       }
       f.body.position.y = y;
+      if (f.rig) pose(f, t, f.jumpAt >= 0 ? (now - f.jumpAt) / 620 : -1);
     }
+  }
+
+  // Poses. Everything is a small rotation of the rig's pivots, so it costs nothing.
+  // Your five: breathing, loose arms, and the player at the top of the key dribbles.
+  // Their five: a defensive stance (wide base, arms out, a little slide).
+  // Whoever shoots: both arms go up through the jump.
+  const still = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function pose(f, t, jt) {
+    const r = f.rig;
+    const wave = still ? 0 : Math.sin(t * 1.9 + f.phase);
+    let armLx = wave * 0.07;
+    let armRx = -wave * 0.07;
+    let armLz = 0.1;
+    let armRz = -0.1;
+    let legSpread = 0;
+    let sink = 0;
+    if (f.side === "opp") {
+      legSpread = 0.26;
+      sink = 0.07;
+      armLz = 1.05 + wave * 0.08;
+      armRz = -1.05 + wave * 0.08;
+      armLx = armRx = -0.25;
+    } else if (f.slot === 3 && !still) {
+      // Dribble with the right hand.
+      const d = Math.sin(t * 7.2 + f.phase);
+      armRx = -0.55 + d * 0.3;
+      armRz = -0.22;
+    }
+    if (jt >= 0 && jt < 1) {
+      // Shooting form: up fast, hold the follow-through, come down.
+      const k = jt < 0.25 ? jt / 0.25 : jt > 0.8 ? (1 - jt) / 0.2 : 1;
+      armLx = armLx * (1 - k) - 2.75 * k;
+      armRx = armRx * (1 - k) - 2.95 * k;
+      armLz = armLz * (1 - k) + 0.12 * k;
+      armRz = armRz * (1 - k) - 0.12 * k;
+      legSpread *= 1 - k;
+      sink *= 1 - k;
+    }
+    r.armL.rotation.set(armLx, 0, armLz);
+    r.armR.rotation.set(armRx, 0, armRz);
+    r.legL.rotation.z = legSpread;
+    r.legR.rotation.z = -legSpread;
+    r.upper.position.y = -sink;
+    r.upper.scale.y = 1 + (still ? 0 : wave * 0.012); // breathing
+    f.body.position.y -= legSpread ? 0.03 : 0;
   }
 
   return { setTeams, update, jump, releasePoint };
