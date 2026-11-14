@@ -10,3 +10,8 @@ assets/teams/*
 assets/players/*
 !assets/teams/README.md
 !assets/players/README.md
+
+# Secrets: API keys never go into the repository.
+.env
+.env.*
+*.key

@@ -1,0 +1,292 @@
+{
+  "note": "Job list for tools/meshy-generate.mjs. Prompts describe generic, fictional figures only: no real people, no logos, no numbers, no text.",
+  "style": "stylized basketball player figurine, collectible toy style, clean low-poly, hand-painted texture, plain white jersey and shorts with no logos, no numbers, no text, neutral A-pose, full body, game asset",
+  "defaults": {
+    "ai_model": "meshy-6-lite",
+    "target_polycount": 15000,
+    "animations": {
+      "idle": 0,
+      "shoot": 421,
+      "layup": 463,
+      "defend": 89,
+      "celebrate": 403
+    }
+  },
+  "jobs": [
+    {
+      "id": "sniper",
+      "group": "archetypes",
+      "output": "assets/models/sniper.glb",
+      "humanoid": true,
+      "prompt": "lean athletic shooting guard, medium height, arm sleeve on shooting arm"
+    },
+    {
+      "id": "slasher",
+      "group": "archetypes",
+      "output": "assets/models/slasher.glb",
+      "humanoid": true,
+      "prompt": "explosive athletic wing, strong legs, headband, wristbands"
+    },
+    {
+      "id": "big",
+      "group": "archetypes",
+      "output": "assets/models/big.glb",
+      "humanoid": true,
+      "prompt": "very tall center, long arms, broad shoulders, knee pads",
+      "height_meters": 2.1
+    },
+    {
+      "id": "floorgeneral",
+      "group": "archetypes",
+      "output": "assets/models/floorgeneral.glb",
+      "humanoid": true,
+      "prompt": "compact point guard, average build, ankle braces",
+      "height_meters": 1.85
+    },
+    {
+      "id": "lockdown",
+      "group": "archetypes",
+      "output": "assets/models/lockdown.glb",
+      "humanoid": true,
+      "prompt": "muscular defensive forward, wide shoulders, compression sleeves",
+      "height_meters": 2
+    },
+    {
+      "id": "star_gulls_1",
+      "group": "stars",
+      "output": "assets/models/players/gulls_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, lean build, short buzz cut, clean shaven, headband",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_volts_1",
+      "group": "stars",
+      "output": "assets/models/players/volts_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, muscular build, wide shoulders, short buzz cut, full beard",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_rafters_1",
+      "group": "stars",
+      "output": "assets/models/players/rafters_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, average athletic build, round afro hair, full beard, headband",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_gators_1",
+      "group": "stars",
+      "output": "assets/models/players/gators_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, lean build, round afro hair, clean shaven",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_hawks_1",
+      "group": "stars",
+      "output": "assets/models/players/hawks_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, muscular build, wide shoulders, short buzz cut, light stubble, arm sleeve",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_wolves_1",
+      "group": "stars",
+      "output": "assets/models/players/wolves_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, average athletic build, braided hair, light stubble, arm sleeve",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_owls_1",
+      "group": "stars",
+      "output": "assets/models/players/owls_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, muscular build, wide shoulders, long hair, light stubble",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_forge_1",
+      "group": "stars",
+      "output": "assets/models/players/forge_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, average athletic build, hair tied in a top bun, clean shaven",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_tides_1",
+      "group": "stars",
+      "output": "assets/models/players/tides_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, average athletic build, bald head, clean shaven, headband",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_rams_1",
+      "group": "stars",
+      "output": "assets/models/players/rams_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, muscular build, wide shoulders, hair tied in a top bun, clean shaven",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_swans_1",
+      "group": "stars",
+      "output": "assets/models/players/swans_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, muscular build, wide shoulders, hair tied in a top bun, clean shaven, wristband",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_polar_1",
+      "group": "stars",
+      "output": "assets/models/players/polar_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, average athletic build, bald head, clean shaven, wristband",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_solar_1",
+      "group": "stars",
+      "output": "assets/models/players/solar_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, lean build, hair tied in a top bun, light stubble",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_rockets_1",
+      "group": "stars",
+      "output": "assets/models/players/rockets_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, average athletic build, braided hair, full beard",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_kings_1",
+      "group": "stars",
+      "output": "assets/models/players/kings_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, average athletic build, braided hair, light stubble, wristband",
+      "height_meters": 1.85
+    },
+    {
+      "id": "star_dynasty_1",
+      "group": "stars",
+      "output": "assets/models/players/dynasty_1.glb",
+      "humanoid": true,
+      "prompt": "point guard, average athletic build, braided hair, full beard, sports goggles",
+      "height_meters": 1.85
+    },
+    {
+      "id": "sniper_2",
+      "group": "variants",
+      "output": "assets/models/sniper_2.glb",
+      "humanoid": true,
+      "prompt": "slim shooting guard, short buzz cut, wristband"
+    },
+    {
+      "id": "sniper_3",
+      "group": "variants",
+      "output": "assets/models/sniper_3.glb",
+      "humanoid": true,
+      "prompt": "tall lean wing shooter, hair tied in a top bun, headband"
+    },
+    {
+      "id": "slasher_2",
+      "group": "variants",
+      "output": "assets/models/slasher_2.glb",
+      "humanoid": true,
+      "prompt": "wiry quick guard, braided hair, arm sleeve"
+    },
+    {
+      "id": "slasher_3",
+      "group": "variants",
+      "output": "assets/models/slasher_3.glb",
+      "humanoid": true,
+      "prompt": "powerful athletic forward, round afro hair, knee pads"
+    },
+    {
+      "id": "big_2",
+      "group": "variants",
+      "output": "assets/models/big_2.glb",
+      "humanoid": true,
+      "prompt": "heavy strong center, bald head, full beard"
+    },
+    {
+      "id": "big_3",
+      "group": "variants",
+      "output": "assets/models/big_3.glb",
+      "humanoid": true,
+      "prompt": "slender very tall center, short hair, sports goggles"
+    },
+    {
+      "id": "floorgeneral_2",
+      "group": "variants",
+      "output": "assets/models/floorgeneral_2.glb",
+      "humanoid": true,
+      "prompt": "small quick point guard, round afro hair, headband"
+    },
+    {
+      "id": "floorgeneral_3",
+      "group": "variants",
+      "output": "assets/models/floorgeneral_3.glb",
+      "humanoid": true,
+      "prompt": "tall point guard, long hair, wristbands"
+    },
+    {
+      "id": "lockdown_2",
+      "group": "variants",
+      "output": "assets/models/lockdown_2.glb",
+      "humanoid": true,
+      "prompt": "lean long-armed defender, bald head, arm sleeves"
+    },
+    {
+      "id": "lockdown_3",
+      "group": "variants",
+      "output": "assets/models/lockdown_3.glb",
+      "humanoid": true,
+      "prompt": "stocky strong defender, short buzz cut, full beard"
+    },
+    {
+      "id": "ball",
+      "group": "props",
+      "output": "assets/models/ball.glb",
+      "humanoid": false,
+      "style": false,
+      "prompt": "a single orange basketball with black seams, stylized collectible toy style, clean low-poly, hand-painted texture, no logos, no text, game asset",
+      "target_polycount": 6000
+    },
+    {
+      "id": "trophy",
+      "group": "props",
+      "output": "assets/models/trophy.glb",
+      "humanoid": false,
+      "style": false,
+      "prompt": "an original golden championship trophy cup with two handles on a dark wooden base, a small plain basketball on top, stylized collectible toy style, clean low-poly, hand-painted texture, no logos, no text, game asset",
+      "target_polycount": 6000
+    },
+    {
+      "id": "hoop",
+      "group": "props",
+      "output": "assets/models/hoop.glb",
+      "humanoid": false,
+      "style": false,
+      "prompt": "a basketball hoop on a pole with a white rectangular backboard, an orange rim and a white net, the rim clearly visible in front of the backboard, stylized collectible toy style, clean low-poly, hand-painted texture, no logos, no text, game asset",
+      "target_polycount": 10000
+    },
+    {
+      "id": "coach",
+      "group": "props",
+      "output": "assets/models/coach.glb",
+      "humanoid": true,
+      "style": false,
+      "target_polycount": 12000,
+      "prompt": "a basketball coach in a plain dark suit holding a clipboard, standing, neutral A-pose, full body, stylized collectible toy style, clean low-poly, hand-painted texture, no logos, no text, game asset",
+      "animations": {
+        "idle": 0
+      }
+    }
+  ]
+}
