@@ -117,6 +117,7 @@ app.goTitle = () => {
 app.goHowTo = () => {
   renderHowTo(app);
   showScreen("howto");
+  app.audio?.setScene("howto");
 };
 
 // ?seed=123 in the URL fixes the run (same schedule, draws and dice every time).
@@ -144,7 +145,7 @@ app.beginMatch = () => {
   startMatch(app.run);
   showScreen("game");
   app.game.begin();
-  app.audio?.setScene("game");
+  app.audio?.setScene("game", app.run.round);
   if (app.run.round === 0 && !app.tutorialDone) app.tutorial.start();
   app.debug?.render();
 };
