@@ -36,6 +36,7 @@ If you add audio or models, run `node tools/update-assets.js` and commit `assets
 | `1`–`9` | Play the card in that hand slot |
 | `Space` | End turn |
 | `M` | Mute / unmute |
+| `T` | Coach's call: timeouts and closing-time options |
 | `D` | Debug panel |
 | `Esc` | Close a dialog |
 | `Enter` (title) | Play |
@@ -55,6 +56,12 @@ If you add audio or models, run `node tools/update-assets.js` and commit `assets
 - **Chemistry**: two players of the same archetype unlock a team bonus.
 - After each win pick **one reward**: a new card, a new player (replaces a starter and swaps their signature cards), or +1 to a rating.
 - The Dynasty gets **Clutch** (+10% on every intent) once either team is within 2 points of 15.
+- **Play calls:** the right cards in order within one turn trigger a named play that boosts the shot finishing it: Pass, Pass, shot = *Swing-Swing* (+10%); Drive, Pass, three = *Drive & Kick* (+15%, their DEF counts half); Screen, two = *Pick & Roll Finish* (+12%); Pass, two = *Give & Go* (+6%). The Playbook panel shows what is ready and what is one card away. Only the best play applies.
+- **The coach reads you:** a coached opponent looks at the Contest you showed on the previous possession and picks, from its next two plays, the one worth more expected points against it. Show no defense and it goes for the bigger, lower-percentage shot, which you can then contest. The choice is always shown before you act.
+- **Timeouts:** three per game (they are not cards). Regroup (new hand of 5), Ice the Shooter (their attempt at -10%), Breather (+6 seconds this turn).
+- **Closing time:** once either team is within 4 points of 15, three one-time options open up: Intentional Foul (two free throws at 70% instead of their play), Hold for the Last Shot (+15%, but the turn ends when you shoot), Two-for-One (two shots this turn, both at -12%).
+- **Lineup shapes:** your five are recognised automatically, each shape with a bonus and a weakness: Small Ball (no Big), Twin Towers (two Bigs), Defensive Five (average DEF 3.6+), Bench Mob (three or more signings).
+- **Lives:** you have 2. A loss before the Finals costs one: you get a rematch against the same team, but no reward for that stop. With no lives left a loss ends the run. Lives do not apply in the Finals series.
 
 ### The league
 
@@ -142,6 +149,12 @@ Each team lists eight `players` (`id`, `name`, `position`, `jersey`, `look`, `te
 
 Rule effects are data. The full list of rule types, with what each one does, is at the top of `src/engine/teamRules.js`. Examples: `intent_bonus`, `streak_bonus`, `hot_streak`, `mismatch_bonus`, `ignore_contest`, `every_nth_intent`, `second_chance` (denied by Box Out), `and_one`, `shot_mod`, `shot_mult`, `rating_cap`, `card_cost`, `pass_steal`, `negate_tag`, `energy_tax`, `pace`, `counter_favorite_type`. Every rule that changes a number is named next to that number in the UI.
 
+### Plays, coach actions and lineup shapes
+
+- `content/plays.json` — each play has a `sequence` of steps (`tag:<Tag>`, `type:<CardType>`, then a final `shot`, `shot:2` or `shot:3`), a `bonus` and an optional `defenseMult`.
+- `content/coach_actions.json` — timeouts (`group: "timeout"`) and closing-time options (`group: "closing"`), each a list of normal card effects plus an optional `cost` in seconds.
+- `content/lineups.json` — lineup shapes: a `when` condition (`max_archetype`, `min_archetype`, `min_avg_rating`, `min_signings`) and a list of rule effects (the same rule types opponents use).
+
 ### Chemistry — `content/chemistry.json`
 
 Keyed by archetype: `threshold`, `name`, `text`, and one `effect` of type `shot_bonus`, `draw_on_opponent_fail`, `tag_cost_reduction`, `extra_draw` or `passive_contest`.
@@ -216,7 +229,7 @@ This rewrites `assets/manifest.json`. The game only requests files listed there,
 node --test tests/*.test.js
 ```
 
-53 tests. League (12): the 16-team data, per-run schedule, the Finals series, boss phases, every rule type, film study, and a reproducible full season. Design system (8): token values, WCAG AA contrast of the main colour pairs, no emoji, no text under 12px, icon coverage, valid play diagrams and card markup. Engine (20): shot %, clamping, energy, draw and reshuffle, one-shot rule, intents and Clutch, steals, win/loss, rewards, player replacement, chemistry, seeded reproducibility. Roster and appearance (13): roster selection with a mocked fetch (the private file is never requested without `?roster=real`, missing and invalid files fall back), `normalizeLook` defaults, portraits stay valid SVG for broken data, and the private-file check.
+64 tests. Strategy (11): play calls, the coach's read, timeouts, closing-time options, lineup shapes, lives. League (12): the 16-team data, per-run schedule, the Finals series, boss phases, every rule type, film study, and a reproducible full season. Design system (8): token values, WCAG AA contrast of the main colour pairs, no emoji, no text under 12px, icon coverage, valid play diagrams and card markup. Engine (20): shot %, clamping, energy, draw and reshuffle, one-shot rule, intents and Clutch, steals, win/loss, rewards, player replacement, chemistry, seeded reproducibility. Roster and appearance (13): roster selection with a mocked fetch (the private file is never requested without `?roster=real`, missing and invalid files fall back), `normalizeLook` defaults, portraits stay valid SVG for broken data, and the private-file check.
 
 ```bash
 node tools/sim.js 2000
@@ -229,12 +242,14 @@ Add `?css=1` to the URL to force the CSS court (the automatic fallback when Thre
 
 ## Design decisions
 
-- **Balance**: team strength per tier comes from the simulator, not from hand-picked numbers. Over 2,000 seeded seasons a bot that plays every useful card clears Act 1 / Act 2 / Act 3 about 99% / 87% / 66% of the time, wins the Finals series 58% of the time and takes the title in 33% of runs. A casual bot (one setup card, one defense card per turn) clears Act 1 92% of the time and Act 2 48%, and almost never wins the title. Act 1 is deliberately forgiving.
+- **Balance**: team strength per tier comes from the simulator, not from hand-picked numbers. Over 2,000 seeded seasons a bot that plays every useful card and uses its timeouts wins about 99% / 88% / 68% of its games in Act 1 / 2 / 3 and 61% of Finals games; with two lives it takes the title in 63% of runs. A casual bot (one setup card, one defense card per turn, no timeouts) wins 92% / 39% / 14% of its games and almost never wins the title. Act 1 is deliberately forgiving; the gap between the two bots is the reward for using the whole shot clock, the playbook and the coach's calls.
+- **Strategy mechanics adapted to the current rules**: timeouts cannot change systems or refresh stamina (neither exists yet), so their three uses are Regroup, Ice and Breather. There is no game clock, so "the last possessions" became closing time (either team within 4 of the target). A loss costs a life and that stop's reward, standing in for Cap Space and morale. There are no Rival teams yet.
 - **League mechanics adapted to the current rules**: some signature mechanics in the design brief depend on systems that do not exist yet (fouls, stamina, rebounding, double teams). They are implemented with the closest rule the engine has: for example the Gators' foul-drawing is an and-one point on made drives, the Rafters' offensive rebounding is a putback after a miss that Box Out denies, and Solar's star is cooled off by 30 or more Contest in a turn.
 
 - **Passive bonuses** are the plain lineup average (about +3 each). `PASSIVE_*_MULT` in the config scales them.
 - **No dead hands**: if a new hand has no shot card, you draw up to 3 extra cards until one appears (same seeded draw order). Set `NO_SHOT_REDRAWS: 0` for strict 5-card hands.
 - A **steal counts as a failed attempt**, so it also triggers Fast Break, Box Out and the Big chemistry.
+- **Timeout is no longer a card.** It was replaced by the three timeouts per game; the Floor Generals who had it now carry No-Look Dime or Give & Go. Iso is tagged Drive so it can start a Drive & Kick.
 - **Big chemistry** ("draw 1 after an opponent miss") gives the extra card at the start of your next turn, because the opponent shoots after your turn ends.
 - **Heat Check** stacks if you play it more than once.
 - **Rewards** offer exactly one of each kind; the rating upgrade names a specific player and rating.

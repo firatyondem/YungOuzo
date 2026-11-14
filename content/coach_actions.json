@@ -1,0 +1,32 @@
+[
+  {
+    "id": "regroup", "group": "timeout", "name": "Regroup",
+    "text": "Discard your hand and draw 5 new cards.",
+    "effects": [{ "type": "discard_hand" }, { "type": "draw", "value": 5 }]
+  },
+  {
+    "id": "ice", "group": "timeout", "name": "Ice the Shooter",
+    "text": "Their attempt this possession is at -10%.",
+    "effects": [{ "type": "ice_intent", "value": 10 }]
+  },
+  {
+    "id": "breather", "group": "timeout", "name": "Breather",
+    "text": "+6 seconds on the shot clock this turn.",
+    "effects": [{ "type": "add_energy", "value": 6 }]
+  },
+  {
+    "id": "foul", "group": "closing", "name": "Intentional Foul", "cost": 4,
+    "text": "They shoot two free throws (70% each, 1 point each) instead of running their play.",
+    "effects": [{ "type": "foul_intent", "shots": 2, "pct": 70 }]
+  },
+  {
+    "id": "hold", "group": "closing", "name": "Hold for the Last Shot",
+    "text": "+15% on your shot this turn, but the turn ends the moment you shoot.",
+    "effects": [{ "type": "turn_shot_bonus", "value": 15, "endTurnAfterShot": true }]
+  },
+  {
+    "id": "two_for_one", "group": "closing", "name": "Two-for-One",
+    "text": "You may shoot twice this turn. Both shots are at -12%.",
+    "effects": [{ "type": "extra_shots", "value": 1 }, { "type": "turn_shot_bonus", "value": -12 }]
+  }
+]

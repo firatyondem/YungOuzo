@@ -9,6 +9,7 @@
 // Every modifier that applies is returned in `notes` with the name of its source,
 // so the UI can explain the number.
 import { rulesOf, firstRule, phaseIntents, intentMatches, weakestDefender } from "./teamRules.js";
+import { playFor } from "./plays.js";
 
 export const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -155,9 +156,21 @@ export function calcShot(run, inst) {
   bonus += chemistrySum(run, "shot_bonus", (e) => e.points === points);
   if (points === 3) bonus += (m.buffs.threeStreakBonus || 0) * m.threeStreak;
 
-  const defense = Math.max(0, getTeam(run).defense - ignore); // never below 0
+  let defense = Math.max(0, getTeam(run).defense - ignore); // never below 0
   let rating = shooter.ratings[ratingKey];
   const notes = [];
+  // Play call: the right sequence of cards this turn boosts the shot that finishes it.
+  const play = playFor(run, card);
+  if (play) {
+    bonus += play.bonus;
+    if (play.defenseMult != null) defense *= play.defenseMult;
+    notes.push({ label: play.name, value: play.bonus });
+  }
+  // Coach calls for this turn (timeouts, closing options).
+  if (m.mods && m.mods.shotBonus) {
+    bonus += m.mods.shotBonus;
+    notes.push({ label: "Coach call", value: m.mods.shotBonus });
+  }
   const cap = firstRule(run, "rating_cap");
   if (cap && rating > cap.value) {
     notes.push({ label: cap.label, text: `${ratingKey} counts as ${cap.value}` });
@@ -183,6 +196,7 @@ export function calcShot(run, inst) {
     pct,
     ruleBonus,
     notes,
+    play,
     raw,
     points,
     shooter,
@@ -220,7 +234,9 @@ export function currentIntent(run) {
   const nth = firstRule(run, "every_nth_intent");
   if (nth && m.opp && (m.opp.possessions + 1) % nth.n === 0) return { ...nth.intent, setPlay: true, setPlayLabel: nth.label };
   const intents = phaseIntents(run);
-  return intents[m.intentIndex % intents.length];
+  // A coached opponent may have picked the next play in its cycle instead (see turnLoop.chooseIntent).
+  const index = m.opp && m.opp.pick != null ? m.opp.pick : m.intentIndex;
+  return intents[index % intents.length];
 }
 
 /** Clutch: team-defined bonus when either side is within N points of the target. */
@@ -261,6 +277,8 @@ export function opponentPreview(run) {
     add(r.label, Math.max(0, 5 - weak.ratings.DEF) * r.perPoint, `attacking ${weak.name}`);
   }
   if (opp.adapted && (intent.tags || []).includes(opp.adapted.tag)) add(opp.adapted.label, opp.adapted.bonus, "adapted");
+  if (opp.readNote) notes.push({ label: "Coach read", value: 0, text: opp.readNote });
+  if (m.mods && m.mods.ice) add("Iced", -m.mods.ice, "timeout");
 
   // Your Contest, after any part the opponent ignores.
   let contest = m.contest;
@@ -283,5 +301,6 @@ export function opponentPreview(run) {
     pct: clampPct(run, basePct - contest),
     steals: m.steals.length,
     notes,
+    foul: (m.mods && m.mods.foul) || null,
   };
 }

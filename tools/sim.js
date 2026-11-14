@@ -7,6 +7,8 @@ import { createRun } from "../src/engine/gameState.js";
 import { startMatch, playCard, endTurn } from "../src/engine/turnLoop.js";
 import { canPlay, calcShot, getCard, getCardCost, getShootEffect } from "../src/engine/rules.js";
 import { applyReward } from "../src/engine/rewards.js";
+import { opponentPreview } from "../src/engine/rules.js";
+import { canUseAction, useAction, isClosingTime } from "../src/engine/actions.js";
 
 const CASUAL = process.argv.includes("casual");
 const PER_TEAM = process.argv.includes("teams");
@@ -16,6 +18,17 @@ export function botTurn(run, casual = CASUAL) {
   const playable = () => m.hand.filter((c) => canPlay(run, c.iid).ok);
   const shots = () => playable().filter((c) => getShootEffect(getCard(run, c)));
   const value = (c) => calcShot(run, c).pct * calcShot(run, c).points;
+
+  // 0) Coach actions (thorough bot only): simple, explainable heuristics.
+  if (!casual) {
+    const pre = opponentPreview(run);
+    const noShot = !m.hand.some((c) => getShootEffect(getCard(run, c)));
+    // No shot in hand: regroup rather than take a violation.
+    if (noShot && canUseAction(run, "regroup").ok) useAction(run, "regroup");
+    // Closing time: foul a dangerous three, otherwise ice a likely make.
+    if (isClosingTime(run) && pre.intent.points >= 3 && pre.pct >= 55 && canUseAction(run, "foul").ok) useAction(run, "foul");
+    else if (pre.pct >= 62 && (isClosingTime(run) || m.timeouts > 1) && canUseAction(run, "ice").ok) useAction(run, "ice");
+  }
 
   // 1) Offense/utility/buff cards while we can still afford the cheapest shot afterwards.
   let guard = 0;
@@ -56,8 +69,10 @@ export function simulate(runs, { casual = CASUAL, teams = content.teams, config 
   for (let seed = 1; seed <= runs; seed++) {
     const run = createRun(c, config, seed);
     let guard = 0;
-    while (run.phase === "map" && guard++ < 20) {
+    const reached = new Set();
+    while (run.phase === "map" && guard++ < 30) {
       const stop = run.schedule[run.round];
+      const roundBefore = run.round;
       startMatch(run);
       let g = 0;
       while (!run.match.over && g++ < 300) botTurn(run, casual);
@@ -70,9 +85,13 @@ export function simulate(runs, { casual = CASUAL, teams = content.teams, config 
       t.pa += run.match.score.opp;
       if (won) t.wins++;
       const s = (stops[stop.label] ||= { reached: 0, cleared: 0, games: 0, wins: 0 });
-      if (run.match.gameNo === 1) s.reached++;
+      if (!reached.has(stop.label)) {
+        reached.add(stop.label);
+        s.reached++;
+      }
       s.games++;
       if (won) s.wins++;
+      if (run.phase === "map" && run.round > roundBefore) s.cleared++; // won a rematch: no reward
       if (run.phase === "reward") {
         s.cleared++;
         // Bot preference: upgrade > card > player (simple and deterministic).

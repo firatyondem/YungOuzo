@@ -55,6 +55,32 @@ const HANDLERS = {
     run.match.onOppFail.push(...(e.effects || []));
   },
 
+  // --- Coach actions (timeouts and closing options) ---
+  ice_intent(run, e, ctx) {
+    run.match.mods.ice += e.value;
+    ctx.events.push({ type: "iced", value: e.value });
+  },
+
+  add_energy(run, e, ctx) {
+    run.match.energy += e.value; // may exceed the normal shot clock for this turn
+    ctx.events.push({ type: "energy", value: e.value });
+  },
+
+  foul_intent(run, e, ctx) {
+    run.match.mods.foul = { shots: e.shots, pct: e.pct };
+    ctx.events.push({ type: "foul_set", shots: e.shots, pct: e.pct });
+  },
+
+  turn_shot_bonus(run, e) {
+    const mods = run.match.mods;
+    mods.shotBonus += e.value;
+    if (e.endTurnAfterShot) mods.endAfterShot = true;
+  },
+
+  extra_shots(run, e) {
+    run.match.shotsAllowed += e.value;
+  },
+
   next_turn_draw(run, e) {
     run.match.pending.draw += e.value;
   },
@@ -90,6 +116,12 @@ const HANDLERS = {
         ? `${shot.shooter.name} scores ${shot.points}! (${pct}%)`
         : `${shot.shooter.name} misses the ${shot.points}PT (${pct}%)`
     );
+    if (shot.play) {
+      run.stats.plays = (run.stats.plays || 0) + 1;
+      log(run, `Play call: ${shot.play.name}!`);
+      ctx.events.push({ type: "play_call", id: shot.play.id, name: shot.play.name, bonus: shot.play.bonus });
+    }
+    if (m.mods && m.mods.endAfterShot) m.mods.endNow = true;
     ctx.events.push({
       type: "shot",
       made,

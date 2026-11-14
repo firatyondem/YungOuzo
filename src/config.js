@@ -40,6 +40,14 @@ export const CONFIG = {
   SHOT_ANIM_MS: 750,
   OPP_ANIM_MS: 800,
 
+  // Lives: a loss before the Finals costs one (rematch, no reward) instead of ending the run.
+  LIVES: 2,
+  // Coach actions (content/coach_actions.json).
+  TIMEOUTS_PER_MATCH: 3,
+  CLOSING_WINDOW: 4, // closing time = either team within this many points of the target
+  // Coached opponents read the Contest you showed last possession (see turnLoop.chooseIntent).
+  OPPONENT_READS: true,
+
   // League film study: from the second stop on, opponents defend your favourite
   // shot type harder once it is this large a share of your shots. null = off.
   LEAGUE_SCOUTING: { minShots: 8, share: 0.62, defense: 6 },

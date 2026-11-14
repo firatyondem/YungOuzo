@@ -120,8 +120,8 @@ test("league: the Finals are a best-of-3 series", () => {
   debugAddPoints(run, 15, "opp");
   assert.equal(run.phase, "gameover");
 
-  // Before the Finals a single loss still ends the run, and a win gives a reward.
-  run = createRun(league, REAL_CONFIG, 3);
+  // Before the Finals a win gives a reward; with no lives left a loss ends the run.
+  run = createRun(league, { ...REAL_CONFIG, LIVES: 0 }, 3);
   startMatch(run);
   debugAddPoints(run, 15, "player");
   assert.equal(run.phase, "reward");

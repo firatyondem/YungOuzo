@@ -33,6 +33,10 @@
 //     energy_tax { value }                             fewer seconds each turn
 //     pace { clock, draw }                             shot clock length and cards drawn
 //     counter_favorite_type { value, fromGame? }       becomes a card_cost rule at tip-off
+//     contest_start { value } / draw_bonus { value }   your Contest and cards drawn at turn start
+//
+// Your own lineup shape (content/lineups.json) uses the same rule types, so a
+// shape's bonus and its weakness combine with opponent rules in one place.
 
 function teamOf(run) {
   const m = run.match;
@@ -40,6 +44,31 @@ function teamOf(run) {
 }
 
 const withLabel = (effects, label) => (effects || []).map((e) => ({ ...e, label: e.label || label }));
+
+/** Is a lineup-shape condition met? (content/lineups.json) */
+function shapeApplies(run, when) {
+  const lineup = run.lineup;
+  const count = (arch) => lineup.filter((p) => p.archetype === arch).length;
+  switch (when && when.type) {
+    case "max_archetype":
+      return count(when.archetype) <= when.count;
+    case "min_archetype":
+      return count(when.archetype) >= when.count;
+    case "min_avg_rating":
+      return lineup.reduce((s, p) => s + p.ratings[when.rating], 0) / lineup.length >= when.value;
+    case "min_signings": {
+      const starters = run.config.STARTING_LINEUP || [];
+      return lineup.filter((p) => !starters.includes(p.id)).length >= when.count;
+    }
+    default:
+      return false;
+  }
+}
+
+/** Lineup shapes your five currently form (Small Ball, Twin Towers...). Each has a bonus AND a weakness. */
+export function activeShapes(run) {
+  return (run.content.lineups || []).filter((s) => shapeApplies(run, s.when));
+}
 
 /** All rules in force right now, each tagged with a `label` naming its source. */
 export function activeRules(run) {
@@ -52,6 +81,7 @@ export function activeRules(run) {
   const phase = team.phases && team.phases[m.opp ? m.opp.phase : 0];
   if (phase) rules.push(...withLabel(phase.effects, phase.name));
   rules.push(...(m.extraRules || []));
+  for (const shape of activeShapes(run)) rules.push(...withLabel(shape.effects, shape.name));
   return rules;
 }
 

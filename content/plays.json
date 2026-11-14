@@ -1,0 +1,26 @@
+[
+  {
+    "id": "swing_swing", "name": "Swing-Swing",
+    "sequence": ["tag:Pass", "tag:Pass", "shot"],
+    "text": "Two Pass cards, then any shot: +10%.",
+    "bonus": 10
+  },
+  {
+    "id": "drive_and_kick", "name": "Drive & Kick",
+    "sequence": ["tag:Drive", "tag:Pass", "shot:3"],
+    "text": "A Drive card, a Pass card, then a three: +15% and their DEF counts half.",
+    "bonus": 15, "defenseMult": 0.5
+  },
+  {
+    "id": "pick_and_roll_finish", "name": "Pick & Roll Finish",
+    "sequence": ["tag:Screen", "shot:2"],
+    "text": "A Screen card, then a two: +12%.",
+    "bonus": 12
+  },
+  {
+    "id": "give_and_go", "name": "Give & Go",
+    "sequence": ["tag:Pass", "shot:2"],
+    "text": "A Pass card, then a two: +6%.",
+    "bonus": 6
+  }
+]

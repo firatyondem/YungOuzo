@@ -77,11 +77,11 @@ export function renderMap(app) {
   host.innerHTML = `
     <div class="page">
       <header class="page-head">
-        <h1>THE SEASON</h1>
+        <h1>THE SEASON${run.config.LIVES ? ` <span class="lives" title="A loss before the Finals costs a life: you get a rematch, but no reward for that stop.">${icon("stamina")}${run.lives} ${run.lives === 1 ? "life" : "lives"}</span>` : ""}</h1>
         ${
           tip.notes.length
             ? `<div class="map-notes">${tip.notes.map((n) => `<span class="bnode-scout">${icon("mismatch")}<span>${esc(n)}</span></span>`).join("")}</div>`
-            : `<p>Beat three league opponents, then win the <b>best-of-3 Finals</b>. A loss before the Finals ends the run.</p>`
+            : `<p>Beat three league opponents, then win the <b>best-of-3 Finals</b>. A loss before the Finals costs a life.</p>`
         }
       </header>
       <div class="bracket">

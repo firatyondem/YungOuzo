@@ -225,7 +225,7 @@ const TEAMS = [
 // set here: every intent gets +pct and the team gets +def, per tier, as found with
 // tools/tune.js against the simulator (see README, Balance). ADJUST evens out teams
 // whose mechanics make them stronger or weaker than their tier.
-const TUNE = { 1: { pct: 16, def: 8 }, 2: { pct: 26, def: 13 }, 3: { pct: 36, def: 18 }, boss: { pct: 30, def: 15 } };
+const TUNE = { 1: { pct: 16, def: 8 }, 2: { pct: 30, def: 15 }, 3: { pct: 42, def: 21 }, boss: { pct: 38, def: 19 } };
 const ADJUST = { gulls: -5, volts: -3, rafters: 4, gators: 2, hawks: 1, rams: -3, swans: -3, tides: -2, rockets: -4, kings: 3 };
 for (const t of TEAMS) {
   const tune = TUNE[t.tier];

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "small_ball", "name": "Small Ball",
+    "when": { "type": "max_archetype", "archetype": "Big", "count": 0 },
+    "text": "No Big on the floor: your threes +6%, but their post-ups and lobs +8%.",
+    "effects": [
+      { "type": "shot_mod", "points": 3, "value": 6 },
+      { "type": "intent_bonus", "tag": "post", "value": 8 },
+      { "type": "intent_bonus", "tag": "lob", "value": 8 }
+    ]
+  },
+  {
+    "id": "twin_towers", "name": "Twin Towers",
+    "when": { "type": "min_archetype", "archetype": "Big", "count": 2 },
+    "text": "Two Bigs: their drives, post-ups and lobs -8%, but your threes -5%.",
+    "effects": [
+      { "type": "intent_bonus", "tag": "drive", "value": -8 },
+      { "type": "intent_bonus", "tag": "post", "value": -8 },
+      { "type": "intent_bonus", "tag": "lob", "value": -8 },
+      { "type": "shot_mod", "points": 3, "value": -5 }
+    ]
+  },
+  {
+    "id": "defensive_five", "name": "Defensive Five",
+    "when": { "type": "min_avg_rating", "rating": "DEF", "value": 3.6 },
+    "text": "Elite defenders: +6 Contest every turn, but your threes -4%.",
+    "effects": [
+      { "type": "contest_start", "value": 6 },
+      { "type": "shot_mod", "points": 3, "value": -4 }
+    ]
+  },
+  {
+    "id": "bench_mob", "name": "Bench Mob",
+    "when": { "type": "min_signings", "count": 3 },
+    "text": "Three or more new signings: draw 1 extra card each turn, but start each turn with 4 less Openness.",
+    "effects": [
+      { "type": "draw_bonus", "value": 1 },
+      { "type": "openness_start", "value": -4 }
+    ]
+  }
+]

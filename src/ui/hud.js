@@ -4,6 +4,9 @@ import { getActiveChemistry, getTeam, opponentPreview, passiveContest, passiveOp
 import { $, esc, ARCHETYPE_LABEL, lastName } from "./dom.js";
 import { avatarHTML } from "./avatar.js";
 import { icon } from "./icons.js";
+import { playbook } from "../engine/plays.js";
+import { actionList, isClosingTime } from "../engine/actions.js";
+import { activeShapes } from "../engine/teamRules.js";
 
 let shownScore = { player: -1, opp: -1 };
 let countTimers = [];
@@ -38,7 +41,7 @@ export function renderScore(app, score = app.run.match.score) {
   countTimers.forEach(clearTimeout);
   countTimers = [];
   const series = m.seriesGames > 1;
-  $("#g-round").innerHTML = `<b>${esc(m.stopLabel || "")}${series ? ` G${m.gameNo}` : ""}</b><span>${series ? `Best of ${m.seriesGames}` : `Stop ${run.round + 1} of ${run.schedule.length}`} / Turn ${m.turn}</span>`;
+  $("#g-round").innerHTML = `<b>${esc(m.stopLabel || "")}${series ? ` G${m.gameNo}` : ""}</b><span>${series ? `Best of ${m.seriesGames}` : `Stop ${run.round + 1} of ${run.schedule.length}`} / Turn ${m.turn}${run.config.LIVES ? ` / Lives ${run.lives}` : ""}</span>`;
   const upP = shownScore.player >= 0 && score.player > shownScore.player;
   const upO = shownScore.opp >= 0 && score.opp > shownScore.opp;
   const bug = $("#g-scorebug");
@@ -135,8 +138,9 @@ export function renderChem(app) {
   const run = app.run;
   const chem = getActiveChemistry(run);
   // The Chemistry heading only shows when a bonus is active (saves room for the opponent panel).
+  const shapes = activeShapes(run);
   const title = $("#g-chem").previousElementSibling;
-  if (title) title.hidden = !chem.length;
+  if (title) title.hidden = !chem.length && !shapes.length;
   const passive = `<div class="chem-passive">Each turn: <b>+${Math.round(passiveOpenness(run))}</b> Openness, <b>+${Math.round(passiveContest(run))}</b> Contest</div>`;
   $("#g-chem").innerHTML =
     (chem.length
@@ -145,7 +149,9 @@ export function renderChem(app) {
             (c) => `<div class="chem-chip on">${icon("star")}<div><b>${esc(c.name)}</b><span>${c.count} x ${esc(ARCHETYPE_LABEL[c.archetype] || c.archetype)}: ${esc(c.text)}</span></div></div>`
           )
           .join("")
-      : "") + passive;
+      : "") +
+    shapes.map((s) => `<div class="chem-chip on shape" title="${esc(s.text)}">${icon("users")}<div><b>${esc(s.name)}</b><span>${esc(s.text)}</span></div></div>`).join("") +
+    passive;
 }
 
 export function renderIntent(app) {
@@ -161,6 +167,19 @@ export function renderIntent(app) {
   const roster = team.players || [];
   const shooter = roster.length ? roster[run.match.intentIndex % roster.length] : null;
   const danger = eff >= 60 ? "hi" : eff >= 35 ? "mid" : "lo";
+  if (pre.foul) {
+    $("#g-intent").innerHTML = `
+      <div class="lt" style="--team:${tc.primary};--team2:${tc.secondary}">
+        <div class="lt-slab">${icon("foul")}</div>
+        <div class="lt-body">
+          <div class="lt-kicker">${esc(team.name)} / intentional foul</div>
+          <div class="lt-play">${icon("target")}<span>Free throws</span><em>${pre.foul.shots} x 1 PT</em></div>
+          <div class="lt-chips"><span class="tag tag-warn">Instead of ${esc(pre.intent.name)}</span></div>
+        </div>
+        <div class="lt-pct lt-mid"><b>${pre.foul.pct}%</b><span>each</span></div>
+      </div>`;
+    return;
+  }
   $("#g-intent").innerHTML = `
     <div class="lt${pre.clutch ? " clutch" : ""}" style="--team:${tc.primary};--team2:${tc.secondary}">
       <div class="lt-slab">
@@ -199,6 +218,33 @@ export function renderOpponent(app) {
     (phase && team.phases.length > 1 ? row("clutch", `Phase: ${phase.name}`, phase.text, "phase") : "") +
     (m.notes || []).map((n) => row("mismatch", "Scouted", n, "scout")).join("") ||
     `<div class="opp-trait"><div><span>No special rules.</span></div></div>`;
+}
+
+/** Playbook: named plays and how close this turn's cards are to completing each. */
+export function renderPlays(app) {
+  const el = $("#g-plays");
+  if (!el) return;
+  el.innerHTML = playbook(app.run)
+    .map(({ play, done, total, ready, near }) => {
+      let pips = "";
+      for (let i = 0; i < total; i++) pips += `<i class="${i < done ? "on" : ""}${i === total - 1 ? " shot" : ""}"></i>`;
+      const state = ready ? "ready" : near ? "near" : "";
+      const label = ready ? "Shoot!" : near ? "1 away" : "";
+      return `<div class="play ${state}" title="${esc(play.text)}"><span class="play-pips">${pips}</span><b>${esc(play.name)}</b><em>+${play.bonus}%</em>${label ? `<span class="play-state">${label}</span>` : ""}</div>`;
+    })
+    .join("");
+}
+
+/** Coach button: timeouts left, and a closing-time cue. */
+export function renderCoach(app) {
+  const btn = $("#btn-coach");
+  if (!btn) return;
+  const m = app.run.match;
+  const closing = isClosingTime(app.run);
+  const usable = actionList(app.run).some((a) => a.ok);
+  btn.innerHTML = `${icon("utility")}<span>${closing ? "Closing time" : "Timeout"}</span><b>${m.timeouts}</b>`;
+  btn.classList.toggle("closing", closing);
+  btn.disabled = m.over || !usable;
 }
 
 export function renderLog(app) {

@@ -392,11 +392,16 @@ test("card rules: heat check streak, fast break, alley-oop, timeout exhausts", (
   assert.equal(canPlay(run, oop.iid).ok, false);
   run.lineup.find((p) => p.id === "player_07").archetype = saved;
 
-  const to = giveCard(run, "timeout");
-  playCard(run, to.iid);
-  assert.equal(m.hand.length, 5);
-  assert.ok(m.exhaust.some((c) => c.iid === to.iid));
-  assert.equal(m.discard.some((c) => c.iid === to.iid), false);
+  // Exhaust: a card marked `exhaust` leaves the game instead of going to the discard pile.
+  content.cards.__once = { id: "__once", name: "Once", cost: 0, type: "Utility", tags: [], exhaust: true, effects: [{ type: "draw", value: 1 }] };
+  try {
+    const once = giveCard(run, "__once");
+    playCard(run, once.iid);
+    assert.ok(m.exhaust.some((c) => c.iid === once.iid));
+    assert.equal(m.discard.some((c) => c.iid === once.iid), false);
+  } finally {
+    delete content.cards.__once;
+  }
 });
 
 test("no dead hands: a hand without a shot card draws extra until one appears", () => {

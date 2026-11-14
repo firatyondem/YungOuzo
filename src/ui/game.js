@@ -5,6 +5,10 @@ import { $, sleep } from "./dom.js";
 import { renderHand, resetHandMemory, layoutHand } from "./cards.js";
 import * as hud from "./hud.js";
 import * as fx from "./fx.js";
+import { actionList, useAction, isClosingTime } from "../engine/actions.js";
+import { showOverlay, hideOverlay } from "./screens.js";
+import { icon } from "./icons.js";
+import { esc } from "./dom.js";
 
 export function createGame(app) {
   const root = $("#screen-game");
@@ -23,6 +27,8 @@ export function createGame(app) {
     hud.renderChem(app);
     hud.renderIntent(app);
     hud.renderOpponent(app);
+    hud.renderPlays(app);
+    hud.renderCoach(app);
     hud.renderLog(app);
     hud.renderPiles(app);
     hud.renderEndHint(app);
@@ -86,6 +92,14 @@ export function createGame(app) {
             hud.setOnFire(makeStreak >= 3);
             break;
           }
+          case "play_call":
+            fx.pop(`${ev.name.toUpperCase()} +${ev.bonus}%`, "good small");
+            await sleep(380);
+            break;
+          case "coach_action":
+            fx.pop(ev.name.toUpperCase(), "small");
+            app.sfx("buzzer");
+            break;
           case "picked_off":
             fx.pop("PICKED OFF!", "bad small");
             fx.flash("flash-blue");
@@ -140,7 +154,10 @@ export function createGame(app) {
             }
             break;
           case "opp_attempt": {
-            if (!ev.stolen) {
+            if (ev.foul) {
+              fx.pop(`FREE THROWS ${ev.ftMade}/${ev.ftShots}`, ev.ftMade ? "opp" : "good small");
+              app.sfx(ev.ftMade ? "swish" : "clank");
+            } else if (!ev.stolen) {
               const slot = (((run.match.intentIndex - 1) % 5) + 5) % 5; // the intent that was just resolved
               await app.court?.shoot({ side: "opp", slot, made: ev.made, points: ev.points }, cfg.OPP_ANIM_MS);
               if (ev.made) {
@@ -159,6 +176,7 @@ export function createGame(app) {
           case "match_end":
             fx.pop(ev.winner === "player" ? "YOU WIN!" : "DEFEAT", ev.winner === "player" ? "good big" : "bad big");
             if (ev.series) fx.pop(`SERIES ${ev.series.wins}-${ev.series.losses}`, "small");
+            if (ev.lifeLost) fx.pop(`LIFE LOST: ${ev.lives} LEFT`, "bad small");
             app.sfx("buzzer");
             app.announce(ev.winner === "player" ? "win" : "loss");
             break;
@@ -218,6 +236,45 @@ export function createGame(app) {
     processEvents(events);
   }
 
+  /** Timeouts and closing-time options, in one menu. */
+  function openCoachMenu() {
+    const run = app.run;
+    if (app.locked || !run?.match || run.match.over) return;
+    const list = actionList(run);
+    const group = (name) =>
+      list
+        .filter((a) => a.action.group === name)
+        .map(
+          ({ action, ok, reason }) => `
+          <button class="coach-opt${ok ? "" : " off"}" data-act="${action.id}" ${ok ? "" : "disabled"}>
+            <b>${esc(action.name)}${action.cost ? ` <em>${action.cost}s</em>` : ""}</b>
+            <span>${esc(action.text)}</span>
+            ${ok ? "" : `<i>${icon("lock")}${esc(reason)}</i>`}
+          </button>`
+        )
+        .join("");
+    const closing = isClosingTime(run);
+    const o = showOverlay(
+      `<h3 class="ov-title">COACH'S CALL</h3>
+       <div class="coach-cols">
+         <div><h4>Timeouts <b>${run.match.timeouts} left</b></h4>${group("timeout")}</div>
+         <div class="${closing ? "" : "dim"}"><h4>Closing time <b>${closing ? "now" : `from ${run.match.target - (run.config.CLOSING_WINDOW ?? 4)} points`}</b></h4>${group("closing")}</div>
+       </div>
+       <button class="btn" id="ov-close">BACK TO THE GAME</button>`,
+      "wide coach"
+    );
+    $("#ov-close", o).addEventListener("click", hideOverlay);
+    // Listen on the box (recreated every time), not on the shared overlay element,
+    // so reopening the menu never stacks handlers.
+    $(".overlay-box", o).addEventListener("click", (e) => {
+      const b = e.target.closest(".coach-opt");
+      if (!b || b.disabled) return;
+      hideOverlay();
+      processEvents(useAction(run, b.dataset.act));
+    });
+  }
+  $("#btn-coach").addEventListener("click", openCoachMenu);
+
   handEl.addEventListener("click", (e) => {
     const cardEl = e.target.closest(".card");
     if (cardEl) tryPlay(cardEl.dataset.iid, cardEl);
@@ -264,6 +321,8 @@ export function createGame(app) {
     if (e.code === "Space") {
       e.preventDefault();
       tryEndTurn();
+    } else if (e.key === "t" || e.key === "T") {
+      openCoachMenu();
     } else if (/^[1-9]$/.test(e.key)) {
       const cardEl = handEl.children[Number(e.key) - 1];
       if (cardEl) tryPlay(cardEl.dataset.iid, cardEl);

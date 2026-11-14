@@ -16,7 +16,11 @@ import {
 } from "./rules.js";
 import { generateRewards } from "./rewards.js";
 import { winsNeeded } from "./gameState.js";
-import { firstRule, rulesOf, intentMatches, tipOffRules } from "./teamRules.js";
+import { firstRule, rulesOf, intentMatches, tipOffRules, phaseIntents } from "./teamRules.js";
+import { cardInfo } from "./plays.js";
+
+/** Per-turn coach modifiers (timeouts and closing options). Reset every turn. */
+const freshMods = () => ({ ice: 0, foul: null, shotBonus: 0, endAfterShot: false, endNow: false });
 
 export function startMatch(run) {
   const stop = run.schedule[run.round];
@@ -41,6 +45,7 @@ export function startMatch(run) {
     shotsAllowed: 1,
     missedShotThisTurn: false,
     playedTags: [],
+    turnCards: [], // cards played this turn, for play calls (see plays.js)
     steals: [],
     onOppFail: [],
     pending: { draw: 0, openness: 0 },
@@ -48,8 +53,11 @@ export function startMatch(run) {
     lastOppFailed: false,
     threeStreak: 0,
     buffs: {},
-    // Opponent-side state used by team rules (see teamRules.js).
-    opp: { streak: 0, possessions: 0, hot: 0, phase: 0, tagStats: {}, adapted: null },
+    timeouts: run.config.TIMEOUTS_PER_MATCH ?? 3,
+    usedActions: [], // closing options already used this game
+    mods: freshMods(),
+    // Opponent-side state used by team rules (see teamRules.js) and the coach's read.
+    opp: { streak: 0, possessions: 0, hot: 0, phase: 0, tagStats: {}, adapted: null, pick: null, lastContest: null, readNote: "" },
     extraRules: [], // league scouting + film study, fixed at tip-off
     notes: [], // what the player is told before the game
     turnEnded: false,
@@ -84,26 +92,63 @@ function checkPhase(run, events) {
   events.push({ type: "phase_shift", name: next.name, text: next.text });
 }
 
+/**
+ * Bait and read. A coached opponent looks at the Contest you showed on the
+ * previous possession and picks, from its next two plays, the one worth more
+ * expected points against that defense (aggressive coaches value threes a bit
+ * more). It only knows what it saw: showing no defense invites the bigger,
+ * lower-percentage shot, which you can then contest. No randomness is involved
+ * and the choice is shown to the player before they act.
+ */
+function chooseIntent(run) {
+  const m = run.match;
+  const opp = m.opp;
+  const team = getTeam(run);
+  opp.pick = null;
+  opp.readNote = "";
+  if (!team.coach || run.config.OPPONENT_READS === false || opp.lastContest == null) return;
+  const set = firstRule(run, "every_nth_intent");
+  if (set && (opp.possessions + 1) % set.n === 0) return;
+  const intents = phaseIntents(run);
+  if (intents.length < 2) return;
+  const lean = 1 + ((team.coach.aggression ?? 0.5) - 0.5) * 0.3;
+  const value = (it) => it.points * Math.max(5, Math.min(95, it.pct - opp.lastContest)) * (it.points >= 3 ? lean : 1);
+  const a = intents[m.intentIndex % intents.length];
+  const b = intents[(m.intentIndex + 1) % intents.length];
+  if (value(b) > value(a) * 1.05) {
+    opp.pick = m.intentIndex + 1;
+    opp.readNote = b.points > a.points ? "saw light defense, going for more" : "saw heavy defense, taking the surer shot";
+  } else {
+    opp.pick = m.intentIndex;
+  }
+}
+
 function startTurn(run, events) {
   const m = run.match;
   m.turn++;
   run.stats.turns++;
   checkPhase(run, events);
+  chooseIntent(run);
   const pace = firstRule(run, "pace");
-  const tax = rulesOf(run, "energy_tax").reduce((s, r) => s + r.value, 0);
-  m.energy = Math.max(0, m.maxEnergy - tax);
+  const sum = (type) => rulesOf(run, type).reduce((s, r) => s + r.value, 0);
+  m.energy = Math.max(0, m.maxEnergy - sum("energy_tax"));
   m.shotsTaken = 0;
   m.shotsAllowed = 1;
   m.missedShotThisTurn = false;
   m.playedTags = [];
+  m.turnCards = [];
   m.steals = [];
   m.onOppFail = [];
+  m.mods = freshMods();
   m.turnEnded = false;
   // Passive lineup + chemistry bonuses, plus delayed effects from last turn.
   const passive = firstRule(run, "no_passive_openness") ? 0 : passiveOpenness(run);
-  m.openness = passive + m.pending.openness + rulesOf(run, "openness_start").reduce((s, r) => s + r.value, 0);
-  m.contest = passiveContest(run);
-  const n = Math.max(1, run.config.HAND_SIZE + chemistrySum(run, "extra_draw") + m.pending.draw + (pace ? pace.draw || 0 : 0));
+  m.openness = passive + m.pending.openness + sum("openness_start");
+  m.contest = passiveContest(run) + sum("contest_start");
+  const n = Math.max(
+    1,
+    run.config.HAND_SIZE + chemistrySum(run, "extra_draw") + m.pending.draw + (pace ? pace.draw || 0 : 0) + sum("draw_bonus")
+  );
   m.pending = { draw: 0, openness: 0 };
   events.push({ type: "turn_start", turn: m.turn });
   // A streaky opponent can catch fire; it is rolled now so the player sees it coming.
@@ -129,6 +174,7 @@ function finishMatch(run, winner, events) {
   m.over = true;
   m.winner = winner;
   const won = winner === "player";
+  let lifeLost = false;
   run.results.push({ teamId: m.teamId, label: stop.label, game: m.gameNo, player: m.score.player, opp: m.score.opp, won });
   if (won) {
     stop.wins++;
@@ -137,6 +183,10 @@ function finishMatch(run, winner, events) {
     if (stop.wins >= winsNeeded(stop)) {
       if (run.round >= run.schedule.length - 1) {
         run.phase = "victory";
+      } else if (stop.forfeit) {
+        // Won the rematch after losing a life: you move on, but without the reward.
+        run.round++;
+        run.phase = "map";
       } else {
         run.phase = "reward";
         generateRewards(run);
@@ -147,9 +197,27 @@ function finishMatch(run, winner, events) {
   } else {
     stop.losses++;
     log(run, `FINAL: ${team.name} win ${m.score.opp}-${m.score.player}.`);
-    run.phase = stop.losses >= winsNeeded(stop) ? "gameover" : "map";
+    if (stop.games > 1) {
+      run.phase = stop.losses >= winsNeeded(stop) ? "gameover" : "map";
+    } else if (run.lives > 0) {
+      // A life buys a rematch; the price is this stop's reward.
+      run.lives--;
+      lifeLost = true;
+      stop.forfeit = true;
+      run.phase = "map";
+      log(run, `You lose a life (${run.lives} left). Rematch, but no reward for this stop.`);
+    } else {
+      run.phase = "gameover";
+    }
   }
-  events.push({ type: "match_end", winner, phase: run.phase, series: stop.games > 1 ? { wins: stop.wins, losses: stop.losses } : null });
+  events.push({
+    type: "match_end",
+    winner,
+    phase: run.phase,
+    lifeLost,
+    lives: run.lives,
+    series: stop.games > 1 ? { wins: stop.wins, losses: stop.losses } : null,
+  });
 }
 
 function checkWin(run, events) {
@@ -196,8 +264,11 @@ export function playCard(run, iid) {
     events.push({ type: "negated", label: negated.label, cardId: card.id });
   }
   applyEffects(run, effects, { inst, events });
+  m.turnCards.push(cardInfo(card)); // after resolving, so a shot never counts toward its own play
   (card.exhaust ? m.exhaust : m.discard).push(inst);
   checkWin(run, events);
+  // "Hold for the last shot": the turn ends the moment the shot is taken.
+  if (m.mods.endNow && !m.over && !m.turnEnded) events.push(...endTurn(run));
   return events;
 }
 
@@ -207,69 +278,85 @@ function resolveOpponent(run, events) {
   const team = getTeam(run);
   const pre = opponentPreview(run);
   const intent = pre.intent;
-
-  // Steal attempts first: each one rolls until one succeeds.
   let stolen = false;
-  for (const steal of m.steals) {
-    if (intent.unblockableBySteal) {
-      events.push({ type: "steal", success: false, blocked: true });
-      log(run, `${intent.name} can't be stolen!`);
-      break;
-    }
-    const success = roll100(run) < steal.chance;
-    events.push({ type: "steal", success, blocked: false });
-    if (success) {
-      stolen = true;
-      run.stats.steals++;
-      log(run, `STEAL! ${team.name}'s ${intent.name} is cancelled.`);
-      applyEffects(run, steal.onSuccess, { inst: null, events });
-      break;
-    }
-    log(run, "Steal attempt fails.");
-  }
-
   let made = false;
   let extra = 0;
-  if (!stolen) {
-    made = roll100(run) < pre.pct;
-    if (made) {
-      m.score.opp += intent.points;
-      run.stats.pointsAgainst += intent.points;
-      const andOne = rulesOf(run, "and_one").find((r) => intentMatches(r, intent));
-      if (andOne && roll100(run) < andOne.chance) {
-        extra = 1;
-        m.score.opp += 1;
-        run.stats.pointsAgainst += 1;
-      }
-    }
-    const pct = Math.round(pre.pct);
-    log(
-      run,
-      made
-        ? `${team.name}: ${intent.name} is good for ${intent.points}${extra ? " and the foul (+1)" : ""}. (${pct}%)`
-        : `${team.name}: ${intent.name} misses! (${pct}%)`
-    );
-  }
-  events.push({
-    type: "opp_attempt",
-    intent,
-    pct: pre.pct,
-    clutch: pre.clutch,
-    notes: pre.notes,
-    made,
-    stolen,
-    extra,
-    points: intent.points,
-    score: { ...m.score },
-  });
 
-  // What the opponent learns and carries forward.
-  const tag = (intent.tags || [])[0];
-  if (tag && !stolen) {
-    const s = (opp.tagStats[tag] ||= { att: 0, made: 0 });
-    s.att++;
-    if (made) s.made++;
+  if (m.mods.foul) {
+    // Intentional foul: free throws replace their play.
+    const foul = m.mods.foul;
+    let ft = 0;
+    for (let i = 0; i < foul.shots; i++) if (roll100(run) < foul.pct) ft++;
+    m.score.opp += ft;
+    run.stats.pointsAgainst += ft;
+    made = ft > 0;
+    log(run, `Intentional foul: ${team.name} make ${ft} of ${foul.shots} free throws.`);
+    events.push({
+      type: "opp_attempt", intent, foul: true, ftMade: ft, ftShots: foul.shots, pct: foul.pct,
+      clutch: false, notes: [], made, stolen: false, extra: 0, points: ft, score: { ...m.score },
+    });
+  } else {
+    // Steal attempts first: each one rolls until one succeeds.
+    for (const steal of m.steals) {
+      if (intent.unblockableBySteal) {
+        events.push({ type: "steal", success: false, blocked: true });
+        log(run, `${intent.name} can't be stolen!`);
+        break;
+      }
+      const success = roll100(run) < steal.chance;
+      events.push({ type: "steal", success, blocked: false });
+      if (success) {
+        stolen = true;
+        run.stats.steals++;
+        log(run, `STEAL! ${team.name}'s ${intent.name} is cancelled.`);
+        applyEffects(run, steal.onSuccess, { inst: null, events });
+        break;
+      }
+      log(run, "Steal attempt fails.");
+    }
+
+    if (!stolen) {
+      made = roll100(run) < pre.pct;
+      if (made) {
+        m.score.opp += intent.points;
+        run.stats.pointsAgainst += intent.points;
+        const andOne = rulesOf(run, "and_one").find((r) => intentMatches(r, intent));
+        if (andOne && roll100(run) < andOne.chance) {
+          extra = 1;
+          m.score.opp += 1;
+          run.stats.pointsAgainst += 1;
+        }
+      }
+      const pct = Math.round(pre.pct);
+      log(
+        run,
+        made
+          ? `${team.name}: ${intent.name} is good for ${intent.points}${extra ? " and the foul (+1)" : ""}. (${pct}%)`
+          : `${team.name}: ${intent.name} misses! (${pct}%)`
+      );
+    }
+    events.push({
+      type: "opp_attempt",
+      intent,
+      pct: pre.pct,
+      clutch: pre.clutch,
+      notes: pre.notes,
+      made,
+      stolen,
+      extra,
+      points: intent.points,
+      score: { ...m.score },
+    });
+
+    // What the opponent learns and carries forward.
+    const tag = (intent.tags || [])[0];
+    if (tag && !stolen) {
+      const s = (opp.tagStats[tag] ||= { att: 0, made: 0 });
+      s.att++;
+      if (made) s.made++;
+    }
   }
+
   opp.streak = made ? opp.streak + 1 : 0;
   const streak = firstRule(run, "streak_bonus");
   if (streak && streak.resetContest && opp.streak > 0 && m.contest >= streak.resetContest) {
@@ -278,9 +365,9 @@ function resolveOpponent(run, events) {
     events.push({ type: "cooled", label: streak.label });
   }
 
-  // Second chance: a putback after a miss, unless you boxed out this turn.
+  // Second chance: a putback after a missed play, unless you boxed out this turn.
   let putback = false;
-  if (!stolen && !made) {
+  if (!stolen && !made && !m.mods.foul) {
     const second = firstRule(run, "second_chance");
     if (second) {
       if (m.onOppFail.length) {
@@ -306,8 +393,9 @@ function resolveOpponent(run, events) {
     m.pending.draw += chemistrySum(run, "draw_on_opponent_fail");
   }
   opp.possessions++;
+  opp.lastContest = m.contest; // what the coach saw (used by chooseIntent next turn)
   if (opp.hot > 0) opp.hot--;
-  if (!intent.setPlay) m.intentIndex++;
+  if (!intent.setPlay) m.intentIndex = (opp.pick != null ? opp.pick : m.intentIndex) + 1;
 
   // Adaptation: after n possessions they go back to what has worked best.
   const adapt = firstRule(run, "adapt_after");

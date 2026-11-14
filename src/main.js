@@ -84,15 +84,18 @@ async function loadJson(path) {
 
 async function loadContent() {
   // Roster selection lives in src/roster.js: league by default, private only with ?roster=real.
-  const [cards, roster, teams, chemistry, rewards] = await Promise.all([
+  const [cards, roster, teams, chemistry, rewards, plays, actions, lineups] = await Promise.all([
     loadJson("content/cards.json"),
     loadRoster({ requiredIds: CONFIG.STARTING_LINEUP, fetchFn: fetchRetry }),
     loadJson("content/teams.json"),
     loadJson("content/chemistry.json"),
     loadJson("content/rewards.json"),
+    loadJson("content/plays.json"),
+    loadJson("content/coach_actions.json"),
+    loadJson("content/lineups.json"),
   ]);
   app.roster = { source: roster.source, warning: roster.warning || "" };
-  return buildContent({ cards, players: roster.players, teams, chemistry, rewards });
+  return buildContent({ cards, players: roster.players, teams, chemistry, rewards, plays, actions, lineups });
 }
 
 // ---------- Flow ----------

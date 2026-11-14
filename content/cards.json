@@ -1,7 +1,7 @@
 [
   {"id":"swing_pass","name":"Swing Pass","cost":3,"type":"Offense","tags":["Pass"],"text":"+10 Openness.","effects":[{"type":"add_openness","value":10}],"rarity":"common"},
   {"id":"pick_and_roll","name":"Pick & Roll","cost":6,"type":"Offense","tags":["Pass","Screen"],"text":"+20 Openness. Draw 1.","effects":[{"type":"add_openness","value":20},{"type":"draw","value":1}],"rarity":"rare"},
-  {"id":"iso","name":"Iso","cost":5,"type":"Offense","tags":[],"text":"+15 Openness. +10 more with a Slasher.","effects":[{"type":"add_openness","value":15},{"type":"add_openness","value":10,"condition":{"type":"archetype_in_lineup","archetype":"Slasher"}}],"rarity":"common"},
+  {"id":"iso","name":"Iso","cost":5,"type":"Offense","tags":["Drive"],"text":"+15 Openness. +10 more with a Slasher.","effects":[{"type":"add_openness","value":15},{"type":"add_openness","value":10,"condition":{"type":"archetype_in_lineup","archetype":"Slasher"}}],"rarity":"common"},
   {"id":"pull_up_jumper","name":"Pull-Up Jumper","cost":5,"type":"Shot","tags":[],"text":"A basic 2-point shot.","effects":[{"type":"shoot","points":2}],"rarity":"common"},
   {"id":"catch_and_shoot_3","name":"Catch & Shoot 3","cost":6,"type":"Shot","tags":[],"text":"+10% if you played a Pass card this turn.","effects":[{"type":"shoot","points":3,"modifiers":[{"type":"bonus","value":10,"condition":{"type":"tag_played_this_turn","tag":"Pass"}}]}],"rarity":"common"},
   {"id":"step_back_3","name":"Step-Back 3","cost":8,"type":"Shot","tags":[],"audio":"deep3","text":"Ignores 10 opponent DEF.","effects":[{"type":"shoot","points":3,"modifiers":[{"type":"ignore_defense","value":10}]}],"rarity":"rare"},
@@ -12,7 +12,6 @@
   {"id":"lockdown","name":"Lockdown","cost":6,"type":"Defense","tags":[],"text":"+30 Contest.","effects":[{"type":"add_contest","value":30}],"rarity":"rare"},
   {"id":"swipe","name":"Swipe","cost":5,"type":"Defense","tags":[],"text":"35% to steal their attempt. If it works, draw 2 extra next turn.","effects":[{"type":"steal_attempt","chance":35,"onSuccess":[{"type":"next_turn_draw","value":2}]}],"rarity":"rare"},
   {"id":"box_out","name":"Box Out","cost":4,"type":"Defense","tags":[],"text":"If they miss this turn: +10 Openness next turn.","effects":[{"type":"on_opponent_fail","effects":[{"type":"next_turn_openness","value":10}]}],"rarity":"common"},
-  {"id":"timeout","name":"Timeout","cost":0,"type":"Utility","tags":[],"exhaust":true,"text":"Discard your hand, draw 5. Once per game.","effects":[{"type":"discard_hand"},{"type":"draw","value":5}],"rarity":"rare"},
   {"id":"fast_break","name":"Fast Break","cost":4,"type":"Offense","tags":[],"text":"+40 Openness. Only after an opponent miss.","requires":[{"type":"opponent_last_failed"}],"effects":[{"type":"add_openness","value":40}],"rarity":"rare"},
   {"id":"no_look_dime","name":"No-Look Dime","cost":2,"type":"Offense","tags":["Pass"],"text":"+8 Openness.","effects":[{"type":"add_openness","value":8}],"rarity":"common"},
   {"id":"hard_screen","name":"Hard Screen","cost":4,"type":"Offense","tags":["Screen"],"text":"+10 Openness and +10 Contest.","effects":[{"type":"add_openness","value":10},{"type":"add_contest","value":10}],"rarity":"common"},

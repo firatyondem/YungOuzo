@@ -6,7 +6,7 @@ import { league } from "../tests/helpers.js";
 import { simulate } from "./sim.js";
 
 const runs = Number(process.argv[2]) || 500;
-const TARGET = { 1: 94, 2: 74, 3: 60, boss: 50 }; // thorough-bot game win rate per tier
+const TARGET = { 1: 96, 2: 80, 3: 62, boss: 50 }; // thorough-bot game win rate per tier
 const offsets = { 1: 0, 2: 0, 3: 0, boss: 0 };
 
 function apply(off) {
@@ -37,7 +37,7 @@ function tierRate(result, teams, tier) {
 
 for (const tier of [1, 2, 3, "boss"]) {
   let best = null;
-  for (let p = 0; p <= 44; p += 4) {
+  for (let p = -8; p <= 36; p += 4) {
     const teams = apply({ ...offsets, [tier]: p });
     const rate = tierRate(simulate(runs, { casual: false, teams }), teams, tier);
     const diff = Math.abs(rate - TARGET[tier]);

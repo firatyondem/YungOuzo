@@ -78,6 +78,9 @@ export function buildContent(raw) {
     teams: raw.teams,
     chemistry: raw.chemistry || {},
     rewards: raw.rewards || { cards: [], players: [] },
+    plays: raw.plays || [],
+    actions: raw.actions || [],
+    lineups: raw.lineups || [],
   };
 }
 
@@ -92,7 +95,8 @@ export function createRun(content, config, seed) {
     nextIid: 1,
     rewards: null,
     results: [],
-    schedule: [], // [{ teamId, label, games, wins, losses }] - run.round indexes this
+    schedule: [], // [{ teamId, label, games, wins, losses, forfeit? }] - run.round indexes this
+    lives: config.LIVES ?? 0, // a loss before the Finals costs a life instead of ending the run
     film: { types: {}, shots: {} }, // what the league has seen you do (film study)
     stats: {
       wins: 0,
