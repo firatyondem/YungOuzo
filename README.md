@@ -16,8 +16,16 @@ It must be served over HTTP (ES modules + `fetch`), so opening `index.html` from
 
 ### GitHub Pages
 
-The repo deploys as-is: **Settings → Pages → Deploy from a branch → `main` / root**.
-All paths are relative, so it works under `https://<user>.github.io/<repo>/`.
+Live at **https://firatyondem.github.io/YungOuzo/**
+
+The site is published from the `gh-pages` branch, which is a copy of `main`. To update the live game after pushing to `main`:
+
+```bash
+git push origin main:gh-pages
+```
+
+(Or switch the source once in **Settings → Pages → Deploy from a branch → `main` / root**, after which every push to `main` deploys by itself.)
+All paths are relative, so the game works under `https://<user>.github.io/<repo>/` with no build step.
 If you add audio or models, run `node tools/update-assets.js` and commit `assets/manifest.json` before pushing.
 
 ## Controls
