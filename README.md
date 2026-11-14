@@ -245,7 +245,7 @@ node tools/meshy-generate.mjs --group archetypes
 node tools/update-assets.js
 ```
 
-The key is read from the environment variable `MESHY_API_KEY` or from a `MESHY_API_KEY=...` line in a `.env` file (gitignored); it is never printed. The script stops starting jobs at 1,000 credits (`--budget`) and records every task in `tools/meshy-ledger.json`. Other groups: `stars`, `variants`, `props`. **No models have been generated yet.**
+The key is read from the environment variable `MESHY_API_KEY` or from a `MESHY_API_KEY=...` line in a `.env` file (gitignored); it is never printed. The script stops starting jobs at 1,000 credits (`--budget`) and records every task in `tools/meshy-ledger.json`. Other groups: `stars`, `variants`, `props`. The five archetype models in `assets/models/` (`sniper`, `slasher`, `big`, `floorgeneral`, `lockdown`) were made in Meshy's web app (Agent mode: text to image, then Smart Topology at about 15,000 faces, textured, 120 credits in total). They are static meshes without animation clips, so they bob, turn and jump with the built-in motion. Stars, variants and props have not been generated.
 
 ## Assets (all optional)
 
@@ -317,6 +317,8 @@ Add `?css=1` to the URL to force the CSS court (the automatic fallback when Thre
 - The private roster is protected by `.gitignore` plus an opt-in pre-commit hook. A clone that has not run `git config core.hooksPath .githooks` only has the `.gitignore` protection.
 
 ## Credits
+
+3D models generated with Meshy.
 
 - 3D models made with **Meshy**.
 - Voices, sound effects and music made with **ElevenLabs**.
