@@ -1,90 +1,257 @@
-// Balance simulator: a bot plays many seeded seasons against the league.
-// Usage: node tools/sim.js [runs] [casual] [teams]
-//   default bot: plays every useful card.  casual: one setup card, first shot, one defense card.
-//   teams: also print the win rate against each team.
+// Balance simulator: bots play many seeded seasons against the league.
+// Usage: node tools/sim.js [runs] [thorough|casual|random] [teams] [cards]
+//   thorough (default): plans each turn by expected value - it understands costs,
+//       risk (turnovers, fatigue, exhaust), the opponent's intent and its own Contest,
+//       uses timeouts, holds a card, and picks the recommended game plan.
+//   casual: one setup card, the first shot it sees, one defense card. No coaching.
+//   random: plays random playable cards, random rewards. The floor.
+//   teams: per-team table.   cards: top cards in winning decks.
 import { league as content, REAL_CONFIG as CONFIG } from "../tests/helpers.js";
 import { createRun } from "../src/engine/gameState.js";
-import { startMatch, playCard, endTurn } from "../src/engine/turnLoop.js";
-import { canPlay, calcShot, getCard, getCardCost, getShootEffect } from "../src/engine/rules.js";
+import { startMatch, playCard, endTurn, toggleHold } from "../src/engine/turnLoop.js";
+import { canPlay, calcShot, checkCondition, getCard, getCardCost, getShootEffect, opponentPreview } from "../src/engine/rules.js";
 import { applyReward } from "../src/engine/rewards.js";
-import { opponentPreview } from "../src/engine/rules.js";
 import { canUseAction, useAction, isClosingTime } from "../src/engine/actions.js";
 import { recommended, setStrategy } from "../src/engine/strategy.js";
+import { nextFloat } from "../src/engine/rng.js";
 
-const CASUAL = process.argv.includes("casual");
-const PER_TEAM = process.argv.includes("teams");
+const ARG = process.argv.slice(2);
+const MODE = ARG.includes("random") ? "random" : ARG.includes("casual") ? "casual" : "thorough";
+const PER_TEAM = ARG.includes("teams");
+const TOP_CARDS = ARG.includes("cards");
 
-export function botTurn(run, casual = CASUAL) {
+// ---------- Thorough bot: expected-value planning ----------
+
+/** Sum of an effect type over a card's effects, honouring conditions against a virtual tag list. */
+function effectSum(run, card, type, tags) {
+  let total = 0;
+  for (const e of card.effects || []) {
+    if (e.type !== type) continue;
+    if (e.condition) {
+      if (e.condition.type === "tag_played_this_turn") {
+        if (!tags.includes(e.condition.tag)) continue;
+      } else if (!checkCondition(run, e.condition)) continue;
+    }
+    total += e.value || 0;
+  }
+  return total;
+}
+
+/**
+ * Value of playing a set of cards this turn, in expected points.
+ * Order assumed: setup first, then the shot, then defense.
+ */
+function planValue(run, picks) {
+  const m = run.match;
+  const cardsOf = picks.map((inst) => ({ inst, card: getCard(run, inst) }));
+  const setup = cardsOf.filter((x) => !getShootEffect(x.card) && x.card.type !== "Defense");
+  const shots = cardsOf.filter((x) => getShootEffect(x.card));
+  const defense = cardsOf.filter((x) => x.card.type === "Defense");
+  if (shots.length > m.shotsAllowed - m.shotsTaken) return -Infinity;
+
+  // Affordability (escalating cards counted once each is close enough).
+  let cost = 0;
+  for (const x of cardsOf) cost += getCardCost(run, x.card);
+  if (cost > m.energy) return -Infinity;
+
+  // Requirements, with the tags this plan would have put down before the shot.
+  const tags = [...m.playedTags];
+  for (const x of setup) tags.push(...(x.card.tags || []));
+  for (const x of cardsOf) {
+    for (const req of x.card.requires || []) {
+      if (req.type === "tag_played_this_turn") {
+        if (!tags.includes(req.tag)) return -Infinity;
+      } else if (!checkCondition(run, req)) return -Infinity;
+    }
+  }
+
+  let value = 0;
+  let openness = m.openness;
+  let contest = m.contest;
+  let draws = 0;
+  let fatigue = 0;
+  for (const x of [...setup, ...defense]) {
+    openness += effectSum(run, x.card, "add_openness", tags);
+    contest += effectSum(run, x.card, "add_contest", tags);
+    draws += effectSum(run, x.card, "draw", tags);
+  }
+  for (const x of cardsOf) {
+    if ((x.card.effects || []).some((e) => e.type === "add_status")) fatigue++;
+    if (x.card.status) value += 0.12; // clearing dead weight is worth a little
+    if ((x.card.effects || []).some((e) => e.type === "add_buff")) value += 0.25;
+    if ((x.card.effects || []).some((e) => e.type === "on_opponent_fail")) value += 0.1;
+  }
+
+  // The opponent's play after this plan's Contest.
+  const pre = opponentPreview(run);
+  let oppBonus = 0;
+  // Our own shot, evaluated on a temporarily adjusted state.
+  if (shots.length) {
+    const saved = { o: m.openness, t: m.playedTags, c: m.turnCards };
+    m.openness = openness;
+    m.playedTags = tags;
+    m.turnCards = [...m.turnCards, ...setup.map((x) => ({ tags: x.card.tags || [], type: x.card.type, points: null }))];
+    for (const x of shots) {
+      const s = calcShot(run, x.inst);
+      const p = s.pct / 100;
+      value += p * s.points;
+      // A miss can be a turnover that helps them.
+      for (const e of x.card.onMiss || []) if (e.type === "opp_bonus") oppBonus += (1 - p) * e.value;
+      if (x.card.exhaust) value -= 0.12; // spending a once-per-game card has an opportunity cost
+      m.openness = 0; // a shot uses all Openness (matters for a second shot)
+    }
+    m.openness = saved.o;
+    m.playedTags = saved.t;
+    m.turnCards = saved.c;
+  } else if (m.shotsTaken === 0) {
+    value -= 0.15; // a turn without a shot scores nothing (already true), and wastes built Openness
+  }
+
+  let oppPct = Math.max(5, Math.min(95, pre.basePct + oppBonus - (pre.contest + (contest - m.contest))));
+  let oppEV = (oppPct / 100) * pre.intent.points;
+  for (const x of defense) {
+    for (const e of x.card.effects || []) {
+      if (e.type !== "steal_attempt" || pre.intent.unblockableBySteal) continue;
+      const c = Math.min(95, e.chance) / 100;
+      const failBonus = (e.onFail || []).filter((f) => f.type === "opp_bonus").reduce((s, f) => s + f.value, 0);
+      const failEV = (Math.min(95, oppPct + failBonus) / 100) * pre.intent.points;
+      oppEV = c * 0 + (1 - c) * failEV;
+      value += c * 0.3; // the extra draws next turn
+    }
+  }
+  value -= oppEV;
+  value += draws * 0.12;
+  value -= fatigue * 0.22;
+  value += Math.min(CONFIG.CARRY_MAX || 0, m.energy - cost) * 0.012; // banked seconds are worth a little
+  return value;
+}
+
+/** Best subset of the hand by planValue (hands are small: at most 2^n subsets). */
+function bestPlan(run) {
+  const m = run.match;
+  const hand = m.hand.slice(0, 9);
+  let best = { value: planValue(run, []), picks: [] };
+  const n = hand.length;
+  for (let mask = 1; mask < 1 << n; mask++) {
+    const picks = [];
+    for (let i = 0; i < n; i++) if (mask & (1 << i)) picks.push(hand[i]);
+    if (picks.length > 5) continue;
+    const value = planValue(run, picks);
+    if (value > best.value + 1e-9) best = { value, picks };
+  }
+  return best;
+}
+
+function thoroughTurn(run) {
+  const m = run.match;
+  // Coach actions: simple, explainable heuristics.
+  const pre = opponentPreview(run);
+  const canShoot = m.hand.some((c) => getShootEffect(getCard(run, c)) && canPlay(run, c.iid).ok);
+  if (!canShoot && m.shotsTaken === 0 && canUseAction(run, "regroup").ok) useAction(run, "regroup");
+  if (isClosingTime(run) && pre.intent.points >= 3 && pre.pct >= 55 && canUseAction(run, "foul").ok) useAction(run, "foul");
+  else if (pre.pct >= 66 && (isClosingTime(run) || m.timeouts > 1) && canUseAction(run, "ice").ok) useAction(run, "ice");
+
+  // Plan, play, and re-plan while cards drawn mid-turn open something better.
+  for (let pass = 0; pass < 4 && !m.over && !m.turnEnded; pass++) {
+    const plan = bestPlan(run);
+    if (!plan.picks.length) break;
+    const order = (inst) => {
+      const card = getCard(run, inst);
+      return getShootEffect(card) ? 1 : card.type === "Defense" ? 2 : 0;
+    };
+    let played = 0;
+    for (const inst of [...plan.picks].sort((a, b) => order(a) - order(b))) {
+      if (m.over || m.turnEnded) break;
+      if (!m.hand.some((c) => c.iid === inst.iid)) continue;
+      if (canPlay(run, inst.iid).ok) {
+        playCard(run, inst.iid);
+        played++;
+      }
+    }
+    if (!played) break;
+  }
+  if (m.over || m.turnEnded) return;
+  // Hold the most valuable card left (a shot first, then the dearest card).
+  const keep = m.hand
+    .filter((c) => !getCard(run, c).status)
+    .sort((a, b) => {
+      const ca = getCard(run, a);
+      const cb = getCard(run, b);
+      return (getShootEffect(cb) ? 100 : 0) + cb.cost - ((getShootEffect(ca) ? 100 : 0) + ca.cost);
+    })[0];
+  if (keep) toggleHold(run, keep.iid);
+  endTurn(run);
+}
+
+// ---------- Casual and random bots ----------
+
+function casualTurn(run) {
   const m = run.match;
   const playable = () => m.hand.filter((c) => canPlay(run, c.iid).ok);
-  const shots = () => playable().filter((c) => getShootEffect(getCard(run, c)));
-  const value = (c) => calcShot(run, c).pct * calcShot(run, c).points;
-
-  // 0) Coach actions (thorough bot only): simple, explainable heuristics.
-  if (!casual) {
-    const pre = opponentPreview(run);
-    const noShot = !m.hand.some((c) => getShootEffect(getCard(run, c)));
-    // No shot in hand: regroup rather than take a violation.
-    if (noShot && canUseAction(run, "regroup").ok) useAction(run, "regroup");
-    // Closing time: foul a dangerous three, otherwise ice a likely make.
-    if (isClosingTime(run) && pre.intent.points >= 3 && pre.pct >= 55 && canUseAction(run, "foul").ok) useAction(run, "foul");
-    else if (pre.pct >= 62 && (isClosingTime(run) || m.timeouts > 1) && canUseAction(run, "ice").ok) useAction(run, "ice");
-  }
-
-  // 1) Offense/utility/buff cards while we can still afford the cheapest shot afterwards.
-  let guard = 0;
-  while (guard++ < 20 && !m.over && m.shotsTaken === 0) {
-    const allShots = m.hand.filter((c) => getShootEffect(getCard(run, c)));
-    const reserve = allShots.length ? Math.min(...allShots.map((c) => getCardCost(run, getCard(run, c)))) : 0;
-    const next = playable().find((c) => {
-      const card = getCard(run, c);
-      return ["Offense", "Utility", "Buff"].includes(card.type) && m.energy - getCardCost(run, card) >= reserve;
-    });
-    if (!next) break;
-    playCard(run, next.iid);
-    if (casual) break;
-  }
-  // 2) Shoot: the thorough bot takes the best expected value, the casual one the first shot.
-  const options = shots();
-  const shot = casual ? options[0] : options.sort((a, b) => value(b) - value(a))[0];
+  const first = (types) => playable().find((c) => types.includes(getCard(run, c).type));
+  // Keep enough clock for the cheapest shot in hand, then one setup card, the shot, one defense card.
+  const shotsInHand = m.hand.filter((c) => getShootEffect(getCard(run, c)));
+  const reserve = shotsInHand.length ? Math.min(...shotsInHand.map((c) => getCardCost(run, getCard(run, c)))) : 0;
+  const setup = playable().find((c) => ["Offense", "Utility", "Buff"].includes(getCard(run, c).type) && m.energy - getCardCost(run, getCard(run, c)) >= reserve);
+  if (setup) playCard(run, setup.iid);
+  const shot = first(["Shot"]);
   if (shot && !m.over) playCard(run, shot.iid);
-  // 3) Spend the rest on defense (and any extra shot).
-  guard = 0;
-  while (guard++ < 20 && !m.over) {
-    const next = playable().find((c) => ["Defense", "Shot"].includes(getCard(run, c).type));
-    if (!next) break;
-    playCard(run, next.iid);
-    if (casual) break;
+  const def = first(["Defense"]);
+  if (def && !m.over) playCard(run, def.iid);
+  if (!m.over) endTurn(run);
+}
+
+function randomTurn(run, dice) {
+  const m = run.match;
+  let guard = 0;
+  while (!m.over && guard++ < 12) {
+    const playable = m.hand.filter((c) => canPlay(run, c.iid).ok);
+    if (!playable.length || nextFloat(dice) < 0.2) break;
+    playCard(run, playable[Math.floor(nextFloat(dice) * playable.length)].iid);
   }
   if (!m.over) endTurn(run);
 }
 
+export function botTurn(run, mode = MODE, dice = null) {
+  if (mode === "random") randomTurn(run, dice || run);
+  else if (mode === "casual") casualTurn(run);
+  else thoroughTurn(run);
+}
+
+// ---------- Seasons ----------
+
 /** Play `runs` seasons. Returns per-stop and per-team tallies. */
-export function simulate(runs, { casual = CASUAL, teams = content.teams, config = CONFIG } = {}) {
+export function simulate(runs, { mode = MODE, teams = content.teams, config = CONFIG, casual = false } = {}) {
+  if (casual) mode = "casual";
   const c = { ...content, teams };
   const stops = {};
   const byTeam = {};
   const plans = {};
+  const winCards = {};
+  const stat = { cards: 0, turns: 0, shots: 0, makes: 0 };
   let champions = 0;
   let matches = 0;
   let turns = 0;
   for (let seed = 1; seed <= runs; seed++) {
     const run = createRun(c, config, seed);
+    const dice = { rngState: seed * 7919 + 13 }; // the random bot's own dice: never the game's RNG
     let guard = 0;
     const reached = new Set();
     while (run.phase === "map" && guard++ < 30) {
       const stop = run.schedule[run.round];
       const roundBefore = run.round;
-      // The thorough bot coaches: it picks the recommended system and scheme for this opponent.
-      if (!casual) setStrategy(run, recommended(run, c.teams.find((t) => t.id === stop.teamId)));
+      if (mode === "thorough") setStrategy(run, recommended(run, c.teams.find((t) => t.id === stop.teamId)));
       const plan = `${run.strategy.offense} / ${run.strategy.defense}`;
       plans[plan] = (plans[plan] || 0) + 1;
       startMatch(run);
+      const cardsBefore = run.stats.cardsPlayed;
       let g = 0;
-      while (!run.match.over && g++ < 300) botTurn(run, casual);
+      while (!run.match.over && g++ < 300) botTurn(run, mode, dice);
       const won = run.match.winner === "player";
       matches++;
       turns += run.match.turn;
+      stat.cards += run.stats.cardsPlayed - cardsBefore;
+      stat.turns += run.match.turn;
       const t = (byTeam[stop.teamId] ||= { games: 0, wins: 0, pf: 0, pa: 0 });
       t.games++;
       t.pf += run.match.score.player;
@@ -100,27 +267,39 @@ export function simulate(runs, { casual = CASUAL, teams = content.teams, config 
       if (run.phase === "map" && run.round > roundBefore) s.cleared++; // won a rematch: no reward
       if (run.phase === "reward") {
         s.cleared++;
-        // Bot preference: upgrade > card > player (simple and deterministic).
-        const idx = run.rewards.findIndex((r) => r.kind === "upgrade");
-        applyReward(run, idx >= 0 ? idx : 0, { slot: 0 });
+        let idx;
+        if (mode === "random") idx = Math.floor(nextFloat(dice) * run.rewards.length);
+        else {
+          idx = run.rewards.findIndex((r) => r.kind === "upgrade");
+          if (idx < 0) idx = 0;
+        }
+        applyReward(run, idx, { slot: Math.floor(nextFloat(dice) * 5) });
       } else if (run.phase === "victory") {
         s.cleared++;
         champions++;
+        for (const id of new Set(run.deck.map((d) => d.cardId))) winCards[id] = (winCards[id] || 0) + 1;
       }
     }
+    stat.shots += run.stats.shots;
+    stat.makes += run.stats.makes;
   }
-  return { runs, stops, byTeam, plans, champions, matches, turns };
+  return { runs, mode, stops, byTeam, plans, winCards, stat, champions, matches, turns };
 }
 
-function report(r, label) {
+function report(r) {
   const pct = (a, b) => (b ? ((100 * a) / b).toFixed(1).padStart(5) + "%" : "    -");
-  console.log(`runs: ${r.runs}  bot: ${label}  matches: ${r.matches}  avg turns/match: ${(r.turns / r.matches).toFixed(1)}`);
+  console.log(`runs: ${r.runs}  bot: ${r.mode}  matches: ${r.matches}  turns/match: ${(r.turns / r.matches).toFixed(1)}  cards/turn: ${(r.stat.cards / r.stat.turns).toFixed(2)}  shooting: ${pct(r.stat.makes, r.stat.shots).trim()}`);
   for (const [name, s] of Object.entries(r.stops)) {
     console.log(`${name.padEnd(8)} reached ${String(s.reached).padStart(5)}  cleared ${pct(s.cleared, s.reached)}  game win rate ${pct(s.wins, s.games)}`);
   }
-  console.log(`champions: ${pct(r.champions, r.runs)}`);
-  const top = Object.entries(r.plans).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  console.log(`full run (champions): ${pct(r.champions, r.runs)}`);
+  const top = Object.entries(r.plans).sort((a, b) => b[1] - a[1]).slice(0, 5);
   console.log(`plans used: ${top.map(([k, v]) => `${k} ${Math.round((100 * v) / r.matches)}%`).join(", ")}`);
+  if (TOP_CARDS && r.champions) {
+    const starters = new Set(["swing_pass", "pull_up_jumper", "contest"]);
+    const rows = Object.entries(r.winCards).filter(([id]) => !starters.has(id)).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    console.log(`cards in winning decks (of ${r.champions}): ${rows.map(([id, n]) => `${id} ${Math.round((100 * n) / r.champions)}%`).join(", ")}`);
+  }
   if (PER_TEAM) {
     console.log("\nper team (game win rate, average score):");
     for (const t of content.teams) {
@@ -132,6 +311,6 @@ function report(r, label) {
 }
 
 if (process.argv[1] && process.argv[1].replace(/\\/g, "/").endsWith("tools/sim.js")) {
-  const runs = Number(process.argv[2]) || 2000;
-  report(simulate(runs), CASUAL ? "casual" : "thorough");
+  const runs = Number(ARG.find((a) => /^\d+$/.test(a))) || 2000;
+  report(simulate(runs));
 }

@@ -14,6 +14,7 @@ export const TYPE_COLOR = {
   Buff: "#9B5CFF",
   Utility: "#9B5CFF",
   Hustle: "#FFB800",
+  Status: "#A9B8D6",
 };
 
 // Keywords become small coloured chips with a tooltip.
@@ -22,8 +23,12 @@ const KEYWORDS = {
   Contest: ["kw-contest", "Contest: subtracted from the opponent's next shot %"],
   Pass: ["kw-pass", "Pass: a card with the Pass tag"],
   Drive: ["kw-drive", "Drive: a card with the Drive tag"],
+  Exhaust: ["kw-exhaust", "Exhaust: leaves your deck for the rest of this game after one use"],
+  Fatigue: ["kw-fatigue", "Fatigue: adds a Tired Legs card to your deck for this game. It does nothing and costs 8s to clear"],
+  Miss: ["kw-risk", "Risk: this card punishes you if it fails"],
+  turnover: ["kw-risk", "Turnover: their next play gets easier"],
 };
-const TOKEN = /(\bOpenness\b|\bContest\b|\bPass\b|\bDrive\b|[+−-]?\d+%?(?:PT)?)/;
+const TOKEN = /(\bOpenness\b|\bContest\b|\bPass\b|\bDrive\b|\bExhaust\b|\bFatigue\b|\bMiss\b|\bturnover\b|[+−-]?\d+%?(?:PT|s\b)?)/;
 
 /** Effect text -> HTML: key numbers bold + coloured, keywords as chips. */
 export function richText(text) {
@@ -61,6 +66,8 @@ export function cardHTML(card, opts = {}) {
   if (opts.index != null) style.push(`--i:${opts.index}`);
   if (opts.dealt != null) style.push(`--d:${opts.dealt}`);
   const discounted = opts.baseCost != null && cost < opts.baseCost;
+  const raised = opts.baseCost != null && cost > opts.baseCost;
+  if (opts.held) cls.push("held");
 
   let pct = "";
   if (opts.pct != null) {
@@ -78,9 +85,9 @@ export function cardHTML(card, opts = {}) {
   return `
     <div class="${cls.join(" ")}" ${opts.iid ? `data-iid="${opts.iid}"` : ""} data-type="${esc(type)}"
          ${opts.actorId ? `data-actor="${esc(opts.actorId)}"` : ""} ${style.length ? `style="${style.join(";")}"` : ""}>
-      <div class="card-cost${discounted ? " discounted" : ""}" title="Costs ${cost} seconds of shot clock">${cost}</div>
+      <div class="card-cost${discounted ? " discounted" : raised ? " raised" : ""}" title="Costs ${cost} seconds of the 24-second shot clock">${cost}<small>s</small></div>
       <div class="card-frame">
-        <div class="card-band">${icon(TYPE_ICON[type] || "utility")}<span>${esc(type)}</span></div>
+        <div class="card-band">${icon(TYPE_ICON[type] || "utility")}<span>${esc(card.category || type)}</span></div>
         <div class="card-art">${playDiagramSVG(card, color)}</div>
         <div class="card-name ${nameClass(card.name)}">${esc(card.name)}</div>
         <div class="card-text">${richText(card.text)}</div>
@@ -88,6 +95,7 @@ export function cardHTML(card, opts = {}) {
       </div>
       ${pct}
       ${opts.playable === false && opts.reason ? `<div class="card-lock">${icon("lock")}${esc(opts.reason)}</div>` : ""}
+      ${opts.holdable ? `<button class="card-hold${opts.held ? " on" : ""}" data-hold="${opts.iid}" title="Hold: keep this card for next turn instead of discarding it (1 card)">${opts.held ? "HELD" : "HOLD"}</button>` : ""}
       ${opts.tip ? `<div class="card-tip">${opts.tip}</div>` : ""}
     </div>`;
 }
@@ -157,6 +165,8 @@ export function renderHand(app) {
         actorId: performer ? performer.id : "",
         tip: shot ? shotTip(shot) : "",
         hotkey: i < 9 ? i + 1 : "",
+        holdable: !card.status && (run.config.HOLD_MAX ?? 0) > 0,
+        held: (m.held || []).includes(inst.iid),
         index: Math.round((i - mid) * 100) / 100,
         dealt: isNew ? dealt++ : null,
       });

@@ -7,21 +7,21 @@
     },
     {
       "id": "pace_space", "name": "Pace & Space",
-      "strengths": ["+10% on your threes", "Fast Break costs 2s less"],
+      "strengths": ["+10% on your threes", "Fast Break costs 4s less"],
       "weaknesses": ["-10 Contest every turn"],
       "effects": [
         { "type": "shot_mod", "points": 3, "value": 10 },
-        { "type": "card_cost", "cardId": "fast_break", "value": -2 },
+        { "type": "card_cost", "cardId": "fast_break", "value": -4 },
         { "type": "contest_start", "value": -10 }
       ]
     },
     {
       "id": "motion", "name": "Motion Offense",
       "strengths": ["Every 2nd Pass card in a turn draws a card"],
-      "weaknesses": ["Iso costs 2s more"],
+      "weaknesses": ["Iso costs 4s more"],
       "effects": [
         { "type": "pass_draw", "every": 2, "value": 1 },
-        { "type": "card_cost", "cardId": "iso", "value": 2 }
+        { "type": "card_cost", "cardId": "iso", "value": 4 }
       ]
     },
     {
@@ -30,7 +30,7 @@
       "weaknesses": ["-10% on your threes"],
       "effects": [
         { "type": "shot_mod", "points": 2, "archetype": "Big", "value": 15 },
-        { "type": "card_cost", "cardId": "box_out", "value": -4 },
+        { "type": "card_cost", "cardId": "box_out", "value": -8 },
         { "type": "shot_mod", "points": 3, "value": -10 }
       ]
     },
@@ -94,36 +94,38 @@
     {
       "id": "press", "name": "Full-Court Press",
       "strengths": ["Your steal attempts +20%"],
-      "weaknesses": ["Their transition plays +20%", "Costs you 2 seconds every turn"],
+      "weaknesses": ["Their transition plays +20%", "-6 Contest every turn"],
       "effects": [
         { "type": "steal_bonus", "value": 20 },
         { "type": "intent_bonus", "tag": "transition", "value": 20 },
-        { "type": "energy_tax", "value": 2 }
+        { "type": "contest_start", "value": -6 }
       ]
     }
   ],
   "pace": [
     {
       "id": "slow", "name": "Slow",
-      "strengths": ["30-second shot clock", "+4 Contest every turn"],
+      "strengths": ["+6 Contest every turn", "Their transition plays -10%"],
       "weaknesses": ["Draw 1 card fewer", "Their post-ups +5%"],
       "effects": [
-        { "type": "pace", "pace": "slow", "clock": 30, "draw": -1 },
-        { "type": "contest_start", "value": 4 },
+        { "type": "pace", "pace": "slow", "draw": -1 },
+        { "type": "contest_start", "value": 6 },
+        { "type": "intent_bonus", "tag": "transition", "value": -10 },
         { "type": "intent_bonus", "tag": "post", "value": 5 }
       ]
     },
     {
       "id": "normal", "name": "Normal",
-      "strengths": ["24-second shot clock"], "weaknesses": ["No special edge"],
+      "strengths": ["A normal hand of 5 cards"], "weaknesses": ["No special edge"],
       "effects": []
     },
     {
       "id": "fast", "name": "Fast",
       "strengths": ["Draw 1 extra card"],
-      "weaknesses": ["18-second shot clock", "Their transition plays +10%"],
+      "weaknesses": ["-6 Contest every turn", "Their transition plays +10%"],
       "effects": [
-        { "type": "pace", "pace": "fast", "clock": 18, "draw": 1 },
+        { "type": "pace", "pace": "fast", "draw": 1 },
+        { "type": "contest_start", "value": -6 },
         { "type": "intent_bonus", "tag": "transition", "value": 10 }
       ]
     }

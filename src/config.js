@@ -18,15 +18,19 @@ export const CONFIG = {
 
   TEAM_NAME: "YOU",
   TARGET_SCORE: 15,
-  MAX_ENERGY: 24, // the shot clock
+  MAX_ENERGY: 24, // the shot clock: always 24. Card costs are sized so a turn fits two or three cards.
+  // Unspent seconds do not carry over, except that up to CARRY_MAX are banked for the next turn.
+  CARRY_MAX: 8,
+  // At the end of your turn you may hold this many unplayed cards instead of discarding them.
+  HOLD_MAX: 1,
   HAND_SIZE: 5,
   // No dead hands: if a new hand has no shot card, draw up to this many extra
   // cards until one shows up (still the normal seeded draw order). 0 = off.
   NO_SHOT_REDRAWS: 3,
 
   // makePct = BASE_PCT[points] + openness + rating * RATING_MULT - opponentDefense
-  BASE_PCT: { 2: 45, 3: 30 },
-  SHOT_RATING: { 2: "INS", 3: "SHT" },
+  BASE_PCT: { 2: 45, 3: 30, 4: 10 },
+  SHOT_RATING: { 2: "INS", 3: "SHT", 4: "SHT" },
   RATING_MULT: 5,
   PCT_MIN: 5,
   PCT_MAX: 95,

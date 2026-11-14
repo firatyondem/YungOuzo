@@ -69,14 +69,15 @@ export function renderClock(app) {
   const m = app.run.match;
   const r = 50;
   const circ = 2 * Math.PI * r;
-  const frac = m.energy / m.maxEnergy;
+  const frac = Math.min(1, m.energy / m.maxEnergy);
+  const extra = Math.max(0, m.energy - m.maxEnergy);
   const low = m.energy <= 5;
   $("#g-clock").innerHTML = `
     <svg viewBox="0 0 120 120" class="${low ? "low" : ""}" role="img" aria-label="Shot clock: ${m.energy} seconds">
       <circle cx="60" cy="60" r="${r}" class="ring-bg"/>
       <circle cx="60" cy="60" r="${r}" class="ring" stroke-dasharray="${circ}" stroke-dashoffset="${circ * (1 - frac)}" transform="rotate(-90 60 60)"/>
       <text x="60" y="68" text-anchor="middle" class="clock-num">${m.energy}</text>
-      <text x="60" y="88" text-anchor="middle" class="clock-label">SHOT CLOCK</text>
+      <text x="60" y="88" text-anchor="middle" class="clock-label">${extra ? `+${extra}s SAVED` : "SHOT CLOCK"}</text>
     </svg>`;
 }
 
@@ -284,6 +285,10 @@ export function renderEndHint(app) {
   const m = app.run.match;
   const el = $("#g-endhint");
   if (m.over) el.textContent = "";
-  else if (m.shotsTaken === 0) el.innerHTML = `<b class="warn">No shot yet</b><span>Ending now is a violation</span>`;
-  else el.innerHTML = `<b class="ok">Shot taken</b><span>Add defense or end the turn</span>`;
+  else {
+    const save = Math.min(app.run.config.CARRY_MAX ?? 0, m.energy);
+    const keep = save > 0 ? `Ending saves ${save}s for next turn` : "Nothing left to save";
+    if (m.shotsTaken === 0) el.innerHTML = `<b class="warn">No shot yet</b><span>Ending now is a violation</span>`;
+    else el.innerHTML = `<b class="ok">Shot taken</b><span>${keep}</span>`;
+  }
 }

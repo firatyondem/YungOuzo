@@ -114,7 +114,12 @@ app.goHowTo = () => {
   showScreen("howto");
 };
 
-app.startRun = (seed = CONFIG.SEED ?? randomSeed()) => {
+// ?seed=123 in the URL fixes the run (same schedule, draws and dice every time).
+const urlSeed = () => {
+  const v = Number(new URLSearchParams(location.search).get("seed"));
+  return Number.isFinite(v) && v > 0 ? Math.floor(v) : null;
+};
+app.startRun = (seed = urlSeed() ?? CONFIG.SEED ?? randomSeed()) => {
   app.tutorial?.stop(false);
   app.run = createRun(app.content, CONFIG, seed);
   app.locked = false;
@@ -304,3 +309,6 @@ async function boot() {
 }
 
 boot();
+
+// Handle for the debug panel and manual checks in the console.
+window.__fcr = app;

@@ -113,6 +113,8 @@ export function getCardCost(run, card) {
       cost += r.value;
     }
   }
+  // Escalating cost: each earlier play of this card in the same game makes it dearer.
+  if (run.match && card.escalate) cost += card.escalate * ((run.match.cardPlays || {})[card.id] || 0);
   return Math.max(0, cost);
 }
 
@@ -155,11 +157,16 @@ export function calcShot(run, inst) {
   }
   // Chemistry (e.g. +5% on 3PT) and match buffs (e.g. heat check streak).
   bonus += chemistrySum(run, "shot_bonus", (e) => e.points === points);
-  if (points === 3) bonus += (m.buffs.threeStreakBonus || 0) * m.threeStreak;
+  if (points >= 3) bonus += (m.buffs.threeStreakBonus || 0) * m.threeStreak;
 
   let defense = Math.max(0, getTeam(run).defense - ignore); // never below 0
   let rating = shooter.ratings[ratingKey];
   const notes = [];
+  // Cold spell: the price of a missed heat check, on your next three only.
+  if (points >= 3 && m.threeCold) {
+    bonus -= m.threeCold;
+    notes.push({ label: "Cold spell", value: -m.threeCold });
+  }
   // Play call: the right sequence of cards this turn boosts the shot that finishes it.
   const play = playFor(run, card);
   if (play) {
@@ -281,6 +288,8 @@ export function opponentPreview(run) {
   if (opp.adapted && (intent.tags || []).includes(opp.adapted.tag)) add(opp.adapted.label, opp.adapted.bonus, "adapted");
   if (opp.readNote) notes.push({ label: "Coach read", value: 0, text: opp.readNote });
   if (m.mods && m.mods.ice) add("Iced", -m.mods.ice, "timeout");
+  // Consequences of your own mistakes this turn (turnovers, failed steals).
+  for (const b of (m.mods && m.mods.oppBonus) || []) add(b.label, b.value, "your mistake");
 
   // Your Contest, after any part the opponent ignores.
   let contest = m.contest;

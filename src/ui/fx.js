@@ -16,6 +16,22 @@ export function pop(text, cls = "") {
   setTimeout(() => el.remove(), 1300);
 }
 
+/** One short line that explains a consequence ("Miss on the drive: turnover, their play is at +10%"). */
+let captionTimer = 0;
+export function caption(text, cls = "bad") {
+  const layer = $("#g-fx");
+  if (!layer || !text) return;
+  let el = layer.querySelector(".fx-caption");
+  if (!el) {
+    el = document.createElement("div");
+    layer.appendChild(el);
+  }
+  el.className = `fx-caption ${cls}`;
+  el.textContent = text;
+  clearTimeout(captionTimer);
+  captionTimer = setTimeout(() => el.remove(), 3200);
+}
+
 /** Screen shake scaled by the points scored (2 = soft, 3+ = hard). */
 export function shake(strength = "soft") {
   const el = $("#screen-game");

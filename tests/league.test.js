@@ -348,8 +348,8 @@ test("rules: shot modifiers, multipliers and rating caps change your make %", ()
 test("rules: card costs, pick-offs, negated tags, Openness and shot clock changes", () => {
   // Card cost by tag.
   let run = matchVs({ signature: { name: "Press", text: "", effects: [{ type: "card_cost", tag: "Pass", value: 1 }] } });
-  assert.equal(getCardCost(run, content.cards.swing_pass), 4);
-  assert.equal(getCardCost(run, content.cards.contest), 3);
+  assert.equal(getCardCost(run, content.cards.swing_pass), content.cards.swing_pass.cost + 1);
+  assert.equal(getCardCost(run, content.cards.contest), content.cards.contest.cost);
 
   // Pass cards can be picked off: spent, no effect, not counted as a pass.
   let picked = 0;
@@ -361,7 +361,7 @@ test("rules: card costs, pick-offs, negated tags, Openness and shot clock change
     if (events.some((e) => e.type === "picked_off")) {
       picked++;
       assert.equal(r.match.openness, before);
-      assert.equal(r.match.energy, r.match.maxEnergy - 3);
+      assert.equal(r.match.energy, r.match.maxEnergy - content.cards.swing_pass.cost);
       assert.equal(r.match.playedTags.includes("Pass"), false);
       assert.equal(r.match.hand.length, 0);
     } else {
@@ -392,14 +392,13 @@ test("rules: card costs, pick-offs, negated tags, Openness and shot clock change
   // Shot clock: tax and pace.
   run = matchVs({ signature: { name: "Bruisers", text: "", effects: [{ type: "energy_tax", value: 2 }] } });
   assert.equal(run.match.energy, 22);
+  // Pace changes how many cards you see. The shot clock is always 24.
   run = matchVs({ signature: { name: "Fast", text: "", effects: [{ type: "pace", pace: "fast", clock: 18, draw: 1 }] } });
-  assert.equal(run.match.maxEnergy, 18);
-  assert.equal(run.match.energy, 18);
+  assert.equal(run.match.maxEnergy, 24);
+  assert.equal(run.match.energy, 24);
   assert.equal(run.match.hand.length, 6);
-  endTurn(run);
-  if (!run.match.over) assert.equal(run.match.energy, 18);
-  run = matchVs({ signature: { name: "Slow", text: "", effects: [{ type: "pace", pace: "slow", clock: 30, draw: -1 }] } });
-  assert.equal(run.match.energy, 30);
+  run = matchVs({ signature: { name: "Slow", text: "", effects: [{ type: "pace", pace: "slow", draw: -1 }] } });
+  assert.equal(run.match.energy, 24);
   assert.equal(run.match.hand.length, 4);
 });
 
@@ -441,6 +440,7 @@ test("film: the league scouts your favourite shot, and film-study teams tax your
 
   // Playing cards records film.
   const rec = matchVs({});
+  rec.match.energy = 99;
   playCard(rec, giveCard(rec, "swing_pass").iid);
   playCard(rec, giveCard(rec, "corner_three").iid);
   assert.equal(rec.film.types.Offense, 1);
@@ -456,18 +456,18 @@ test("film: the league scouts your favourite shot, and film-study teams tax your
     return r;
   };
   run = filmRun({ Defense: 9, Offense: 4, Shot: 3 });
-  assert.equal(getCardCost(run, content.cards.contest), 4);
-  assert.equal(getCardCost(run, content.cards.swing_pass), 3);
+  assert.equal(getCardCost(run, content.cards.contest), content.cards.contest.cost + 1);
+  assert.equal(getCardCost(run, content.cards.swing_pass), content.cards.swing_pass.cost);
   assert.ok(run.match.notes.some((n) => /Defense cards/.test(n)));
-  assert.equal(getCardCost(filmRun({ Defense: 2 }), content.cards.contest), 3, "not enough film yet");
+  assert.equal(getCardCost(filmRun({ Defense: 2 }), content.cards.contest), content.cards.contest.cost, "not enough film yet");
   // fromGame: only from that game of a series on.
   const late = { series: 3, signature: { name: "Film Room", text: "", effects: [{ type: "counter_favorite_type", value: 1, fromGame: 2 }] } };
   run = filmRun({ Shot: 9 }, late);
-  assert.equal(getCardCost(run, content.cards.pull_up_jumper), 5, "game 1: no tax");
+  assert.equal(getCardCost(run, content.cards.pull_up_jumper), content.cards.pull_up_jumper.cost, "game 1: no tax");
   debugAddPoints(run, 15, "player");
   startMatch(run);
   assert.equal(run.match.gameNo, 2);
-  assert.equal(getCardCost(run, content.cards.pull_up_jumper), 6, "game 2: taxed");
+  assert.equal(getCardCost(run, content.cards.pull_up_jumper), content.cards.pull_up_jumper.cost + 1, "game 2: taxed");
 });
 
 test("league: a full seeded season is reproducible", () => {

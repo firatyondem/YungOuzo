@@ -1,59 +1,76 @@
-// Balance helper: finds per-tier strength offsets that hit target win rates.
-// For each tier in turn it tries "+p% on every intent and +p/2 DEF" and keeps
-// the value whose game win rate (thorough bot) is closest to the target.
-//   node tools/tune.js [runs]
-import { league } from "../tests/helpers.js";
-import { simulate } from "./sim.js";
+// Balance helper: finds the per-tier strength offset that hits a target game
+// win rate for the thorough bot. It plays isolated games at each stop (with the
+// rewards a run would have by then), and bisects on "+p% on every intent and
+// +p/2 DEF" for that tier. Print-only: put the result into TUNE in gen-league.js.
+//   node tools/tune.js [games per step]
+import { league, REAL_CONFIG as CONFIG } from "../tests/helpers.js";
+import { createRun } from "../src/engine/gameState.js";
+import { startMatch } from "../src/engine/turnLoop.js";
+import { generateRewards, applyReward } from "../src/engine/rewards.js";
+import { recommended, setStrategy } from "../src/engine/strategy.js";
+import { botTurn } from "./sim.js";
 
-const runs = Number(process.argv[2]) || 500;
-const TARGET = { 1: 96, 2: 80, 3: 62, boss: 50 }; // thorough-bot game win rate per tier
-const offsets = { 1: 0, 2: 0, 3: 0, boss: 0 };
+const games = Number(process.argv[2]) || 300;
+// Thorough-bot game win rate per tier. With two lives and a best-of-3 Finals
+// these give roughly: Act 1 85%, Act 2 57%, Act 3 47%, Finals series ~35%, full run ~20%.
+export const TARGET = { 1: 85, 2: 57, 3: 47, boss: 40 };
+const STOP = { 1: 0, 2: 1, 3: 2, boss: 3 };
 
-function apply(off) {
-  const teams = JSON.parse(JSON.stringify(league.teams));
-  for (const t of teams) {
-    const p = off[t.tier] || 0;
-    t.defense += Math.round(p / 2);
-    const bump = (i) => (i.pct = Math.min(92, i.pct + p));
+function apply(teams, tier, p) {
+  const out = JSON.parse(JSON.stringify(teams));
+  for (const t of out.filter((x) => x.tier === tier)) {
+    t.defense = Math.max(0, t.defense + Math.round(p / 2));
+    const bump = (i) => (i.pct = Math.max(15, Math.min(92, i.pct + p)));
     t.intents.forEach(bump);
     for (const ph of t.phases || []) (ph.intents || []).forEach(bump);
     for (const src of [t.star, t.signature]) for (const e of src.effects) if (e.intent) bump(e.intent);
   }
-  return teams;
+  return out;
 }
 
-function tierRate(result, teams, tier) {
-  let games = 0;
+/** Win rate of the thorough bot in single games against one tier. */
+export function tierRate(teams, tier, n = games, mode = "thorough") {
+  const content = { ...league, teams };
+  const pool = teams.filter((t) => t.tier === tier);
   let wins = 0;
-  for (const t of teams.filter((x) => x.tier === tier)) {
-    const s = result.byTeam[t.id];
-    if (s) {
-      games += s.games;
-      wins += s.wins;
+  for (let seed = 1; seed <= n; seed++) {
+    const run = createRun(content, CONFIG, seed * 31 + 7);
+    // Give the run the rewards it would have collected before this stop.
+    for (let r = 0; r < STOP[tier]; r++) {
+      run.phase = "reward";
+      generateRewards(run);
+      const idx = Math.max(0, run.rewards.findIndex((x) => x.kind === "upgrade"));
+      applyReward(run, idx, { slot: 0 });
     }
+    run.round = STOP[tier];
+    const team = pool[seed % pool.length];
+    run.schedule[run.round].teamId = team.id;
+    if (mode === "thorough") setStrategy(run, recommended(run, team));
+    startMatch(run);
+    let g = 0;
+    const dice = { rngState: seed * 7919 };
+    while (!run.match.over && g++ < 300) botTurn(run, mode, dice);
+    if (run.match.winner === "player") wins++;
   }
-  return games ? (100 * wins) / games : 0;
+  return (100 * wins) / n;
 }
 
-for (const tier of [1, 2, 3, "boss"]) {
-  let best = null;
-  for (let p = -8; p <= 36; p += 4) {
-    const teams = apply({ ...offsets, [tier]: p });
-    const rate = tierRate(simulate(runs, { casual: false, teams }), teams, tier);
-    const diff = Math.abs(rate - TARGET[tier]);
-    if (!best || diff < best.diff) best = { p, rate, diff };
-    if (rate < TARGET[tier] - 6) break;
+if (process.argv[1] && process.argv[1].replace(/\\/g, "/").endsWith("tools/tune.js")) {
+  const offsets = {};
+  for (const tier of [1, 2, 3, "boss"]) {
+    let lo = -44; // weaker opponent -> higher win rate
+    let hi = 12;
+    let best = null;
+    for (let step = 0; step < 6; step++) {
+      const mid = Math.round((lo + hi) / 2);
+      const rate = tierRate(apply(league.teams, tier, mid), tier);
+      if (!best || Math.abs(rate - TARGET[tier]) < Math.abs(best.rate - TARGET[tier])) best = { p: mid, rate };
+      if (rate > TARGET[tier]) lo = mid; // too easy: make them stronger
+      else hi = mid;
+      if (hi - lo <= 1) break;
+    }
+    offsets[tier] = best.p;
+    console.log(`tier ${String(tier).padEnd(4)} offset ${String(best.p).padStart(4)} -> thorough bot wins ${best.rate.toFixed(1)}% of games (target ${TARGET[tier]}%)`);
   }
-  offsets[tier] = best.p;
-  console.log(`tier ${tier}: +${best.p}% intents, +${Math.round(best.p / 2)} DEF -> thorough bot wins ${best.rate.toFixed(1)}% (target ${TARGET[tier]}%)`);
-}
-console.log("offsets:", JSON.stringify(offsets));
-const teams = apply(offsets);
-for (const casual of [false, true]) {
-  const r = simulate(runs * 2, { casual, teams });
-  console.log(`\n${casual ? "casual" : "thorough"} bot, ${runs * 2} runs: champions ${((100 * r.champions) / r.runs).toFixed(1)}%`);
-  for (const t of teams) {
-    const s = r.byTeam[t.id];
-    if (s) console.log(`  ${String(t.tier).padEnd(4)} ${t.name.padEnd(22)} ${((100 * s.wins) / s.games).toFixed(0).padStart(3)}%  ${(s.pf / s.games).toFixed(1)}-${(s.pa / s.games).toFixed(1)}`);
-  }
+  console.log("add to TUNE in tools/gen-league.js (pct += offset, def += offset / 2):", JSON.stringify(offsets));
 }

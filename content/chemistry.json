@@ -8,8 +8,8 @@
     "effect": { "type": "draw_on_opponent_fail", "value": 1 }
   },
   "Slasher": {
-    "threshold": 2, "name": "Downhill", "text": "Drive cards cost 1s less",
-    "effect": { "type": "tag_cost_reduction", "tag": "Drive", "value": 1 }
+    "threshold": 2, "name": "Downhill", "text": "Drive cards cost 4s less",
+    "effect": { "type": "tag_cost_reduction", "tag": "Drive", "value": 4 }
   },
   "FloorGeneral": {
     "threshold": 2, "name": "Twin Maestros", "text": "Draw 1 extra card each turn",

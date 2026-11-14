@@ -48,7 +48,7 @@ test("systems: Pace & Space, Post Hub and Heliocentric change your shots", () =>
   let run = withPlan({ offense: "pace_space" });
   assert.equal(three(run), b3 + 10);
   assert.equal(two(run), b2);
-  assert.equal(getCardCost(run, content.cards.fast_break), 2);
+  assert.equal(getCardCost(run, content.cards.fast_break), content.cards.fast_break.cost - 4);
   assert.ok(calcShot(run, giveCard(run, "corner_three")).notes.some((n) => n.label === "Pace & Space" && n.value === 10));
   endTurn(run);
   if (!run.match.over) assert.equal(run.match.contest, passiveContest(run) - 10);
@@ -81,7 +81,8 @@ test("systems: Pace & Space, Post Hub and Heliocentric change your shots", () =>
 
 test("systems: Motion Offense draws on every 2nd pass; Pick & Roll Heavy boosts screens", () => {
   let run = withPlan({ offense: "motion" });
-  assert.equal(getCardCost(run, content.cards.iso), 7, "Iso costs 2s more");
+  assert.equal(getCardCost(run, content.cards.iso), content.cards.iso.cost + 4, "Iso costs 4s more");
+  run.match.energy = 99;
   let hand = run.match.hand.length;
   play(run, "swing_pass");
   assert.equal(run.match.hand.length, hand, "first pass: nothing yet");
@@ -142,27 +143,28 @@ test("schemes: each defensive scheme changes their plays as described", () => {
   const events = play(run, "swipe");
   assert.equal(events.find((e) => e.type === "steal_set").chance, 55);
   endTurn(run);
-  if (!run.match.over) assert.equal(run.match.energy, 22);
+  if (!run.match.over) assert.equal(run.match.contest, passiveContest(run) - 6, "the gamble costs 6 Contest a turn");
   // The scheme is named next to the number it changes.
   const z = matchVs(team);
   setStrategy(z, { defense: "zone_23" });
   assert.ok(opponentPreview(z).notes.some((n) => n.label === "2-3 Zone" && n.value === -15));
 });
 
-test("pace: shot clock and hand size change for you; an opponent's pace lock wins", () => {
+test("pace: hand size changes, the shot clock never does; an opponent's pace lock wins", () => {
   let run = newRun();
   setStrategy(run, { pace: "fast" });
   startMatch(run);
-  assert.equal(run.match.maxEnergy, 18);
-  assert.equal(run.match.energy, 18);
+  assert.equal(run.match.maxEnergy, 24);
+  assert.equal(run.match.energy, 24);
   assert.equal(run.match.hand.length, 6);
+  assert.equal(run.match.contest, passiveContest(run) - 6);
 
   run = newRun();
   setStrategy(run, { pace: "slow" });
   startMatch(run);
-  assert.equal(run.match.energy, 30);
+  assert.equal(run.match.energy, 24);
   assert.equal(run.match.hand.length, 4);
-  assert.equal(run.match.contest, passiveContest(run) + 4);
+  assert.equal(run.match.contest, passiveContest(run) + 6);
 
   // Pace affects the opponent too: fast feeds their transition game.
   const team = { intents: [{ name: "Run-Out", points: 2, pct: 50, tags: ["transition"] }] };
@@ -172,13 +174,13 @@ test("pace: shot clock and hand size change for you; an opponent's pace lock win
   assert.equal(opponentPreview(run).pct, 60);
 
   // A team that locks the pace overrides your choice.
-  const locked = { signature: { name: "Slow Burn", text: "", effects: [{ type: "pace", pace: "slow", clock: 30, draw: -1 }] } };
+  const locked = { signature: { name: "Slow Burn", text: "", effects: [{ type: "pace", pace: "slow", draw: -1 }] } };
   run = matchVs(locked);
   setStrategy(run, { pace: "fast" });
   endTurn(run);
   if (!run.match.over) {
-    assert.equal(run.match.maxEnergy, 30);
-    assert.equal(run.match.energy, 30);
+    assert.equal(run.match.hand.length, 4, "their slow pace wins: 4 cards, not 6");
+    assert.equal(run.match.maxEnergy, 24);
   }
 });
 
@@ -281,7 +283,10 @@ test("changing the plan: free before a game and at halftime, otherwise it costs 
   // A new pace applies from the next turn.
   const r3 = newMatch(23);
   changePlan(r3, { pace: "fast" });
-  assert.equal(r3.match.maxEnergy, 24);
+  assert.equal(r3.match.hand.length, 5);
   endTurn(r3);
-  if (!r3.match.over) assert.equal(r3.match.maxEnergy, 18);
+  if (!r3.match.over) {
+    assert.equal(r3.match.hand.length, 6);
+    assert.equal(r3.match.maxEnergy, 24, "the shot clock is always 24");
+  }
 });

@@ -11,11 +11,11 @@
   },
   {
     "id": "breather", "group": "timeout", "name": "Breather",
-    "text": "+6 seconds on the shot clock this turn.",
-    "effects": [{ "type": "add_energy", "value": 6 }]
+    "text": "+8 seconds to spend this turn.",
+    "effects": [{ "type": "add_energy", "value": 8 }]
   },
   {
-    "id": "foul", "group": "closing", "name": "Intentional Foul", "cost": 4,
+    "id": "foul", "group": "closing", "name": "Intentional Foul", "cost": 8,
     "text": "They shoot two free throws (70% each, 1 point each) instead of running their play.",
     "effects": [{ "type": "foul_intent", "shots": 2, "pct": 70 }]
   },

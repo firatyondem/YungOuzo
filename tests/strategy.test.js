@@ -34,6 +34,7 @@ test("plays: content is valid and every play ends with a shot", () => {
 test("plays: Pass, Pass, shot triggers Swing-Swing (+10%) and is announced", () => {
   const run = newMatch();
   const m = run.match;
+  m.energy = 99; // this test is about sequencing, not about affording it
   const shot = giveCard(run, "pull_up_jumper");
   const base = calcShot(run, shot).pct;
   assert.equal(playFor(run, content.cards.pull_up_jumper), null);
@@ -68,6 +69,7 @@ test("plays: Pass, Pass, shot triggers Swing-Swing (+10%) and is announced", () 
 test("plays: Drive & Kick needs Drive then Pass then a three, and halves their DEF", () => {
   const run = matchVs({ defense: 20 });
   run.match.openness = 0;
+  run.match.energy = 99;
   const three = giveCard(run, "corner_three");
   const two = giveCard(run, "pull_up_jumper");
   const base3 = calcShot(run, three).pct;
@@ -78,6 +80,7 @@ test("plays: Drive & Kick needs Drive then Pass then a three, and halves their D
 
   const r2 = matchVs({ defense: 20 });
   r2.match.openness = 0;
+  r2.match.energy = 99;
   const t2 = giveCard(r2, "corner_three");
   play(r2, "iso"); // Drive-tagged
   play(r2, "swing_pass"); // the kick-out
@@ -187,9 +190,9 @@ test("timeouts: three per game, each with a real effect", () => {
   assert.equal(canUseAction(run, "ice").ok, false);
   assert.equal(m.timeouts, 1);
 
-  // Breather: +6 seconds, can go above the normal clock.
+  // Breather: +8 seconds on top of the normal clock.
   useAction(run, "breather");
-  assert.equal(m.energy, 30);
+  assert.equal(m.energy, 32);
   assert.equal(m.timeouts, 0);
 
   // None left.
@@ -201,7 +204,7 @@ test("timeouts: three per game, each with a real effect", () => {
   if (!m.over) {
     assert.equal(m.timeouts, 0, "timeouts do not come back");
     assert.equal(m.mods.ice, 0, "the ice wore off");
-    assert.equal(m.energy, 24);
+    assert.equal(m.energy, 24 + 8, "a fresh 24, plus the 8 unspent seconds that were banked");
   }
   // Timeout is no longer a card.
   assert.equal(content.cards.timeout, undefined);
@@ -235,7 +238,7 @@ test("closing: intentional foul swaps their play for two free throws", () => {
     m.score.player = 11;
     const events0 = useAction(run, "foul");
     assert.ok(events0.some((e) => e.type === "foul_set"));
-    assert.equal(m.energy, 20, "costs 4 seconds");
+    assert.equal(m.energy, 16, "costs 8 seconds");
     assert.deepEqual(opponentPreview(run).foul, { shots: 2, pct: 70 });
     const attempt = endTurn(run).find((e) => e.type === "opp_attempt");
     assert.equal(attempt.foul, true);
@@ -281,6 +284,7 @@ test("closing: Hold boosts the shot and ends the turn; Two-for-One allows a seco
   assert.equal(calcShot(run, a).pct, plain - 12);
   playCard(run, a.iid);
   if (m.over) return;
+  m.energy = 99;
   assert.equal(canPlay(run, b.iid).ok, true, "second shot allowed");
   playCard(run, b.iid);
   if (m.over) return;

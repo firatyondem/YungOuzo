@@ -101,12 +101,13 @@ test("energy: unaffordable cards are unplayable, energy never negative", () => {
   const run = newMatch();
   const m = run.match;
   const card = giveCard(run, "swing_pass", "starter", true);
-  m.energy = 2;
+  const cost = content.cards.swing_pass.cost;
+  m.energy = cost - 1;
   assert.equal(canPlay(run, card.iid).ok, false);
   assert.deepEqual(playCard(run, card.iid), []);
-  assert.equal(m.energy, 2);
+  assert.equal(m.energy, cost - 1);
   assert.equal(m.hand.length, 1);
-  m.energy = 3;
+  m.energy = cost;
   assert.equal(canPlay(run, card.iid).ok, true);
   playCard(run, card.iid);
   assert.equal(m.energy, 0);
@@ -143,6 +144,7 @@ test("one shot per turn (unless a card explicitly allows another)", () => {
   assert.ok(events.some((e) => e.type === "shot"));
   assert.equal(m.shotsTaken, 1);
   assert.equal(m.openness, 0, "a shot consumes all Openness");
+  m.energy = 99; // so the only thing stopping a second shot is the rule itself
   const check = canPlay(run, b.iid);
   assert.equal(check.ok, false);
   assert.equal(check.reason, "One shot per turn");
@@ -350,9 +352,9 @@ test("chemistry activates with two of an archetype and is recalculated", () => {
   assert.ok(passiveContest(run) >= baseContest + 10);
 
   const r2 = newRun();
-  replacePlayer(r2, 0, "player_05"); // second Slasher: Drive cards cost 1 less
-  assert.equal(getCardCost(r2, content.cards.drive_and_finish), 6);
-  assert.equal(getCardCost(r2, content.cards.swing_pass), 3);
+  replacePlayer(r2, 0, "player_05"); // second Slasher: Drive cards cost 4s less
+  assert.equal(getCardCost(r2, content.cards.drive_and_finish), content.cards.drive_and_finish.cost - 4);
+  assert.equal(getCardCost(r2, content.cards.swing_pass), content.cards.swing_pass.cost);
 
   const r3 = newRun();
   replacePlayer(r3, 0, "player_11"); // second FloorGeneral: +1 card per turn

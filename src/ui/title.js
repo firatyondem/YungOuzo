@@ -63,7 +63,7 @@ export function howtoHTML(app) {
         ${step(1, "GET OPEN", "<b class='o'>Offense</b> cards build <b class='o'>Openness</b>. Every point adds +1% to your next shot.", "swing_pass")}
         ${step(2, "TAKE THE SHOT", "<b class='y'>Shot</b> cards score 2 or 3. The big % on the card is your live chance. One shot per turn.", "pull_up_jumper")}
         ${step(3, "DEFEND", "The opponent shows what they will try. <b class='b'>Defense</b> cards add <b class='b'>Contest</b> and cut their %.", "contest")}
-        ${step(4, "BEAT THE CLOCK", "Every card costs seconds from your <b>24-second shot clock</b>. Hit <b>END TURN</b> and the opponent shoots. No shot = violation.", "pick_and_roll")}
+        ${step(4, "BEAT THE CLOCK", "Cards cost 8, 16 or 24 of your <b>24 seconds</b>: you cannot do everything. Save up to 8 seconds and <b>HOLD</b> one card for next turn. No shot = violation.", "pick_and_roll")}
       </div>
       <div class="how-extra">
         <span><b>Lineup</b> — shots use your players' SHT (3PT) and INS (2PT). DEF and PLY give passive Contest and Openness.</span>

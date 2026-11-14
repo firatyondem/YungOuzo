@@ -21,7 +21,7 @@ import { cardInfo } from "./plays.js";
 import { ensureStar } from "./strategy.js";
 
 /** Per-turn coach modifiers (timeouts and closing options). Reset every turn. */
-const freshMods = () => ({ ice: 0, foul: null, shotBonus: 0, endAfterShot: false, endNow: false });
+const freshMods = () => ({ ice: 0, foul: null, shotBonus: 0, endAfterShot: false, endNow: false, oppBonus: [] });
 
 export function startMatch(run) {
   const stop = run.schedule[run.round];
@@ -53,7 +53,12 @@ export function startMatch(run) {
     intentIndex: 0,
     lastOppFailed: false,
     threeStreak: 0,
+    threeCold: 0, // penalty on your next three after a missed heat check
     buffs: {},
+    cardPlays: {}, // times each card was played this game (escalating costs)
+    bank: 0, // seconds carried into the next turn (max CARRY_MAX)
+    banked: 0, // seconds that were carried into this turn
+    held: [], // iids you chose to keep at the end of this turn (max HOLD_MAX)
     timeouts: run.config.TIMEOUTS_PER_MATCH ?? 3,
     usedActions: [], // closing options already used this game
     mods: freshMods(),
@@ -133,8 +138,10 @@ function startTurn(run, events) {
   chooseIntent(run);
   const pace = firstRule(run, "pace");
   const sum = (type) => rulesOf(run, type).reduce((s, r) => s + r.value, 0);
-  m.maxEnergy = pace && pace.clock ? pace.clock : run.config.MAX_ENERGY;
-  m.energy = Math.max(0, m.maxEnergy - sum("energy_tax"));
+  m.maxEnergy = run.config.MAX_ENERGY;
+  m.banked = m.bank;
+  m.bank = 0;
+  m.energy = Math.max(0, m.maxEnergy - sum("energy_tax")) + m.banked;
   // Halftime: the first turn after either team reaches the halfway score. One free plan change.
   const half = run.config.HALFTIME_AT ?? Math.ceil(m.target / 2);
   m.freePlanChange = false;
@@ -170,7 +177,7 @@ function startTurn(run, events) {
     log(run, `${getTeam(run).name} are heating up: ${hot.label}!`);
     events.push({ type: "hot_start", label: hot.label });
   }
-  const drawn = drawCards(run, n);
+  const drawn = drawCards(run, Math.max(0, n - m.hand.length));
   // No dead hands: keep drawing (a few) until the hand holds a shot card.
   let extra = 0;
   const hasShot = () => m.hand.some((c) => getShootEffect(getCard(run, c)));
@@ -251,6 +258,8 @@ export function playCard(run, iid) {
   const tags = card.tags || [];
   m.energy = Math.max(0, m.energy - cost);
   m.hand.splice(idx, 1);
+  m.cardPlays[card.id] = (m.cardPlays[card.id] || 0) + 1;
+  m.held = m.held.filter((x) => x !== iid);
   run.stats.cardsPlayed++;
   // Film: the league remembers what you lean on.
   run.film.types[card.type] = (run.film.types[card.type] || 0) + 1;
@@ -306,7 +315,7 @@ function resolveOpponent(run, events) {
   const m = run.match;
   const opp = m.opp;
   const team = getTeam(run);
-  const pre = opponentPreview(run);
+  let pre = opponentPreview(run);
   const intent = pre.intent;
   let stolen = false;
   let made = false;
@@ -343,9 +352,12 @@ function resolveOpponent(run, events) {
         break;
       }
       log(run, "Steal attempt fails.");
+      // A failed gamble has a price (the card says what), applied to this very play.
+      applyEffects(run, steal.onFail, { inst: null, events });
     }
 
     if (!stolen) {
+      pre = opponentPreview(run); // includes anything a failed steal just gave them
       made = roll100(run) < pre.pct;
       if (made) {
         m.score.opp += intent.points;
@@ -449,10 +461,37 @@ export function endTurn(run) {
     events.push({ type: "violation" });
     log(run, "Shot-clock violation! No shot this turn.");
   }
+  // Unspent seconds are lost, except a small bank (CARRY_MAX) for the next turn.
+  m.bank = Math.min(run.config.CARRY_MAX ?? 0, m.energy);
   resolveOpponent(run, events);
-  discardHand(run);
+  // Discard the hand, keeping the cards you chose to hold.
+  const keep = new Set(m.held.slice(0, run.config.HOLD_MAX ?? 0));
+  const kept = m.hand.filter((c) => keep.has(c.iid));
+  m.discard.push(...m.hand.filter((c) => !keep.has(c.iid)));
+  m.hand = kept;
+  m.held = [];
   if (!checkWin(run, events)) startTurn(run, events);
   return events;
+}
+
+/**
+ * Mark or unmark a card in hand to be held at the end of this turn instead of
+ * discarded (max HOLD_MAX). A held card stays in hand, so you draw one fewer.
+ * Returns { ok, held, reason }.
+ */
+export function toggleHold(run, iid) {
+  const m = run.match;
+  const max = run.config.HOLD_MAX ?? 0;
+  if (!m || m.over || m.turnEnded) return { ok: false, held: false, reason: "Turn is over" };
+  if (!m.hand.some((c) => c.iid === iid)) return { ok: false, held: false, reason: "Card is not in hand" };
+  if (m.held.includes(iid)) {
+    m.held = m.held.filter((x) => x !== iid);
+    return { ok: true, held: false, reason: "" };
+  }
+  if (max <= 0) return { ok: false, held: false, reason: "Holding is off" };
+  if (m.held.length >= max) m.held.shift(); // holding another card releases the first
+  m.held.push(iid);
+  return { ok: true, held: true, reason: "" };
 }
 
 // ---------- Debug helpers (debug panel + tests) ----------

@@ -38,7 +38,7 @@ const STEPS = [
   {
     id: "clock",
     title: "BEAT THE CLOCK",
-    text: "Each card costs seconds from the <b>24s shot clock</b>. When you're done, hit <b>END TURN</b>. Then they shoot. First to 15 wins!",
+    text: "Cards cost 8, 16 or 24 seconds of the <b>24s shot clock</b>, so you play 2 or 3 a turn, never the whole hand. Up to 8 unspent seconds carry over, and you can <b>HOLD</b> one card. Then hit <b>END TURN</b> and they shoot. First to 15 wins!",
     cardType: null,
     highlight: [".shotclock", "#btn-endturn"],
     // Ending a turn only counts once this tip has actually been on screen.

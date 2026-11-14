@@ -15,6 +15,7 @@
 .card.type-buff { --tc: var(--t-buff); }
 .card.type-utility { --tc: var(--t-utility); }
 .card.type-hustle { --tc: var(--t-hustle); }
+.card.type-status { --tc: var(--t-status); }
 
 /* Rarity frames: silver / blue foil / animated holographic foil */
 .card.rar-common { --frame: linear-gradient(160deg, #F2F5FA, #AEB9CC 45%, #E7ECF4 70%, #98A4B8); }
@@ -126,3 +127,20 @@
 @media (max-height: 800px) {
   .hand { zoom: 0.86; }
 }
+
+/* Hard mode: drawback keywords, raised cost, hold tab */
+.kw-exhaust { background: #E3D4FF; }
+.kw-fatigue { background: #D9DFEA; }
+.kw-risk { background: #FFC9C9; }
+.card-cost small { font-size: 12px; margin-left: 1px; opacity: 0.85; }
+.card-cost.raised { color: var(--bad); border-color: var(--bad); }
+.card-hold {
+  position: absolute; left: 50%; top: -13px; transform: translateX(-50%); z-index: 4;
+  font: 800 12px/1 var(--body); letter-spacing: 0.06em; padding: 5px 10px; border-radius: 999px;
+  border: 2px solid var(--navy, #0B1B3A); background: #FFFFFF; color: #0B1B3A; cursor: pointer;
+  opacity: 0; transition: opacity 0.12s;
+}
+.card:hover .card-hold, .card-hold.on, .card-hold:focus-visible { opacity: 1; }
+.card-hold.on { background: #FFB800; }
+.card.held { outline: 3px solid #FFB800; outline-offset: 2px; }
+.card.type-status .card-frame { filter: saturate(0.6); }

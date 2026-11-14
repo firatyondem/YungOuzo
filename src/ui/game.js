@@ -1,5 +1,5 @@
 // Game screen controller: input -> engine -> events -> animations -> render.
-import { playCard, endTurn } from "../engine/turnLoop.js";
+import { playCard, endTurn, toggleHold } from "../engine/turnLoop.js";
 import { canPlay, getTeam } from "../engine/rules.js";
 import { $, sleep } from "./dom.js";
 import { renderHand, resetHandMemory, layoutHand } from "./cards.js";
@@ -94,6 +94,14 @@ export function createGame(app) {
             hud.setOnFire(makeStreak >= 3);
             break;
           }
+          case "consequence":
+            fx.caption(ev.text, ev.good ? "good" : "bad");
+            await sleep(350);
+            break;
+          case "status_added":
+            fx.pop(`${String(ev.name).toUpperCase()} ADDED`, "bad small");
+            await sleep(300);
+            break;
           case "halftime":
             fx.pop("HALFTIME", "small");
             app.sfx("buzzer");
@@ -293,9 +301,32 @@ export function createGame(app) {
   }
   $("#btn-plan").addEventListener("click", openPlan);
 
+  /** Keep one card for next turn (click its HOLD tab, right-click it, or Shift + its number). */
+  function tryHold(iid) {
+    const run = app.run;
+    if (app.locked || !run?.match || run.match.over || !iid) return;
+    const res = toggleHold(run, iid);
+    if (res.ok) {
+      app.sfx("squeak");
+      render();
+    }
+  }
+
   handEl.addEventListener("click", (e) => {
+    const hold = e.target.closest(".card-hold");
+    if (hold) {
+      e.stopPropagation();
+      tryHold(hold.dataset.hold);
+      return;
+    }
     const cardEl = e.target.closest(".card");
     if (cardEl) tryPlay(cardEl.dataset.iid, cardEl);
+  });
+  handEl.addEventListener("contextmenu", (e) => {
+    const cardEl = e.target.closest(".card");
+    if (!cardEl) return;
+    e.preventDefault();
+    tryHold(cardEl.dataset.iid);
   });
   endBtn.addEventListener("click", tryEndTurn);
 
@@ -343,9 +374,11 @@ export function createGame(app) {
       openCoachMenu();
     } else if (e.key === "p" || e.key === "P") {
       openPlan();
-    } else if (/^[1-9]$/.test(e.key)) {
-      const cardEl = handEl.children[Number(e.key) - 1];
-      if (cardEl) tryPlay(cardEl.dataset.iid, cardEl);
+    } else if (/^Digit[1-9]$/.test(e.code)) {
+      const cardEl = handEl.children[Number(e.code.slice(5)) - 1];
+      if (!cardEl) return;
+      if (e.shiftKey) tryHold(cardEl.dataset.iid);
+      else tryPlay(cardEl.dataset.iid, cardEl);
     }
   });
 

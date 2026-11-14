@@ -44,7 +44,7 @@ const P = {
 export const ICON_NAMES = Object.keys(P);
 
 /** Type name ("Offense", "Shot"...) -> icon name. */
-export const TYPE_ICON = { Offense: "offense", Shot: "shot", Defense: "defense", Buff: "buff", Utility: "utility", Hustle: "hustle" };
+export const TYPE_ICON = { Offense: "offense", Shot: "shot", Defense: "defense", Buff: "buff", Utility: "utility", Hustle: "hustle", Status: "wear" };
 
 /** Inline SVG icon. opts: { size (px), cls, title } */
 export function icon(name, opts = {}) {

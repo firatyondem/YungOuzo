@@ -1,12 +1,39 @@
 {
   "maxRating": 5,
   "cards": [
-    "corner_three", "euro_step", "putback", "give_and_go", "help_defense", "chase_down_block",
-    "film_study", "fast_break", "heat_check", "step_back_3", "pick_and_roll", "lockdown",
-    "no_look_dime", "clamp_down", "hard_screen", "drive_and_finish", "catch_and_shoot_3"
+    "no_look_dime",
+    "pick_and_roll",
+    "iso",
+    "hard_screen",
+    "give_and_go",
+    "fast_break",
+    "film_study",
+    "catch_and_shoot_3",
+    "step_back_3",
+    "corner_three",
+    "euro_step",
+    "alley_oop",
+    "putback",
+    "drive_and_finish",
+    "logo_shot",
+    "heat_check",
+    "swipe",
+    "help_defense",
+    "lockdown",
+    "clamp_down",
+    "chase_down_block",
+    "box_out"
   ],
   "players": [
-    "player_02", "player_03", "player_05", "player_06", "player_08",
-    "player_09", "player_11", "player_12", "player_14", "player_15"
+    "player_02",
+    "player_03",
+    "player_05",
+    "player_06",
+    "player_08",
+    "player_09",
+    "player_11",
+    "player_12",
+    "player_14",
+    "player_15"
   ]
 }

@@ -93,7 +93,7 @@ const TEAMS = [
     coach: coach("aggressive", 0.9, 0.3, 0.9, 9, "fast", "Pushes the pace no matter the score."),
     intents: [I("Drive", 2, 50, ["drive"]), I("Quick Three", 3, 36, ["three"]), I("Pull-Up", 2, 46, ["mid"]), I("Leak Out", 2, 54, ["transition"])],
     star: { name: "Spark", text: "Can catch fire at any time: +15% for two possessions.", effects: [{ type: "hot_streak", chance: 22, bonus: 15, length: 2 }] },
-    signature: { name: "Track Meet", text: "Fast pace for both teams: 18-second shot clock, you draw 1 extra card.", effects: [{ type: "pace", pace: "fast", clock: 18, draw: 1 }] },
+    signature: { name: "Track Meet", text: "Fast pace for both teams: you draw 1 extra card, and they shoot at +5%.", effects: [{ type: "pace", pace: "fast", draw: 1 }, { type: "intent_bonus", value: 5 }] },
   },
   {
     id: "rafters", name: "Riverbend Rafters", tier: 1, defense: 6, colors: ["#4ADE80", "#16233D"],
@@ -109,7 +109,7 @@ const TEAMS = [
     coach: coach("aggressive", 0.7, 0.3, 0.5, 8, "normal", "Attacks the rim to draw contact."),
     intents: [I("Drive", 2, 50, ["drive"]), I("Bully Drive", 2, 48, ["drive"]), I("Post-Up", 2, 46, ["post"]), I("Mid-Range", 2, 42, ["mid"])],
     star: { name: "And-One", text: "30% of made drives become three-point plays.", effects: [{ type: "and_one", chance: 30, tag: "drive" }] },
-    signature: { name: "Bruisers", text: "Their physical defense costs you 2 seconds every turn.", effects: [{ type: "energy_tax", value: 2 }] },
+    signature: { name: "Bruisers", text: "Physical defense: your two-point shots are at -6%.", effects: [{ type: "shot_mod", points: 2, value: -6 }] },
   },
   {
     id: "hawks", name: "Skyline Hawks", tier: 1, defense: 5, colors: ["#F87171", "#FFF8EC"],
@@ -125,14 +125,14 @@ const TEAMS = [
     coach: coach("aggressive", 0.8, 0.5, 0.8, 10, "fast", "Jumps passing lanes for easy points."),
     intents: [I("Drive", 2, 50, ["drive"]), I("Three", 3, 35, ["three"]), I("Run-Out Layup", 2, 54, ["transition"]), I("Mid-Range", 2, 44, ["mid"])],
     star: { name: "Pickpocket", text: "25% chance to pick off each Pass card you play.", effects: [{ type: "pass_steal", chance: 25 }] },
-    signature: { name: "Press", text: "Your Pass cards cost 1 second more.", effects: [{ type: "card_cost", tag: "Pass", value: 1 }] },
+    signature: { name: "Press", text: "Your Pass cards cost 4 seconds more.", effects: [{ type: "card_cost", tag: "Pass", value: 4 }] },
   },
   {
     id: "owls", name: "Old Mill Owls", tier: 2, defense: 11, colors: ["#D6B98C", "#16233D"],
     identity: "Veteran, smart", tagline: "They have seen every trick you know.",
     coach: coach("adaptive", 0.4, 0.9, 0.3, 8, "slow", "Takes away whatever you lean on."),
     intents: [I("Mid-Range", 2, 54, ["mid"]), I("Three", 3, 41, ["three"]), I("Post-Up", 2, 54, ["post"]), I("Corner Three", 3, 43, ["three"])],
-    star: { name: "Film Study", text: "Your most-played card type this run costs 1 second more.", effects: [{ type: "counter_favorite_type", value: 1 }] },
+    star: { name: "Film Study", text: "Your most-played card type this run costs 4 seconds more.", effects: [{ type: "counter_favorite_type", value: 4 }] },
     signature: { name: "Read and React", text: "Your lineup's passive Openness does not apply.", effects: [{ type: "no_passive_openness" }] },
   },
   {
@@ -173,7 +173,7 @@ const TEAMS = [
     coach: coach("conservative", 0.3, 0.5, 0.2, 7, "slow", "Bleeds the clock and waits for the last shot."),
     intents: [I("Mid-Range", 2, 54, ["mid"]), I("Post-Up", 2, 54, ["post"]), I("Three", 3, 41, ["three"]), I("Elbow Jumper", 2, 54, ["mid"])],
     star: { name: "Ice Veins", text: "+20% when the game is within 3 points late.", effects: [{ type: "late_bonus", value: 20, within: 3, window: 6 }] },
-    signature: { name: "Slow Burn", text: "Slow pace for both teams: 30-second shot clock, you draw 1 card fewer.", effects: [{ type: "pace", pace: "slow", clock: 30, draw: -1 }] },
+    signature: { name: "Slow Burn", text: "Slow pace for both teams: you draw 1 card fewer.", effects: [{ type: "pace", pace: "slow", draw: -1 }] },
   },
   {
     id: "solar", name: "Sunreach Solar", tier: 3, defense: 15, colors: ["#FDBA74", "#16233D"],
@@ -216,7 +216,7 @@ const TEAMS = [
       },
     ],
     star: { name: "Closing Lineup", text: "At 8 points (either team) they change lineup and system.", effects: [] },
-    signature: { name: "Film Room", text: "In the Finals series, your most-played card type costs 1 second more from Game 2.", effects: [{ type: "counter_favorite_type", value: 1, fromGame: 2 }] },
+    signature: { name: "Film Room", text: "In the Finals series, your most-played card type costs 4 seconds more from Game 2.", effects: [{ type: "counter_favorite_type", value: 4, fromGame: 2 }] },
   },
 ];
 
@@ -225,8 +225,8 @@ const TEAMS = [
 // set here: every intent gets +pct and the team gets +def, per tier, as found with
 // tools/tune.js against the simulator (see README, Balance). ADJUST evens out teams
 // whose mechanics make them stronger or weaker than their tier.
-const TUNE = { 1: { pct: 16, def: 8 }, 2: { pct: 30, def: 15 }, 3: { pct: 42, def: 21 }, boss: { pct: 38, def: 19 } };
-const ADJUST = { gulls: -5, volts: -3, rafters: 4, gators: 2, hawks: 1, rams: -3, swans: -3, tides: -2, rockets: -4, kings: 3 };
+const TUNE = { 1: { pct: 14, def: 7 }, 2: { pct: 15, def: 7 }, 3: { pct: 16, def: 8 }, boss: { pct: 5, def: 2 } };
+const ADJUST = { gulls: -5, volts: -7, rafters: 7, gators: 5, hawks: 3, rams: 6, swans: -3, tides: -6, forge: -6, rockets: -4, kings: 1 };
 for (const t of TEAMS) {
   const tune = TUNE[t.tier];
   const p = tune.pct + (ADJUST[t.id] || 0);

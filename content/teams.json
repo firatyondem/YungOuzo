@@ -5,17 +5,17 @@
     "tier": 1,
     "identity": "Pace & Space",
     "tagline": "They let it fly from everywhere.",
-    "defense": 13,
+    "defense": 12,
     "color": "#38BDF8",
     "colors": {"primary":"#38BDF8","secondary":"#FFF8EC"},
     "coach": {"style":"aggressive","aggression":0.8,"adaptationSpeed":0.4,"riskTolerance":0.7,"rotationDepth":8,"preferredPace":"fast","hint":"Hunts threes early in the clock."},
     "star": {"playerId":"gulls_1","name":"Deep Range","text":"+10% on every three-point attempt.","effects":[{"type":"intent_bonus","tag":"three","value":10}]},
-    "signature": {"name":"Run Out","text":"Every 3rd possession is a transition three.","effects":[{"type":"every_nth_intent","n":3,"intent":{"name":"Transition Three","points":3,"pct":53,"tags":["three","transition"]}}]},
+    "signature": {"name":"Run Out","text":"Every 3rd possession is a transition three.","effects":[{"type":"every_nth_intent","n":3,"intent":{"name":"Transition Three","points":3,"pct":51,"tags":["three","transition"]}}]},
     "intents": [
-      {"name":"Three","points":3,"pct":45,"tags":["three"]},
-      {"name":"Drive","points":2,"pct":61,"tags":["drive"]},
-      {"name":"Pull-Up Three","points":3,"pct":47,"tags":["three"]},
-      {"name":"Mid-Range","points":2,"pct":59,"tags":["mid"]}
+      {"name":"Three","points":3,"pct":43,"tags":["three"]},
+      {"name":"Drive","points":2,"pct":59,"tags":["drive"]},
+      {"name":"Pull-Up Three","points":3,"pct":45,"tags":["three"]},
+      {"name":"Mid-Range","points":2,"pct":57,"tags":["mid"]}
     ],
     "players": [
       {"id":"gulls_1","name":"Hollis Birchfall","position":"PG","jersey":42,"look":{"skinTone":1,"hair":"buzz","beard":"none","build":"lean","accessories":["headband"],"shoes":"#ffffff"},"tendencies":["off_ball"]},
@@ -34,17 +34,17 @@
     "tier": 1,
     "identity": "Fast pace, chaotic",
     "tagline": "Blink and they have already shot.",
-    "defense": 13,
+    "defense": 12,
     "color": "#FDE047",
     "colors": {"primary":"#FDE047","secondary":"#9B5CFF"},
     "coach": {"style":"aggressive","aggression":0.9,"adaptationSpeed":0.3,"riskTolerance":0.9,"rotationDepth":9,"preferredPace":"fast","hint":"Pushes the pace no matter the score."},
     "star": {"playerId":"volts_1","name":"Spark","text":"Can catch fire at any time: +15% for two possessions.","effects":[{"type":"hot_streak","chance":22,"bonus":15,"length":2}]},
-    "signature": {"name":"Track Meet","text":"Fast pace for both teams: 18-second shot clock, you draw 1 extra card.","effects":[{"type":"pace","pace":"fast","clock":18,"draw":1}]},
+    "signature": {"name":"Track Meet","text":"Fast pace for both teams: you draw 1 extra card, and they shoot at +5%.","effects":[{"type":"pace","pace":"fast","draw":1},{"type":"intent_bonus","value":5}]},
     "intents": [
-      {"name":"Drive","points":2,"pct":63,"tags":["drive"]},
-      {"name":"Quick Three","points":3,"pct":49,"tags":["three"]},
-      {"name":"Pull-Up","points":2,"pct":59,"tags":["mid"]},
-      {"name":"Leak Out","points":2,"pct":67,"tags":["transition"]}
+      {"name":"Drive","points":2,"pct":57,"tags":["drive"]},
+      {"name":"Quick Three","points":3,"pct":43,"tags":["three"]},
+      {"name":"Pull-Up","points":2,"pct":53,"tags":["mid"]},
+      {"name":"Leak Out","points":2,"pct":61,"tags":["transition"]}
     ],
     "players": [
       {"id":"volts_1","name":"Rafe Yellowley","position":"PG","jersey":9,"look":{"skinTone":1,"hair":"buzz","beard":"full","build":"strong","accessories":[],"shoes":"#f43f5e"},"tendencies":["off_ball"]},
@@ -63,17 +63,17 @@
     "tier": 1,
     "identity": "Rebounding and hustle",
     "tagline": "Every miss is a second chance for them.",
-    "defense": 14,
+    "defense": 13,
     "color": "#4ADE80",
     "colors": {"primary":"#4ADE80","secondary":"#16233D"},
     "coach": {"style":"conservative","aggression":0.4,"adaptationSpeed":0.4,"riskTolerance":0.3,"rotationDepth":9,"preferredPace":"normal","hint":"Sends everyone to the glass."},
     "star": {"playerId":"rafters_1","name":"Glass Eater","text":"After a miss, 40% chance of a second-chance putback.","effects":[{"type":"second_chance","chance":40,"pct":58}]},
     "signature": {"name":"Crash the Boards","text":"A Box Out played that turn denies the second chance.","effects":[]},
     "intents": [
-      {"name":"Post-Up","points":2,"pct":66,"tags":["post"]},
-      {"name":"Drive","points":2,"pct":68,"tags":["drive"]},
-      {"name":"Mid-Range","points":2,"pct":64,"tags":["mid"]},
-      {"name":"Hook Shot","points":2,"pct":66,"tags":["post"]}
+      {"name":"Post-Up","points":2,"pct":67,"tags":["post"]},
+      {"name":"Drive","points":2,"pct":69,"tags":["drive"]},
+      {"name":"Mid-Range","points":2,"pct":65,"tags":["mid"]},
+      {"name":"Hook Shot","points":2,"pct":67,"tags":["post"]}
     ],
     "players": [
       {"id":"rafters_1","name":"Yorick Larkspur","position":"PG","jersey":19,"look":{"skinTone":4,"hair":"afro","beard":"full","build":"average","accessories":["headband"],"shoes":"#a78bfa"},"tendencies":["risky_passer"]},
@@ -92,17 +92,17 @@
     "tier": 1,
     "identity": "Physical, foul-heavy",
     "tagline": "Every trip to the paint costs you something.",
-    "defense": 15,
+    "defense": 14,
     "color": "#34D399",
     "colors": {"primary":"#34D399","secondary":"#FFD23F"},
     "coach": {"style":"aggressive","aggression":0.7,"adaptationSpeed":0.3,"riskTolerance":0.5,"rotationDepth":8,"preferredPace":"normal","hint":"Attacks the rim to draw contact."},
     "star": {"playerId":"gators_1","name":"And-One","text":"30% of made drives become three-point plays.","effects":[{"type":"and_one","chance":30,"tag":"drive"}]},
-    "signature": {"name":"Bruisers","text":"Their physical defense costs you 2 seconds every turn.","effects":[{"type":"energy_tax","value":2}]},
+    "signature": {"name":"Bruisers","text":"Physical defense: your two-point shots are at -6%.","effects":[{"type":"shot_mod","points":2,"value":-6}]},
     "intents": [
-      {"name":"Drive","points":2,"pct":68,"tags":["drive"]},
-      {"name":"Bully Drive","points":2,"pct":66,"tags":["drive"]},
-      {"name":"Post-Up","points":2,"pct":64,"tags":["post"]},
-      {"name":"Mid-Range","points":2,"pct":60,"tags":["mid"]}
+      {"name":"Drive","points":2,"pct":69,"tags":["drive"]},
+      {"name":"Bully Drive","points":2,"pct":67,"tags":["drive"]},
+      {"name":"Post-Up","points":2,"pct":65,"tags":["post"]},
+      {"name":"Mid-Range","points":2,"pct":61,"tags":["mid"]}
     ],
     "players": [
       {"id":"gators_1","name":"Zane Westermark","position":"PG","jersey":35,"look":{"skinTone":4,"hair":"afro","beard":"none","build":"lean","accessories":[],"shoes":"#f97316"},"tendencies":["off_ball"]},
@@ -121,7 +121,7 @@
     "tier": 1,
     "identity": "Lob-heavy athletes",
     "tagline": "Above the rim, all night.",
-    "defense": 13,
+    "defense": 12,
     "color": "#F87171",
     "colors": {"primary":"#F87171","secondary":"#FFF8EC"},
     "coach": {"style":"aggressive","aggression":0.7,"adaptationSpeed":0.4,"riskTolerance":0.7,"rotationDepth":8,"preferredPace":"fast","hint":"Throws lobs whenever a big is free."},
@@ -150,17 +150,17 @@
     "tier": 1,
     "identity": "Full-court press",
     "tagline": "They live in your passing lanes.",
-    "defense": 14,
+    "defense": 13,
     "color": "#A5B4FC",
     "colors": {"primary":"#A5B4FC","secondary":"#16233D"},
     "coach": {"style":"aggressive","aggression":0.8,"adaptationSpeed":0.5,"riskTolerance":0.8,"rotationDepth":10,"preferredPace":"fast","hint":"Jumps passing lanes for easy points."},
     "star": {"playerId":"wolves_1","name":"Pickpocket","text":"25% chance to pick off each Pass card you play.","effects":[{"type":"pass_steal","chance":25}]},
-    "signature": {"name":"Press","text":"Your Pass cards cost 1 second more.","effects":[{"type":"card_cost","tag":"Pass","value":1}]},
+    "signature": {"name":"Press","text":"Your Pass cards cost 4 seconds more.","effects":[{"type":"card_cost","tag":"Pass","value":4}]},
     "intents": [
-      {"name":"Drive","points":2,"pct":66,"tags":["drive"]},
-      {"name":"Three","points":3,"pct":51,"tags":["three"]},
-      {"name":"Run-Out Layup","points":2,"pct":70,"tags":["transition"]},
-      {"name":"Mid-Range","points":2,"pct":60,"tags":["mid"]}
+      {"name":"Drive","points":2,"pct":64,"tags":["drive"]},
+      {"name":"Three","points":3,"pct":49,"tags":["three"]},
+      {"name":"Run-Out Layup","points":2,"pct":68,"tags":["transition"]},
+      {"name":"Mid-Range","points":2,"pct":58,"tags":["mid"]}
     ],
     "players": [
       {"id":"wolves_1","name":"Piero Amberlake","position":"PG","jersey":22,"look":{"skinTone":1,"hair":"braids","beard":"stubble","build":"average","accessories":["sleeve"],"shoes":"#ffffff"},"tendencies":["clutch"]},
@@ -179,17 +179,17 @@
     "tier": 2,
     "identity": "Veteran, smart",
     "tagline": "They have seen every trick you know.",
-    "defense": 26,
+    "defense": 18,
     "color": "#D6B98C",
     "colors": {"primary":"#D6B98C","secondary":"#16233D"},
     "coach": {"style":"adaptive","aggression":0.4,"adaptationSpeed":0.9,"riskTolerance":0.3,"rotationDepth":8,"preferredPace":"slow","hint":"Takes away whatever you lean on."},
-    "star": {"playerId":"owls_1","name":"Film Study","text":"Your most-played card type this run costs 1 second more.","effects":[{"type":"counter_favorite_type","value":1}]},
+    "star": {"playerId":"owls_1","name":"Film Study","text":"Your most-played card type this run costs 4 seconds more.","effects":[{"type":"counter_favorite_type","value":4}]},
     "signature": {"name":"Read and React","text":"Your lineup's passive Openness does not apply.","effects":[{"type":"no_passive_openness"}]},
     "intents": [
-      {"name":"Mid-Range","points":2,"pct":84,"tags":["mid"]},
-      {"name":"Three","points":3,"pct":71,"tags":["three"]},
-      {"name":"Post-Up","points":2,"pct":84,"tags":["post"]},
-      {"name":"Corner Three","points":3,"pct":73,"tags":["three"]}
+      {"name":"Mid-Range","points":2,"pct":69,"tags":["mid"]},
+      {"name":"Three","points":3,"pct":56,"tags":["three"]},
+      {"name":"Post-Up","points":2,"pct":69,"tags":["post"]},
+      {"name":"Corner Three","points":3,"pct":58,"tags":["three"]}
     ],
     "players": [
       {"id":"owls_1","name":"Emeric Delacroy","position":"PG","jersey":29,"look":{"skinTone":6,"hair":"long","beard":"stubble","build":"strong","accessories":[],"shoes":"#f43f5e"},"tendencies":["drives"]},
@@ -208,17 +208,17 @@
     "tier": 2,
     "identity": "Defensive grind",
     "tagline": "Low scores, long nights.",
-    "defense": 28,
+    "defense": 20,
     "color": "#FB923C",
     "colors": {"primary":"#FB923C","secondary":"#16233D"},
     "coach": {"style":"conservative","aggression":0.2,"adaptationSpeed":0.5,"riskTolerance":0.2,"rotationDepth":9,"preferredPace":"slow","hint":"Protects the paint and waits for mistakes."},
     "star": {"playerId":"forge_1","name":"Wall","text":"Your Drive cards shoot at -15%.","effects":[{"type":"shot_mod","tag":"Drive","value":-15}]},
     "signature": {"name":"Set Defense","text":"You start every turn with 10 less Openness.","effects":[{"type":"openness_start","value":-10}]},
     "intents": [
-      {"name":"Mid-Range","points":2,"pct":80,"tags":["mid"]},
-      {"name":"Post-Up","points":2,"pct":82,"tags":["post"]},
-      {"name":"Three","points":3,"pct":68,"tags":["three"]},
-      {"name":"Drive","points":2,"pct":80,"tags":["drive"]}
+      {"name":"Mid-Range","points":2,"pct":59,"tags":["mid"]},
+      {"name":"Post-Up","points":2,"pct":61,"tags":["post"]},
+      {"name":"Three","points":3,"pct":47,"tags":["three"]},
+      {"name":"Drive","points":2,"pct":59,"tags":["drive"]}
     ],
     "players": [
       {"id":"forge_1","name":"Gideon Hallworthy","position":"PG","jersey":35,"look":{"skinTone":4,"hair":"bun","beard":"none","build":"average","accessories":[],"shoes":"#f43f5e"},"tendencies":["risky_passer","drives"]},
@@ -237,17 +237,17 @@
     "tier": 2,
     "identity": "Motion offense, adaptive",
     "tagline": "The ball never stops, and neither do they.",
-    "defense": 25,
+    "defense": 17,
     "color": "#5EEAD4",
     "colors": {"primary":"#5EEAD4","secondary":"#16233D"},
     "coach": {"style":"adaptive","aggression":0.5,"adaptationSpeed":1,"riskTolerance":0.5,"rotationDepth":9,"preferredPace":"normal","hint":"Finds what works and goes back to it."},
     "star": {"playerId":"tides_1","name":"Extra Pass","text":"Their shots get 3% better every possession (up to +15%).","effects":[{"type":"ramp_bonus","value":3,"cap":15}]},
     "signature": {"name":"Quick Study","text":"After 4 possessions they adapt: +10% on their best play type.","effects":[{"type":"adapt_after","n":4,"bonus":10}]},
     "intents": [
-      {"name":"Three","points":3,"pct":69,"tags":["three"]},
-      {"name":"Back Cut","points":2,"pct":82,"tags":["drive"]},
-      {"name":"Swing Three","points":3,"pct":70,"tags":["three"]},
-      {"name":"Elbow Jumper","points":2,"pct":80,"tags":["mid"]}
+      {"name":"Three","points":3,"pct":50,"tags":["three"]},
+      {"name":"Back Cut","points":2,"pct":63,"tags":["drive"]},
+      {"name":"Swing Three","points":3,"pct":51,"tags":["three"]},
+      {"name":"Elbow Jumper","points":2,"pct":61,"tags":["mid"]}
     ],
     "players": [
       {"id":"tides_1","name":"Zane Nakamori","position":"PG","jersey":44,"look":{"skinTone":6,"hair":"bald","beard":"none","build":"average","accessories":["headband"],"shoes":"#ffffff"},"tendencies":["drives","risky_passer"]},
@@ -266,17 +266,17 @@
     "tier": 2,
     "identity": "Post Hub, bully ball",
     "tagline": "They walk the ball into the paint.",
-    "defense": 27,
+    "defense": 19,
     "color": "#C4B5FD",
     "colors": {"primary":"#C4B5FD","secondary":"#16233D"},
     "coach": {"style":"conservative","aggression":0.5,"adaptationSpeed":0.4,"riskTolerance":0.3,"rotationDepth":8,"preferredPace":"slow","hint":"Feeds the post until you stop it."},
     "star": {"playerId":"rams_1","name":"Post Titan","text":"Their two-point attempts ignore 15 Contest.","effects":[{"type":"ignore_contest","points":2,"value":15}]},
     "signature": {"name":"Second Effort","text":"After a miss, 35% chance of a putback. Box Out denies it.","effects":[{"type":"second_chance","chance":35,"pct":55}]},
     "intents": [
-      {"name":"Post-Up","points":2,"pct":83,"tags":["post"]},
-      {"name":"Deep Seal","points":2,"pct":81,"tags":["post"]},
-      {"name":"Drive","points":2,"pct":79,"tags":["drive"]},
-      {"name":"Hook Shot","points":2,"pct":81,"tags":["post"]}
+      {"name":"Post-Up","points":2,"pct":77,"tags":["post"]},
+      {"name":"Deep Seal","points":2,"pct":75,"tags":["post"]},
+      {"name":"Drive","points":2,"pct":73,"tags":["drive"]},
+      {"name":"Hook Shot","points":2,"pct":75,"tags":["post"]}
     ],
     "players": [
       {"id":"rams_1","name":"Yusuf Tavernier","position":"PG","jersey":8,"look":{"skinTone":5,"hair":"bun","beard":"none","build":"strong","accessories":[],"shoes":"#38bdf8"},"tendencies":["risky_passer"]},
@@ -295,17 +295,17 @@
     "tier": 2,
     "identity": "Switch everything",
     "tagline": "No screen frees you. No matchup favours you.",
-    "defense": 28,
+    "defense": 20,
     "color": "#E2E8F0",
     "colors": {"primary":"#E2E8F0","secondary":"#2EA8FF"},
     "coach": {"style":"adaptive","aggression":0.5,"adaptationSpeed":0.7,"riskTolerance":0.4,"rotationDepth":8,"preferredPace":"normal","hint":"Switches every action and stays in front."},
     "star": {"playerId":"swans_1","name":"Versatile","text":"No mismatches: your shooter's rating counts as 4 at most.","effects":[{"type":"rating_cap","value":4}]},
     "signature": {"name":"Switch Everything","text":"Your Screen cards create no Openness.","effects":[{"type":"negate_tag","tag":"Screen"}]},
     "intents": [
-      {"name":"Three","points":3,"pct":68,"tags":["three"]},
-      {"name":"Drive","points":2,"pct":79,"tags":["drive"]},
-      {"name":"Iso","points":2,"pct":79,"tags":["iso"]},
-      {"name":"Corner Three","points":3,"pct":70,"tags":["three"]}
+      {"name":"Three","points":3,"pct":53,"tags":["three"]},
+      {"name":"Drive","points":2,"pct":64,"tags":["drive"]},
+      {"name":"Iso","points":2,"pct":64,"tags":["iso"]},
+      {"name":"Corner Three","points":3,"pct":55,"tags":["three"]}
     ],
     "players": [
       {"id":"swans_1","name":"Yorick Varkonyi","position":"PG","jersey":2,"look":{"skinTone":5,"hair":"bun","beard":"none","build":"strong","accessories":["wristband"],"shoes":"#ffffff"},"tendencies":["clutch"]},
@@ -324,17 +324,17 @@
     "tier": 2,
     "identity": "Slow, control",
     "tagline": "They shrink the game and win the last minute.",
-    "defense": 26,
+    "defense": 18,
     "color": "#BAE6FD",
     "colors": {"primary":"#BAE6FD","secondary":"#16233D"},
     "coach": {"style":"conservative","aggression":0.3,"adaptationSpeed":0.5,"riskTolerance":0.2,"rotationDepth":7,"preferredPace":"slow","hint":"Bleeds the clock and waits for the last shot."},
     "star": {"playerId":"polar_1","name":"Ice Veins","text":"+20% when the game is within 3 points late.","effects":[{"type":"late_bonus","value":20,"within":3,"window":6}]},
-    "signature": {"name":"Slow Burn","text":"Slow pace for both teams: 30-second shot clock, you draw 1 card fewer.","effects":[{"type":"pace","pace":"slow","clock":30,"draw":-1}]},
+    "signature": {"name":"Slow Burn","text":"Slow pace for both teams: you draw 1 card fewer.","effects":[{"type":"pace","pace":"slow","draw":-1}]},
     "intents": [
-      {"name":"Mid-Range","points":2,"pct":84,"tags":["mid"]},
-      {"name":"Post-Up","points":2,"pct":84,"tags":["post"]},
-      {"name":"Three","points":3,"pct":71,"tags":["three"]},
-      {"name":"Elbow Jumper","points":2,"pct":84,"tags":["mid"]}
+      {"name":"Mid-Range","points":2,"pct":69,"tags":["mid"]},
+      {"name":"Post-Up","points":2,"pct":69,"tags":["post"]},
+      {"name":"Three","points":3,"pct":56,"tags":["three"]},
+      {"name":"Elbow Jumper","points":2,"pct":69,"tags":["mid"]}
     ],
     "players": [
       {"id":"polar_1","name":"Bastian Arbuckle","position":"PG","jersey":51,"look":{"skinTone":5,"hair":"bald","beard":"none","build":"average","accessories":["wristband"],"shoes":"#111827"},"tendencies":["clutch"]},
@@ -353,17 +353,17 @@
     "tier": 3,
     "identity": "Heliocentric",
     "tagline": "One star. Everything orbits him.",
-    "defense": 36,
+    "defense": 23,
     "color": "#FDBA74",
     "colors": {"primary":"#FDBA74","secondary":"#16233D"},
     "coach": {"style":"star","aggression":0.7,"adaptationSpeed":0.5,"riskTolerance":0.6,"rotationDepth":7,"preferredPace":"normal","hint":"Runs every possession through the star."},
     "star": {"playerId":"solar_1","name":"Supernova","text":"+5% for every make in a row (up to +25%).","effects":[{"type":"streak_bonus","value":5,"cap":25,"resetContest":30}]},
     "signature": {"name":"Double Him","text":"30 or more Contest in a turn cools him off, even if he scores.","effects":[]},
     "intents": [
-      {"name":"Star Iso","points":2,"pct":92,"tags":["iso"]},
-      {"name":"Step-Back Three","points":3,"pct":85,"tags":["three"]},
-      {"name":"Star Drive","points":2,"pct":92,"tags":["drive"]},
-      {"name":"Deep Three","points":3,"pct":86,"tags":["three"]}
+      {"name":"Star Iso","points":2,"pct":74,"tags":["iso"]},
+      {"name":"Step-Back Three","points":3,"pct":59,"tags":["three"]},
+      {"name":"Star Drive","points":2,"pct":74,"tags":["drive"]},
+      {"name":"Deep Three","points":3,"pct":60,"tags":["three"]}
     ],
     "players": [
       {"id":"solar_1","name":"Cyrus Foxglove","position":"PG","jersey":22,"look":{"skinTone":1,"hair":"bun","beard":"stubble","build":"lean","accessories":[],"shoes":"#38bdf8"},"tendencies":["risky_passer","clutch"]},
@@ -382,17 +382,17 @@
     "tier": 3,
     "identity": "Iso-heavy",
     "tagline": "They find your weakest defender. Every time.",
-    "defense": 36,
+    "defense": 23,
     "color": "#F87171",
     "colors": {"primary":"#F87171","secondary":"#16233D"},
     "coach": {"style":"aggressive","aggression":0.8,"adaptationSpeed":0.6,"riskTolerance":0.7,"rotationDepth":7,"preferredPace":"normal","hint":"Attacks your weakest defender."},
     "star": {"playerId":"rockets_1","name":"Ankle Breaker","text":"Every 4th possession ignores all of your Contest.","effects":[{"type":"ignore_all_contest_every","n":4}]},
     "signature": {"name":"Mismatch Hunters","text":"+3% for each point your weakest defender's DEF is below 5.","effects":[{"type":"mismatch_bonus","perPoint":3}]},
     "intents": [
-      {"name":"Iso","points":2,"pct":92,"tags":["iso"]},
-      {"name":"Pull-Up Three","points":3,"pct":81,"tags":["three"]},
-      {"name":"Iso Drive","points":2,"pct":92,"tags":["iso","drive"]},
-      {"name":"Drive","points":2,"pct":92,"tags":["drive"]}
+      {"name":"Iso","points":2,"pct":68,"tags":["iso"]},
+      {"name":"Pull-Up Three","points":3,"pct":55,"tags":["three"]},
+      {"name":"Iso Drive","points":2,"pct":70,"tags":["iso","drive"]},
+      {"name":"Drive","points":2,"pct":68,"tags":["drive"]}
     ],
     "players": [
       {"id":"rockets_1","name":"Tobin Willowmere","position":"PG","jersey":1,"look":{"skinTone":4,"hair":"braids","beard":"full","build":"average","accessories":[],"shoes":"#f97316"},"tendencies":["clutch"]},
@@ -411,17 +411,17 @@
     "tier": 3,
     "identity": "Drop coverage, rim protection",
     "tagline": "Nothing easy at the rim. Beat them from deep.",
-    "defense": 37,
+    "defense": 24,
     "color": "#FCD34D",
     "colors": {"primary":"#FCD34D","secondary":"#16233D"},
     "coach": {"style":"conservative","aggression":0.4,"adaptationSpeed":0.5,"riskTolerance":0.3,"rotationDepth":8,"preferredPace":"slow","hint":"Protects the rim and gives up the three."},
     "star": {"playerId":"kings_1","name":"Rim Wall","text":"Your two-point shots are 25% less likely to go in.","effects":[{"type":"shot_mult","points":2,"value":0.75}]},
     "signature": {"name":"Drop Coverage","text":"They give up the perimeter: your threes shoot at +8%.","effects":[{"type":"shot_mod","points":3,"value":8}]},
     "intents": [
-      {"name":"Post-Up","points":2,"pct":92,"tags":["post"]},
-      {"name":"Mid-Range","points":2,"pct":92,"tags":["mid"]},
-      {"name":"Three","points":3,"pct":88,"tags":["three"]},
-      {"name":"Drive","points":2,"pct":92,"tags":["drive"]}
+      {"name":"Post-Up","points":2,"pct":75,"tags":["post"]},
+      {"name":"Mid-Range","points":2,"pct":73,"tags":["mid"]},
+      {"name":"Three","points":3,"pct":60,"tags":["three"]},
+      {"name":"Drive","points":2,"pct":73,"tags":["drive"]}
     ],
     "players": [
       {"id":"kings_1","name":"Silas Redfernley","position":"PG","jersey":22,"look":{"skinTone":2,"hair":"braids","beard":"stubble","build":"average","accessories":["wristband"],"shoes":"#34d399"},"tendencies":["clutch","off_ball"]},
@@ -440,23 +440,23 @@
     "tier": "boss",
     "identity": "Elite, two-phase",
     "tagline": "Stacked, disciplined, and deadly in the clutch.",
-    "defense": 38,
+    "defense": 21,
     "color": "#E4B53A",
     "colors": {"primary":"#E4B53A","secondary":"#16233D"},
     "coach": {"style":"adaptive","aggression":0.6,"adaptationSpeed":0.9,"riskTolerance":0.5,"rotationDepth":8,"preferredPace":"normal","hint":"Changes the whole plan when it matters."},
     "clutch": {"within":2,"bonus":10},
     "series": 3,
     "star": {"playerId":"dynasty_1","name":"Closing Lineup","text":"At 8 points (either team) they change lineup and system.","effects":[]},
-    "signature": {"name":"Film Room","text":"In the Finals series, your most-played card type costs 1 second more from Game 2.","effects":[{"type":"counter_favorite_type","value":1,"fromGame":2}]},
+    "signature": {"name":"Film Room","text":"In the Finals series, your most-played card type costs 4 seconds more from Game 2.","effects":[{"type":"counter_favorite_type","value":4,"fromGame":2}]},
     "intents": [
-      {"name":"Post-Up","points":2,"pct":92,"tags":["post"]},
-      {"name":"Three","points":3,"pct":84,"tags":["three"]},
-      {"name":"Iso","points":2,"pct":92,"tags":["iso"]},
-      {"name":"Elbow Jumper","points":2,"pct":92,"tags":["mid"]}
+      {"name":"Post-Up","points":2,"pct":69,"tags":["post"]},
+      {"name":"Three","points":3,"pct":51,"tags":["three"]},
+      {"name":"Iso","points":2,"pct":69,"tags":["iso"]},
+      {"name":"Elbow Jumper","points":2,"pct":67,"tags":["mid"]}
     ],
     "phases": [
       {"name":"Balanced","text":"Inside-out basketball through the post.","effects":[]},
-      {"name":"Closing Lineup","at":8,"text":"Five shooters, switching everything: threes on offense, and your Screen cards stop working.","intents":[{"name":"SUPERTEAM","points":3,"pct":92,"tags":["three"],"unblockableBySteal":true},{"name":"Corner Three","points":3,"pct":88,"tags":["three"]},{"name":"Lob","points":2,"pct":92,"tags":["lob"]},{"name":"Pull-Up Three","points":3,"pct":88,"tags":["three"]}],"effects":[{"type":"negate_tag","tag":"Screen"}]}
+      {"name":"Closing Lineup","at":8,"text":"Five shooters, switching everything: threes on offense, and your Screen cards stop working.","intents":[{"name":"SUPERTEAM","points":3,"pct":67,"tags":["three"],"unblockableBySteal":true},{"name":"Corner Three","points":3,"pct":55,"tags":["three"]},{"name":"Lob","points":2,"pct":71,"tags":["lob"]},{"name":"Pull-Up Three","points":3,"pct":55,"tags":["three"]}],"effects":[{"type":"negate_tag","tag":"Screen"}]}
     ],
     "players": [
       {"id":"dynasty_1","name":"Yorick Talmadge","position":"PG","jersey":25,"look":{"skinTone":3,"hair":"braids","beard":"full","build":"average","accessories":["goggles"],"shoes":"#34d399"},"tendencies":["drives","clutch"]},

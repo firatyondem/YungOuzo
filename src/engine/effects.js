@@ -48,13 +48,27 @@ const HANDLERS = {
   // Rolled when the opponent attempts; see turnLoop.resolveOpponent.
   steal_attempt(run, e, ctx) {
     const chance = Math.min(95, e.chance + rulesOf(run, "steal_bonus").reduce((s, r) => s + r.value, 0));
-    run.match.steals.push({ chance, onSuccess: e.onSuccess || [] });
+    run.match.steals.push({ chance, onSuccess: e.onSuccess || [], onFail: e.onFail || [] });
     ctx.events.push({ type: "steal_set", chance });
   },
 
   // Effects that fire if the opponent's attempt this turn fails (miss or steal).
   on_opponent_fail(run, e) {
     run.match.onOppFail.push(...(e.effects || []));
+  },
+
+  // Their play this possession gets easier because of something you did (turnover, failed steal).
+  opp_bonus(run, e) {
+    run.match.mods.oppBonus.push({ label: e.label || "Mistake", value: e.value });
+  },
+
+  // Fatigue: a status card (dead weight) joins your deck for the rest of this game.
+  add_status(run, e, ctx) {
+    const m = run.match;
+    for (let i = 0; i < (e.count || 1); i++) m.discard.push({ iid: "s" + run.nextIid++, cardId: e.cardId, source: "status" });
+    const name = (run.content.cards[e.cardId] || {}).name || e.cardId;
+    log(run, `Fatigue: ${name} added to your deck.`);
+    ctx.events.push({ type: "status_added", cardId: e.cardId, name });
   },
 
   // --- Coach actions (timeouts and closing options) ---
@@ -96,6 +110,8 @@ const HANDLERS = {
     const card = getCard(run, ctx.inst);
     const shot = calcShot(run, ctx.inst);
     const made = roll100(run) < shot.pct;
+    const long = shot.points >= 3;
+    if (long) m.threeCold = 0; // a cold spell lasts one attempt
     m.shotsTaken++;
     m.openness = 0; // a shot consumes all Openness
     run.stats.shots++;
@@ -103,13 +119,16 @@ const HANDLERS = {
       m.score.player += shot.points;
       run.stats.pointsFor += shot.points;
       run.stats.makes++;
-      if (shot.points === 3) {
+      if (long) {
         m.threeStreak++;
         run.stats.threes++;
       }
     } else {
       m.missedShotThisTurn = true;
-      if (shot.points === 3) m.threeStreak = 0;
+      if (long) {
+        m.threeStreak = 0;
+        if (m.buffs.threeMissPenalty) m.threeCold = m.buffs.threeMissPenalty;
+      }
     }
     const pct = Math.round(shot.pct);
     log(
@@ -134,6 +153,8 @@ const HANDLERS = {
       audio: card.audio || null,
       score: { ...m.score },
     });
+    // A miss can cost you: the card says how (turnover, long rebound...).
+    if (!made && card.onMiss) applyEffects(run, card.onMiss, ctx);
   },
 };
 
@@ -143,6 +164,10 @@ export function applyEffects(run, effects, ctx) {
     if (e.condition && !checkCondition(run, e.condition)) continue;
     const handler = HANDLERS[e.type];
     if (handler) handler(run, e, ctx);
+    if (e.text) {
+      log(run, e.text);
+      ctx.events.push({ type: "consequence", text: e.text });
+    }
   }
 }
 
