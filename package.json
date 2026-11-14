@@ -1,0 +1,13 @@
+{
+  "name": "full-court-run",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Full Court Run - a basketball roguelike deckbuilder. No build step.",
+  "scripts": {
+    "start": "npx serve .",
+    "test": "node --test tests/*.test.js",
+    "sim": "node tools/sim.js",
+    "assets": "node tools/update-assets.js"
+  }
+}

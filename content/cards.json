@@ -1,0 +1,136 @@
+[
+  {
+    "id": "swing_pass", "name": "Swing Pass", "cost": 3, "type": "Offense", "tags": ["Pass"],
+    "text": "+10 Openness.",
+    "effects": [{ "type": "add_openness", "value": 10 }]
+  },
+  {
+    "id": "pick_and_roll", "name": "Pick & Roll", "cost": 6, "type": "Offense", "tags": ["Pass"],
+    "text": "+20 Openness. Draw 1.",
+    "effects": [{ "type": "add_openness", "value": 20 }, { "type": "draw", "value": 1 }]
+  },
+  {
+    "id": "iso", "name": "Iso", "cost": 5, "type": "Offense", "tags": [],
+    "text": "+15 Openness. +10 more with a Slasher in your lineup.",
+    "effects": [
+      { "type": "add_openness", "value": 15 },
+      { "type": "add_openness", "value": 10, "condition": { "type": "archetype_in_lineup", "archetype": "Slasher" } }
+    ]
+  },
+  {
+    "id": "pull_up_jumper", "name": "Pull-Up Jumper", "cost": 5, "type": "Shot", "tags": [],
+    "text": "2PT shot.",
+    "effects": [{ "type": "shoot", "points": 2 }]
+  },
+  {
+    "id": "catch_and_shoot_3", "name": "Catch & Shoot 3", "cost": 6, "type": "Shot", "tags": [],
+    "text": "3PT shot. +10% if you played a Pass card this turn.",
+    "effects": [{
+      "type": "shoot", "points": 3,
+      "modifiers": [{ "type": "bonus", "value": 10, "condition": { "type": "tag_played_this_turn", "tag": "Pass" } }]
+    }]
+  },
+  {
+    "id": "step_back_3", "name": "Step-Back 3", "cost": 8, "type": "Shot", "tags": [], "audio": "deep3",
+    "text": "3PT shot. Ignores 10 opponent DEF.",
+    "effects": [{ "type": "shoot", "points": 3, "modifiers": [{ "type": "ignore_defense", "value": 10 }] }]
+  },
+  {
+    "id": "drive_and_finish", "name": "Drive & Finish", "cost": 7, "type": "Shot", "tags": ["Drive"],
+    "text": "2PT shot. Shooter's INS counts double.",
+    "effects": [{ "type": "shoot", "points": 2, "modifiers": [{ "type": "rating_multiplier", "value": 10 }] }]
+  },
+  {
+    "id": "alley_oop", "name": "Alley-Oop", "cost": 9, "type": "Shot", "tags": [], "audio": "alleyoop",
+    "text": "2PT shot at +30%. Needs a Big in your lineup.",
+    "requires": [{ "type": "archetype_in_lineup", "archetype": "Big" }],
+    "effects": [{ "type": "shoot", "points": 2, "modifiers": [{ "type": "bonus", "value": 30 }] }]
+  },
+  {
+    "id": "heat_check", "name": "Heat Check", "cost": 4, "type": "Buff", "tags": [],
+    "text": "Rest of match: +15% on 3PT per consecutive made 3. A missed 3 resets the streak.",
+    "effects": [{ "type": "add_buff", "buff": "threeStreakBonus", "value": 15 }]
+  },
+  {
+    "id": "contest", "name": "Contest", "cost": 3, "type": "Defense", "tags": [],
+    "text": "+15 Contest.",
+    "effects": [{ "type": "add_contest", "value": 15 }]
+  },
+  {
+    "id": "lockdown", "name": "Lockdown", "cost": 6, "type": "Defense", "tags": [],
+    "text": "+30 Contest.",
+    "effects": [{ "type": "add_contest", "value": 30 }]
+  },
+  {
+    "id": "swipe", "name": "Swipe", "cost": 5, "type": "Defense", "tags": [],
+    "text": "35% chance to steal the opponent's attempt. If it works, draw 2 extra next turn.",
+    "effects": [{ "type": "steal_attempt", "chance": 35, "onSuccess": [{ "type": "next_turn_draw", "value": 2 }] }]
+  },
+  {
+    "id": "box_out", "name": "Box Out", "cost": 4, "type": "Defense", "tags": [],
+    "text": "If the opponent misses this turn: +10 Openness next turn.",
+    "effects": [{ "type": "on_opponent_fail", "effects": [{ "type": "next_turn_openness", "value": 10 }] }]
+  },
+  {
+    "id": "timeout", "name": "Timeout", "cost": 0, "type": "Utility", "tags": [], "exhaust": true,
+    "text": "Discard your hand, draw 5. Once per match.",
+    "effects": [{ "type": "discard_hand" }, { "type": "draw", "value": 5 }]
+  },
+  {
+    "id": "fast_break", "name": "Fast Break", "cost": 4, "type": "Offense", "tags": [],
+    "text": "+40 Openness. Only after an opponent miss.",
+    "requires": [{ "type": "opponent_last_failed" }],
+    "effects": [{ "type": "add_openness", "value": 40 }]
+  },
+  {
+    "id": "no_look_dime", "name": "No-Look Dime", "cost": 2, "type": "Offense", "tags": ["Pass"],
+    "text": "+8 Openness.",
+    "effects": [{ "type": "add_openness", "value": 8 }]
+  },
+  {
+    "id": "hard_screen", "name": "Hard Screen", "cost": 4, "type": "Offense", "tags": [],
+    "text": "+10 Openness and +10 Contest.",
+    "effects": [{ "type": "add_openness", "value": 10 }, { "type": "add_contest", "value": 10 }]
+  },
+  {
+    "id": "clamp_down", "name": "Clamp Down", "cost": 4, "type": "Defense", "tags": [],
+    "text": "+15 Contest. Draw 1.",
+    "effects": [{ "type": "add_contest", "value": 15 }, { "type": "draw", "value": 1 }]
+  },
+  {
+    "id": "corner_three", "name": "Corner Three", "cost": 5, "type": "Shot", "tags": [],
+    "text": "3PT shot at +5%.",
+    "effects": [{ "type": "shoot", "points": 3, "modifiers": [{ "type": "bonus", "value": 5 }] }]
+  },
+  {
+    "id": "euro_step", "name": "Euro Step", "cost": 6, "type": "Shot", "tags": ["Drive"],
+    "text": "2PT shot at +10%.",
+    "effects": [{ "type": "shoot", "points": 2, "modifiers": [{ "type": "bonus", "value": 10 }] }]
+  },
+  {
+    "id": "putback", "name": "Putback", "cost": 3, "type": "Shot", "tags": [], "ignoresShotLimit": true,
+    "text": "Extra 2PT shot at +15%. Only after you miss a shot this turn.",
+    "requires": [{ "type": "missed_shot_this_turn" }],
+    "effects": [{ "type": "shoot", "points": 2, "modifiers": [{ "type": "bonus", "value": 15 }] }]
+  },
+  {
+    "id": "give_and_go", "name": "Give & Go", "cost": 4, "type": "Offense", "tags": ["Pass"],
+    "text": "+12 Openness. Gain 2 seconds.",
+    "effects": [{ "type": "add_openness", "value": 12 }, { "type": "gain_energy", "value": 2 }]
+  },
+  {
+    "id": "help_defense", "name": "Help Defense", "cost": 2, "type": "Defense", "tags": [],
+    "text": "+10 Contest.",
+    "effects": [{ "type": "add_contest", "value": 10 }]
+  },
+  {
+    "id": "chase_down_block", "name": "Chase-Down Block", "cost": 8, "type": "Defense", "tags": [],
+    "text": "+45 Contest.",
+    "effects": [{ "type": "add_contest", "value": 45 }]
+  },
+  {
+    "id": "film_study", "name": "Film Study", "cost": 2, "type": "Utility", "tags": [],
+    "text": "Draw 2.",
+    "effects": [{ "type": "draw", "value": 2 }]
+  }
+]

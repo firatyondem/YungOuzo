@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Full Court Run</title>
+  <meta name="description" content="Full Court Run - a basketball roguelike deckbuilder. Build a team, beat the shot clock, win the tournament.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏀</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <div id="boot" class="boot">Loading the arena…</div>
+
+    <!-- GAME -->
+    <section id="screen-game" class="screen" hidden>
+      <header class="topbar">
+        <div class="round-label" id="g-round"></div>
+        <div class="scorebug" id="g-scorebug"></div>
+        <div class="topbar-right" id="g-tools"></div>
+      </header>
+
+      <main class="arena">
+        <aside class="side left-col">
+          <h3 class="side-title">Your lineup</h3>
+          <div id="g-lineup" class="lineup"></div>
+          <h3 class="side-title">Chemistry</h3>
+          <div id="g-chem" class="chem"></div>
+        </aside>
+
+        <div class="court-wrap" id="g-court">
+          <div class="css-court" id="css-court"></div>
+          <canvas id="three-canvas" hidden></canvas>
+          <div class="intent" id="g-intent"></div>
+          <div class="fx-layer" id="g-fx"></div>
+          <div class="caption" id="g-caption"></div>
+        </div>
+
+        <aside class="side right-col">
+          <div class="clock-row">
+            <div class="shotclock" id="g-clock"></div>
+            <div class="bars" id="g-bars"></div>
+          </div>
+          <h3 class="side-title">Play-by-play</h3>
+          <div class="log" id="g-log"></div>
+        </aside>
+      </main>
+
+      <footer class="handbar">
+        <div class="piles" id="g-piles"></div>
+        <div class="hand" id="g-hand"></div>
+        <div class="endturn-wrap">
+          <div class="endturn-hint" id="g-endhint"></div>
+          <button id="btn-endturn" class="btn btn-primary btn-endturn">END TURN<small>Space</small></button>
+        </div>
+      </footer>
+    </section>
+
+    <!-- Shared overlay (results, pickers) -->
+    <div id="overlay" class="overlay" hidden></div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

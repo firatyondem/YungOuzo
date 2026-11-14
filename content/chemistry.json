@@ -1,0 +1,22 @@
+{
+  "Sniper": {
+    "threshold": 2, "name": "Long Range", "text": "+5% on 3PT shots",
+    "effect": { "type": "shot_bonus", "points": 3, "value": 5 }
+  },
+  "Big": {
+    "threshold": 2, "name": "Paint Patrol", "text": "Draw 1 after an opponent miss",
+    "effect": { "type": "draw_on_opponent_fail", "value": 1 }
+  },
+  "Slasher": {
+    "threshold": 2, "name": "Downhill", "text": "Drive cards cost 1s less",
+    "effect": { "type": "tag_cost_reduction", "tag": "Drive", "value": 1 }
+  },
+  "FloorGeneral": {
+    "threshold": 2, "name": "Twin Maestros", "text": "Draw 1 extra card each turn",
+    "effect": { "type": "extra_draw", "value": 1 }
+  },
+  "Lockdown": {
+    "threshold": 2, "name": "No Fly Zone", "text": "+10 passive Contest",
+    "effect": { "type": "passive_contest", "value": 10 }
+  }
+}
