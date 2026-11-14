@@ -44,6 +44,9 @@ export const CONFIG = {
   // Replace the procedural 3D floor with assets/models/court.glb (if present).
   USE_COURT_MODEL: false,
 
+  // Synthesized fallback sounds when an SFX file is missing (assets/audio/).
+  SYNTH_SFX: true,
+
   // Fixed seed for demos/tests; null = new random seed each run.
   SEED: null,
 };

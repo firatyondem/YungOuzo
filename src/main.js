@@ -16,6 +16,7 @@ import { createDebug } from "./ui/debug.js";
 import { renderTitle, renderHowTo, showHowToOverlay, soundButtonHTML } from "./ui/title.js";
 import { createTutorial } from "./ui/tutorial.js";
 import { loadManifest } from "./assets.js";
+import { AudioManager } from "./audio/AudioManager.js";
 
 function readMuted() {
   try {
@@ -179,6 +180,31 @@ async function initThreeCourt() {
   }
 }
 
+// ---------- Audio (optional) ----------
+
+async function initAudio() {
+  try {
+    const [manifest, announcer] = await Promise.all([
+      loadManifest(),
+      loadJson("content/announcer.json").catch(() => ({})),
+    ]);
+    app.audio = new AudioManager({
+      announcer,
+      manifest,
+      captionEl: $("#g-caption"),
+      muted: app.muted,
+      synth: CONFIG.SYNTH_SFX !== false,
+    });
+    app.audio.setScene(currentScreen());
+    // Browsers only allow audio after a user gesture.
+    const unlock = () => app.audio?.unlock();
+    document.addEventListener("pointerdown", unlock, { capture: true });
+    document.addEventListener("keydown", unlock, { capture: true });
+  } catch (err) {
+    console.info("Audio unavailable:", err?.message || err);
+  }
+}
+
 /** Victory screen: swap the emoji for assets/models/trophy.glb when it exists. */
 app.mountTrophy = async (el) => {
   try {
@@ -227,6 +253,7 @@ async function boot() {
   });
 
   app.goTitle();
+  initAudio(); // async, never blocks the game
   initThreeCourt(); // async, never blocks the game
 }
 

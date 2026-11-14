@@ -67,6 +67,7 @@ export function createGame(app) {
               fx.pop(three ? "SPLASH! +3" : "BUCKET! +2", three ? "good big" : "good");
               fx.shake(three ? "hard" : "soft");
               app.sfx("swish");
+              if (three) app.sfx("crowd");
               app.announce(ev.audio || (three ? "made3" : "made2"));
             } else {
               fx.pop("CLANK!", "bad");
@@ -100,7 +101,6 @@ export function createGame(app) {
               if (ev.made) {
                 fx.pop(`${getTeam(run).name.toUpperCase()} +${ev.points}`, "opp");
                 app.sfx("swish");
-                app.sfx("crowd");
               } else {
                 fx.pop("THEY MISS!", "good small");
                 app.sfx("clank");

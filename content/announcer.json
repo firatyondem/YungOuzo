@@ -1,0 +1,61 @@
+{
+  "_readme": "event -> lines. Each line pairs an audio file in assets/audio/ with its caption. Captions always show; a file only plays if it exists (run `node tools/update-assets.js` after adding files). The captions double as the voice-over script.",
+
+  "made2": { "lines": [
+    { "file": "made2_1.mp3", "caption": "Bucket! Two more on the board." },
+    { "file": "made2_2.mp3", "caption": "Smooth finish. That's an easy two." },
+    { "file": "made2_3.mp3", "caption": "Count it! Right through the middle." }
+  ] },
+  "made3": { "lines": [
+    { "file": "made3_1.mp3", "caption": "Three ball... nothing but net!" },
+    { "file": "made3_2.mp3", "caption": "From long range, and it's pure!" },
+    { "file": "made3_3.mp3", "caption": "Splash! Put three on the board." }
+  ] },
+  "deep3": { "lines": [
+    { "file": "deep3_1.mp3", "caption": "From the parking lot! Are you kidding me?" },
+    { "file": "deep3_2.mp3", "caption": "Way, way out... and it drops!" }
+  ] },
+  "miss": { "lines": [
+    { "file": "miss_1.mp3", "caption": "Off the iron. No good." },
+    { "file": "miss_2.mp3", "caption": "It rattles out. Shake it off." },
+    { "file": "miss_3.mp3", "caption": "Clank. That one had no chance." }
+  ] },
+  "block": { "lines": [
+    { "file": "block_1.mp3", "caption": "Smothered! Nothing easy tonight." },
+    { "file": "block_2.mp3", "caption": "Locked up. That is championship defense." }
+  ] },
+  "steal": { "lines": [
+    { "file": "steal_1.mp3", "caption": "Picked clean! What a steal." },
+    { "file": "steal_2.mp3", "caption": "Stolen! They never saw it coming." }
+  ] },
+  "alleyoop": { "lines": [
+    { "file": "alleyoop_1.mp3", "caption": "The lob... and the slam! The crowd is on its feet!" },
+    { "file": "alleyoop_2.mp3", "caption": "Up top, and he hammers it home!" }
+  ] },
+  "shotclock": { "lines": [
+    { "file": "shotclock_1.mp3", "caption": "Shot-clock violation. That's a wasted trip." },
+    { "file": "shotclock_2.mp3", "caption": "The horn sounds. No shot, no points." }
+  ] },
+  "gamepoint": { "lines": [
+    { "file": "gamepoint_1.mp3", "caption": "We're in the closing stretch. Every possession counts." },
+    { "file": "gamepoint_2.mp3", "caption": "Game point is close. Buckle up." }
+  ] },
+  "win": { "lines": [
+    { "file": "win_1.mp3", "caption": "That's the ballgame! What a performance." },
+    { "file": "win_2.mp3", "caption": "Final horn! They move on." }
+  ] },
+  "loss": { "lines": [
+    { "file": "loss_1.mp3", "caption": "And that's it. The run ends here." },
+    { "file": "loss_2.mp3", "caption": "Heartbreak. So close, yet so far." }
+  ] },
+  "title": { "lines": [
+    { "file": "title_1.mp3", "caption": "Welcome to Full Court Run." },
+    { "file": "title_2.mp3", "caption": "Three games. One title. Let's run." }
+  ] },
+
+  "swish": { "lines": [{ "file": "swish_1.mp3" }, { "file": "swish_2.mp3" }] },
+  "clank": { "lines": [{ "file": "clank_1.mp3" }, { "file": "clank_2.mp3" }] },
+  "buzzer": { "lines": [{ "file": "buzzer_1.mp3" }] },
+  "squeak": { "lines": [{ "file": "squeak_1.mp3" }, { "file": "squeak_2.mp3" }] },
+  "crowd": { "lines": [{ "file": "crowd_1.mp3" }, { "file": "crowd_2.mp3" }] }
+}
