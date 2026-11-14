@@ -38,6 +38,12 @@ export const CONFIG = {
   SHOT_ANIM_MS: 750,
   OPP_ANIM_MS: 800,
 
+  // 3D court (Three.js from a CDN). false, ?css=1 in the URL, or any load
+  // failure -> the CSS court is used instead.
+  USE_THREE: true,
+  // Replace the procedural 3D floor with assets/models/court.glb (if present).
+  USE_COURT_MODEL: false,
+
   // Fixed seed for demos/tests; null = new random seed each run.
   SEED: null,
 };

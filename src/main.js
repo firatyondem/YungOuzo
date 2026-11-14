@@ -4,6 +4,7 @@ import { buildContent, createRun } from "./engine/gameState.js";
 import { startMatch } from "./engine/turnLoop.js";
 import { skipReward } from "./engine/rewards.js";
 import { randomSeed } from "./engine/rng.js";
+import { getTeam } from "./engine/rules.js";
 import { $, $$, esc } from "./ui/dom.js";
 import { showScreen, showOverlay, hideOverlay, currentScreen } from "./ui/screens.js";
 import { createGame } from "./ui/game.js";
@@ -14,6 +15,7 @@ import { renderEnd } from "./ui/endscreen.js";
 import { createDebug } from "./ui/debug.js";
 import { renderTitle, renderHowTo, showHowToOverlay, soundButtonHTML } from "./ui/title.js";
 import { createTutorial } from "./ui/tutorial.js";
+import { loadManifest } from "./assets.js";
 
 function readMuted() {
   try {
@@ -147,6 +149,49 @@ function confirmQuit() {
   $("#ov-yes", o).addEventListener("click", () => app.goTitle());
 }
 
+// ---------- 3D court (optional) ----------
+
+async function initThreeCourt() {
+  const params = new URLSearchParams(location.search);
+  if (!CONFIG.USE_THREE || params.has("css")) return;
+  const canvas = $("#three-canvas");
+  const cssCourt = app.court;
+  try {
+    const manifest = await loadManifest();
+    const { createThreeCourt } = await import("./scene/court.js");
+    const three = await createThreeCourt({ canvas, wrap: $("#g-court"), manifest, config: CONFIG });
+    const useCss = () => {
+      three.setVisible(false);
+      cssCourt.setVisible(true);
+      app.court = cssCourt;
+      if (app.run?.match) cssCourt.setTeams(app.run.lineup, getTeam(app.run));
+    };
+    three.onContextLost = useCss;
+    cssCourt.setVisible(false);
+    three.setVisible(true);
+    app.court = three;
+    if (app.run?.match) three.setTeams(app.run.lineup, getTeam(app.run));
+  } catch (err) {
+    canvas.hidden = true;
+    cssCourt.setVisible(true);
+    app.court = cssCourt;
+    console.info("3D court unavailable, using the CSS court:", err?.message || err);
+  }
+}
+
+/** Victory screen: swap the emoji for assets/models/trophy.glb when it exists. */
+app.mountTrophy = async (el) => {
+  try {
+    if (!CONFIG.USE_THREE || !el) return;
+    const manifest = await loadManifest();
+    if (!manifest || !manifest.models.has("trophy.glb")) return;
+    const { mountTrophy } = await import("./scene/trophy.js");
+    await mountTrophy(el, "assets/models/trophy.glb");
+  } catch {
+    /* keep the emoji */
+  }
+};
+
 // ---------- Boot ----------
 
 async function boot() {
@@ -182,6 +227,7 @@ async function boot() {
   });
 
   app.goTitle();
+  initThreeCourt(); // async, never blocks the game
 }
 
 boot();

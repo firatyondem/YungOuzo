@@ -97,6 +97,7 @@
 
 /* End screens */
 .end-icon { font-size: clamp(60px, 13vh, 130px); line-height: 1; animation: trophy 1.6s ease-in-out infinite alternate; }
+.end-icon.has-model { animation: none; font-size: 0; }
 @keyframes trophy { from { transform: translateY(0) rotate(-4deg); } to { transform: translateY(-10px) rotate(4deg); } }
 .end-title { font-size: clamp(70px, 14vh, 150px); line-height: 0.95; }
 .end-sub { font-size: 24px; color: var(--muted); margin: 0; text-align: center; }

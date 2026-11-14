@@ -47,6 +47,7 @@ export function renderEnd(app) {
       </div>
       <div class="end-seed">Seed ${esc(run.seed)}</div>
     </div>`;
+  if (won) app.mountTrophy?.($(".end-icon", host));
   $("#end-again", host).addEventListener("click", () => app.startRun());
   $("#end-title", host).addEventListener("click", () => app.goTitle());
 }
