@@ -47,6 +47,7 @@ export function loadContent({ teams = null, playerFile = "league" } = {}) {
     plays: readJson("content/plays.json"),
     actions: readJson("content/coach_actions.json"),
     lineups: readJson("content/lineups.json"),
+    strategy: readJson("content/strategy.json"),
   });
 }
 

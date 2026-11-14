@@ -34,9 +34,20 @@
 //     pace { clock, draw }                             shot clock length and cards drawn
 //     counter_favorite_type { value, fromGame? }       becomes a card_cost rule at tip-off
 //     contest_start { value } / draw_bonus { value }   your Contest and cards drawn at turn start
+//     pass_draw { every, value }                       every nth Pass card in a turn draws cards
+//     openness_bonus { tag, value }                    extra Openness from matching cards
+//     steal_bonus { value }                            added to your steal chance
+//   Filters: shot_mod also takes star (true = only your Star, false = everyone else);
+//   card_cost also takes cardId.
+//
+// ORDER: opponent rules come first, then your lineup shape, then your game plan.
+// Where only one rule can apply (pace), the first one wins, so an opponent's
+// pace lock overrides your own pace.
 //
 // Your own lineup shape (content/lineups.json) uses the same rule types, so a
 // shape's bonus and its weakness combine with opponent rules in one place.
+
+import { strategyRules } from "./strategy.js";
 
 function teamOf(run) {
   const m = run.match;
@@ -82,6 +93,7 @@ export function activeRules(run) {
   if (phase) rules.push(...withLabel(phase.effects, phase.name));
   rules.push(...(m.extraRules || []));
   for (const shape of activeShapes(run)) rules.push(...withLabel(shape.effects, shape.name));
+  rules.push(...strategyRules(run)); // your offensive system, defensive scheme and pace
   return rules;
 }
 

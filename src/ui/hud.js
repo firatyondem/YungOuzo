@@ -7,6 +7,8 @@ import { icon } from "./icons.js";
 import { playbook } from "../engine/plays.js";
 import { actionList, isClosingTime } from "../engine/actions.js";
 import { activeShapes } from "../engine/teamRules.js";
+import { planSummary, planVerdict } from "./strategy.js";
+import { canChangePlan } from "../engine/actions.js";
 
 let shownScore = { player: -1, opp: -1 };
 let countTimers = [];
@@ -233,6 +235,21 @@ export function renderPlays(app) {
       return `<div class="play ${state}" title="${esc(play.text)}"><span class="play-pips">${pips}</span><b>${esc(play.name)}</b><em>+${play.bonus}%</em>${label ? `<span class="play-state">${label}</span>` : ""}</div>`;
     })
     .join("");
+}
+
+/** PLAN button: the current game plan, with a halftime cue when a change is free. */
+export function renderPlan(app) {
+  const btn = $("#btn-plan");
+  if (!btn) return;
+  const run = app.run;
+  const can = canChangePlan(run);
+  const free = can.ok && can.free;
+  const verdict = planVerdict(run);
+  btn.innerHTML = `${icon("scouting")}<span><small>${free ? "Halftime: free change" : "Game plan"}</small>${esc(planSummary(run))}</span>`;
+  btn.classList.toggle("free", free);
+  btn.classList.toggle("warn", verdict < 0);
+  btn.disabled = run.match.over;
+  btn.title = `Your offensive system, defensive scheme and pace (P). ${free ? "One free change now." : can.ok ? "Changing it costs a timeout." : can.reason}`;
 }
 
 /** Coach button: timeouts left, and a closing-time cue. */

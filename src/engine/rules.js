@@ -109,6 +109,7 @@ export function getCardCost(run, card) {
     for (const r of rulesOf(run, "card_cost")) {
       if (r.tag && !(card.tags || []).includes(r.tag)) continue;
       if (r.cardType && card.type !== r.cardType) continue;
+      if (r.cardId && card.id !== r.cardId) continue;
       cost += r.value;
     }
   }
@@ -182,6 +183,7 @@ export function calcShot(run, inst) {
     if (r.points && r.points !== points) continue;
     if (r.tag && !tags.includes(r.tag)) continue;
     if (r.archetype && shooter.archetype !== r.archetype) continue;
+    if (r.star != null && r.star !== (shooter.id === (run.strategy && run.strategy.starId))) continue;
     ruleBonus += r.value;
     notes.push({ label: r.label, value: r.value });
   }

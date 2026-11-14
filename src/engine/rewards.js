@@ -38,6 +38,7 @@ export function replacePlayer(run, slot, newPlayerId) {
   const np = clonePlayer(template);
   run.lineup[slot] = np;
   for (const id of np.signatureCards) run.deck.push(makeInstance(run, id, np.id));
+  if (run.strategy && run.strategy.starId === old.id) run.strategy.starId = np.id;
   return true;
 }
 

@@ -69,6 +69,7 @@ export function howtoHTML(app) {
         <span><b>Lineup</b> — shots use your players' SHT (3PT) and INS (2PT). DEF and PLY give passive Contest and Openness.</span>
         <span><b>Chemistry</b> — two players of the same archetype unlock a team bonus.</span>
         <span><b>Plays</b> — the right cards in order trigger a play call, e.g. Pass, Pass, shot = Swing-Swing (+10%). The Playbook shows what is one card away.</span>
+        <span><b>Game plan</b> — before each game pick an offensive system, a defensive scheme and a pace. Each is rated against the opponent, with the reason. Changing it mid-game is free at halftime, otherwise a timeout.</span>
         <span><b>Coach</b> — three timeouts per game (new hand, ice their shooter, extra seconds) and special options in closing time.</span>
         <span><b>Rewards</b> — after each win pick a new card, a new player, or a rating upgrade.</span>
         <span><b>Controls</b> — click a card to play it · Space = end turn · 1–9 = play card · M = mute</span>

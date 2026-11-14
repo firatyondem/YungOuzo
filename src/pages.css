@@ -182,3 +182,7 @@
 .bnode-stats { flex-wrap: wrap; row-gap: 3px; }
 
 .page-head h1 .lives { display: inline-flex; align-items: center; gap: 6px; font-family: var(--body); font-size: var(--fs-14); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--navy-ink); background: var(--yellow); border-radius: var(--r-pill); padding: 3px 12px; vertical-align: middle; margin-left: 14px; }
+
+.page-actions .plan-btn { font-size: var(--fs-20); padding: 8px 16px 6px; border-width: 3px; box-shadow: 0 5px 0 #0A1120; max-width: 420px; }
+.page-actions .plan-btn span { font-size: var(--fs-14); }
+.page-actions .plan-btn small { font-size: var(--fs-16); }

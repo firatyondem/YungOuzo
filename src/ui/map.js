@@ -7,6 +7,7 @@ import { avatarHTML } from "./avatar.js";
 import { icon } from "./icons.js";
 import { teamColors } from "./hud.js";
 import { tipOffRules } from "../engine/teamRules.js";
+import { openPlanBoard, planSummary, planVerdict } from "./strategy.js";
 import { showOverlay, hideOverlay } from "./screens.js";
 
 const TYPE_ORDER = ["Shot", "Offense", "Defense", "Buff", "Utility"];
@@ -103,10 +104,12 @@ export function renderMap(app) {
         <div class="pc-row">${run.lineup.map((p) => playerCardHTML(p, run.content, { compact: true })).join("")}</div>
       </section>
       <div class="page-actions">
+        <button class="btn plan-btn ${planVerdict(run) < 0 ? "warn" : ""}" id="map-plan" title="Choose your offensive system, defensive scheme and pace">${icon("utility")}<span><small>GAME PLAN</small>${esc(planSummary(run))}</span></button>
         <button class="btn btn-primary btn-big" id="map-go">TIP-OFF vs ${esc(next.name.toUpperCase())}${game}</button>
       </div>
     </div>`;
 
   $("#map-go", host).addEventListener("click", () => app.beginMatch());
   $("#map-deck", host).addEventListener("click", () => showDeck(app));
+  $("#map-plan", host).addEventListener("click", () => openPlanBoard(app, () => renderMap(app)));
 }

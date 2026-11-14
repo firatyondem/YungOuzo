@@ -18,6 +18,7 @@ import { generateRewards } from "./rewards.js";
 import { winsNeeded } from "./gameState.js";
 import { firstRule, rulesOf, intentMatches, tipOffRules, phaseIntents } from "./teamRules.js";
 import { cardInfo } from "./plays.js";
+import { ensureStar } from "./strategy.js";
 
 /** Per-turn coach modifiers (timeouts and closing options). Reset every turn. */
 const freshMods = () => ({ ice: 0, foul: null, shotBonus: 0, endAfterShot: false, endNow: false });
@@ -60,6 +61,8 @@ export function startMatch(run) {
     opp: { streak: 0, possessions: 0, hot: 0, phase: 0, tagStats: {}, adapted: null, pick: null, lastContest: null, readNote: "" },
     extraRules: [], // league scouting + film study, fixed at tip-off
     notes: [], // what the player is told before the game
+    halftimeDone: false,
+    freePlanChange: false, // true during the halftime turn until you play a card
     turnEnded: false,
     over: false,
     winner: null,
@@ -69,8 +72,7 @@ export function startMatch(run) {
   const tip = tipOffRules(run, team, stop);
   m.extraRules = tip.rules;
   m.notes = tip.notes;
-  const pace = firstRule(run, "pace");
-  if (pace && pace.clock) m.maxEnergy = pace.clock;
+  ensureStar(run);
   m.draw = shuffle(run, run.deck.map((c) => ({ ...c })));
   run.phase = "match";
   const events = [{ type: "match_start", teamId: team.id }];
@@ -131,7 +133,17 @@ function startTurn(run, events) {
   chooseIntent(run);
   const pace = firstRule(run, "pace");
   const sum = (type) => rulesOf(run, type).reduce((s, r) => s + r.value, 0);
+  m.maxEnergy = pace && pace.clock ? pace.clock : run.config.MAX_ENERGY;
   m.energy = Math.max(0, m.maxEnergy - sum("energy_tax"));
+  // Halftime: the first turn after either team reaches the halfway score. One free plan change.
+  const half = run.config.HALFTIME_AT ?? Math.ceil(m.target / 2);
+  m.freePlanChange = false;
+  if (!m.halftimeDone && (m.score.player >= half || m.score.opp >= half)) {
+    m.halftimeDone = true;
+    m.freePlanChange = true;
+    log(run, "Halftime. You may change your game plan for free.");
+    events.push({ type: "halftime" });
+  }
   m.shotsTaken = 0;
   m.shotsAllowed = 1;
   m.missedShotThisTurn = false;
@@ -264,6 +276,24 @@ export function playCard(run, iid) {
     events.push({ type: "negated", label: negated.label, cardId: card.id });
   }
   applyEffects(run, effects, { inst, events });
+  // Systems that reward the card just played.
+  if ((effects || []).some((e) => e.type === "add_openness")) {
+    for (const r of rulesOf(run, "openness_bonus")) {
+      if (!tags.includes(r.tag)) continue;
+      m.openness += r.value;
+      events.push({ type: "openness", value: r.value, label: r.label });
+    }
+  }
+  if (tags.includes("Pass")) {
+    const passes = m.turnCards.filter((c) => c.tags.includes("Pass")).length + 1;
+    for (const r of rulesOf(run, "pass_draw")) {
+      if (passes % r.every !== 0) continue;
+      const drawn = drawCards(run, r.value);
+      log(run, `${r.label}: the ball movement draws ${drawn.length} card${drawn.length === 1 ? "" : "s"}.`);
+      events.push({ type: "draw", count: drawn.length, label: r.label });
+    }
+  }
+  m.freePlanChange = false; // the halftime window closes once you start playing
   m.turnCards.push(cardInfo(card)); // after resolving, so a shot never counts toward its own play
   (card.exhaust ? m.exhaust : m.discard).push(inst);
   checkWin(run, events);

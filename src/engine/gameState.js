@@ -59,6 +59,7 @@
 // =====================================================================
 import { hashSeed, pick } from "./rng.js";
 import { buildStartingDeck } from "./deck.js";
+import { defaultStrategy } from "./strategy.js";
 
 export function clonePlayer(p) {
   return JSON.parse(JSON.stringify(p));
@@ -81,6 +82,7 @@ export function buildContent(raw) {
     plays: raw.plays || [],
     actions: raw.actions || [],
     lineups: raw.lineups || [],
+    strategy: raw.strategy || { offense: [], defense: [], pace: [] },
   };
 }
 
@@ -116,6 +118,7 @@ export function createRun(content, config, seed) {
   run.lineup = config.STARTING_LINEUP.map((id) => clonePlayer(content.players[id]));
   run.deck = buildStartingDeck(run);
   run.schedule = buildSchedule(run);
+  run.strategy = defaultStrategy(run); // { offense, defense, pace, starId } - see strategy.js
   return run;
 }
 

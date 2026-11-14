@@ -40,6 +40,8 @@ export const CONFIG = {
   SHOT_ANIM_MS: 750,
   OPP_ANIM_MS: 800,
 
+  // Halftime (one free game-plan change) when either team first reaches this score.
+  HALFTIME_AT: 8,
   // Lives: a loss before the Finals costs one (rematch, no reward) instead of ending the run.
   LIVES: 2,
   // Coach actions (content/coach_actions.json).

@@ -1,0 +1,131 @@
+{
+  "offense": [
+    {
+      "id": "balanced", "name": "Balanced",
+      "strengths": ["No weaknesses to attack"], "weaknesses": ["No bonuses either"],
+      "effects": []
+    },
+    {
+      "id": "pace_space", "name": "Pace & Space",
+      "strengths": ["+10% on your threes", "Fast Break costs 2s less"],
+      "weaknesses": ["-10 Contest every turn"],
+      "effects": [
+        { "type": "shot_mod", "points": 3, "value": 10 },
+        { "type": "card_cost", "cardId": "fast_break", "value": -2 },
+        { "type": "contest_start", "value": -10 }
+      ]
+    },
+    {
+      "id": "motion", "name": "Motion Offense",
+      "strengths": ["Every 2nd Pass card in a turn draws a card"],
+      "weaknesses": ["Iso costs 2s more"],
+      "effects": [
+        { "type": "pass_draw", "every": 2, "value": 1 },
+        { "type": "card_cost", "cardId": "iso", "value": 2 }
+      ]
+    },
+    {
+      "id": "post_hub", "name": "Post Hub",
+      "strengths": ["Your Bigs shoot twos at +15%", "Box Out is free"],
+      "weaknesses": ["-10% on your threes"],
+      "effects": [
+        { "type": "shot_mod", "points": 2, "archetype": "Big", "value": 15 },
+        { "type": "card_cost", "cardId": "box_out", "value": -4 },
+        { "type": "shot_mod", "points": 3, "value": -10 }
+      ]
+    },
+    {
+      "id": "heliocentric", "name": "Heliocentric",
+      "strengths": ["Your Star shoots at +20%"],
+      "weaknesses": ["Everyone else shoots at -10%"],
+      "usesStar": true,
+      "effects": [
+        { "type": "shot_mod", "star": true, "value": 20 },
+        { "type": "shot_mod", "star": false, "value": -10 }
+      ]
+    },
+    {
+      "id": "pick_roll", "name": "Pick & Roll Heavy",
+      "strengths": ["Screen cards give +10 extra Openness"],
+      "weaknesses": ["12% of your Pass cards get picked off"],
+      "effects": [
+        { "type": "openness_bonus", "tag": "Screen", "value": 10 },
+        { "type": "pass_steal", "chance": 12 }
+      ]
+    }
+  ],
+  "defense": [
+    {
+      "id": "man", "name": "Man-to-Man",
+      "strengths": ["Solid against everything"], "weaknesses": ["No special edge"],
+      "effects": []
+    },
+    {
+      "id": "zone_23", "name": "2-3 Zone",
+      "strengths": ["Their drives and post-ups -15%"],
+      "weaknesses": ["Their threes +10%"],
+      "effects": [
+        { "type": "intent_bonus", "tag": "drive", "value": -15 },
+        { "type": "intent_bonus", "tag": "post", "value": -15 },
+        { "type": "intent_bonus", "tag": "three", "value": 10 }
+      ]
+    },
+    {
+      "id": "switch", "name": "Switch Everything",
+      "strengths": ["Their threes and mid-range shots -8%", "Their iso plays -8%"],
+      "weaknesses": ["Their post-ups +15%", "Their lobs +8%"],
+      "effects": [
+        { "type": "intent_bonus", "tag": "three", "value": -8 },
+        { "type": "intent_bonus", "tag": "mid", "value": -8 },
+        { "type": "intent_bonus", "tag": "iso", "value": -8 },
+        { "type": "intent_bonus", "tag": "post", "value": 15 },
+        { "type": "intent_bonus", "tag": "lob", "value": 8 }
+      ]
+    },
+    {
+      "id": "drop", "name": "Drop Coverage",
+      "strengths": ["Their two-point attempts -15%"],
+      "weaknesses": ["Their threes +15%"],
+      "effects": [
+        { "type": "intent_bonus", "points": 2, "value": -15 },
+        { "type": "intent_bonus", "points": 3, "value": 15 }
+      ]
+    },
+    {
+      "id": "press", "name": "Full-Court Press",
+      "strengths": ["Your steal attempts +20%"],
+      "weaknesses": ["Their transition plays +20%", "Costs you 2 seconds every turn"],
+      "effects": [
+        { "type": "steal_bonus", "value": 20 },
+        { "type": "intent_bonus", "tag": "transition", "value": 20 },
+        { "type": "energy_tax", "value": 2 }
+      ]
+    }
+  ],
+  "pace": [
+    {
+      "id": "slow", "name": "Slow",
+      "strengths": ["30-second shot clock", "+4 Contest every turn"],
+      "weaknesses": ["Draw 1 card fewer", "Their post-ups +5%"],
+      "effects": [
+        { "type": "pace", "pace": "slow", "clock": 30, "draw": -1 },
+        { "type": "contest_start", "value": 4 },
+        { "type": "intent_bonus", "tag": "post", "value": 5 }
+      ]
+    },
+    {
+      "id": "normal", "name": "Normal",
+      "strengths": ["24-second shot clock"], "weaknesses": ["No special edge"],
+      "effects": []
+    },
+    {
+      "id": "fast", "name": "Fast",
+      "strengths": ["Draw 1 extra card"],
+      "weaknesses": ["18-second shot clock", "Their transition plays +10%"],
+      "effects": [
+        { "type": "pace", "pace": "fast", "clock": 18, "draw": 1 },
+        { "type": "intent_bonus", "tag": "transition", "value": 10 }
+      ]
+    }
+  ]
+}

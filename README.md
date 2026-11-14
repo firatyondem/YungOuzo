@@ -37,6 +37,7 @@ If you add audio or models, run `node tools/update-assets.js` and commit `assets
 | `Space` | End turn |
 | `M` | Mute / unmute |
 | `T` | Coach's call: timeouts and closing-time options |
+| `P` | Game plan (during a game) |
 | `D` | Debug panel |
 | `Esc` | Close a dialog |
 | `Enter` (title) | Play |
@@ -56,6 +57,7 @@ If you add audio or models, run `node tools/update-assets.js` and commit `assets
 - **Chemistry**: two players of the same archetype unlock a team bonus.
 - After each win pick **one reward**: a new card, a new player (replaces a starter and swaps their signature cards), or +1 to a rating.
 - The Dynasty gets **Clutch** (+10% on every intent) once either team is within 2 points of 15.
+- **Game plan:** before each game choose an **offensive system** (Balanced, Pace & Space, Motion Offense, Post Hub, Heliocentric, Pick & Roll Heavy), a **defensive scheme** (Man-to-Man, 2-3 Zone, Switch Everything, Drop Coverage, Full-Court Press) and a **pace** (Slow 30s, Normal 24s, Fast 18s). Every option has strengths and a weakness, and the board rates each one against the opponent as favourable, even or unfavourable, with the reason. Changing the plan during a game is free once at halftime (when either team reaches 8) and otherwise costs a timeout. A team that locks the pace overrides yours.
 - **Play calls:** the right cards in order within one turn trigger a named play that boosts the shot finishing it: Pass, Pass, shot = *Swing-Swing* (+10%); Drive, Pass, three = *Drive & Kick* (+15%, their DEF counts half); Screen, two = *Pick & Roll Finish* (+12%); Pass, two = *Give & Go* (+6%). The Playbook panel shows what is ready and what is one card away. Only the best play applies.
 - **The coach reads you:** a coached opponent looks at the Contest you showed on the previous possession and picks, from its next two plays, the one worth more expected points against it. Show no defense and it goes for the bigger, lower-percentage shot, which you can then contest. The choice is always shown before you act.
 - **Timeouts:** three per game (they are not cards). Regroup (new hand of 5), Ice the Shooter (their attempt at -10%), Breather (+6 seconds this turn).
@@ -151,6 +153,7 @@ Rule effects are data. The full list of rule types, with what each one does, is 
 
 ### Plays, coach actions and lineup shapes
 
+- `content/strategy.json` — offensive systems, defensive schemes and paces. Each option has `strengths`, `weaknesses` (shown to the player) and a list of rule `effects`; the matchup verdict is computed from those effects against the opponent's plays and rules, so new options are rated automatically.
 - `content/plays.json` — each play has a `sequence` of steps (`tag:<Tag>`, `type:<CardType>`, then a final `shot`, `shot:2` or `shot:3`), a `bonus` and an optional `defenseMult`.
 - `content/coach_actions.json` — timeouts (`group: "timeout"`) and closing-time options (`group: "closing"`), each a list of normal card effects plus an optional `cost` in seconds.
 - `content/lineups.json` — lineup shapes: a `when` condition (`max_archetype`, `min_archetype`, `min_avg_rating`, `min_signings`) and a list of rule effects (the same rule types opponents use).
@@ -229,7 +232,7 @@ This rewrites `assets/manifest.json`. The game only requests files listed there,
 node --test tests/*.test.js
 ```
 
-64 tests. Strategy (11): play calls, the coach's read, timeouts, closing-time options, lineup shapes, lives. League (12): the 16-team data, per-run schedule, the Finals series, boss phases, every rule type, film study, and a reproducible full season. Design system (8): token values, WCAG AA contrast of the main colour pairs, no emoji, no text under 12px, icon coverage, valid play diagrams and card markup. Engine (20): shot %, clamping, energy, draw and reshuffle, one-shot rule, intents and Clutch, steals, win/loss, rewards, player replacement, chemistry, seeded reproducibility. Roster and appearance (13): roster selection with a mocked fetch (the private file is never requested without `?roster=real`, missing and invalid files fall back), `normalizeLook` defaults, portraits stay valid SVG for broken data, and the private-file check.
+71 tests. Team strategy (7): every system, scheme and pace, the matchup reading, and plan changes (free before a game and at halftime, otherwise a timeout). Strategy (11): play calls, the coach's read, timeouts, closing-time options, lineup shapes, lives. League (12): the 16-team data, per-run schedule, the Finals series, boss phases, every rule type, film study, and a reproducible full season. Design system (8): token values, WCAG AA contrast of the main colour pairs, no emoji, no text under 12px, icon coverage, valid play diagrams and card markup. Engine (20): shot %, clamping, energy, draw and reshuffle, one-shot rule, intents and Clutch, steals, win/loss, rewards, player replacement, chemistry, seeded reproducibility. Roster and appearance (13): roster selection with a mocked fetch (the private file is never requested without `?roster=real`, missing and invalid files fall back), `normalizeLook` defaults, portraits stay valid SVG for broken data, and the private-file check.
 
 ```bash
 node tools/sim.js 2000
@@ -243,6 +246,7 @@ Add `?css=1` to the URL to force the CSS court (the automatic fallback when Thre
 ## Design decisions
 
 - **Balance**: team strength per tier comes from the simulator, not from hand-picked numbers. Over 2,000 seeded seasons a bot that plays every useful card and uses its timeouts wins about 99% / 88% / 68% of its games in Act 1 / 2 / 3 and 61% of Finals games; with two lives it takes the title in 63% of runs. A casual bot (one setup card, one defense card per turn, no timeouts) wins 92% / 39% / 14% of its games and almost never wins the title. Act 1 is deliberately forgiving; the gap between the two bots is the reward for using the whole shot clock, the playbook and the coach's calls.
+- **Team strategy adapted to the current rules**: systems and schemes act on what the engine has. Full-Court Press costs 2 seconds a turn instead of draining stamina, Switch Everything works on play types rather than screens, Pick & Roll Heavy risks a 12% pick-off on Pass cards instead of a Blitz, and Heliocentric's Star gets +20% (no stamina yet). The default plan is Balanced / Man-to-Man / Normal, which changes nothing, so a first-time player can ignore the board. In the simulator the recommended plan is Drop Coverage in about 70% of games, because most league teams score mostly twos; that scheme may be too broadly good.
 - **Strategy mechanics adapted to the current rules**: timeouts cannot change systems or refresh stamina (neither exists yet), so their three uses are Regroup, Ice and Breather. There is no game clock, so "the last possessions" became closing time (either team within 4 of the target). A loss costs a life and that stop's reward, standing in for Cap Space and morale. There are no Rival teams yet.
 - **League mechanics adapted to the current rules**: some signature mechanics in the design brief depend on systems that do not exist yet (fouls, stamina, rebounding, double teams). They are implemented with the closest rule the engine has: for example the Gators' foul-drawing is an and-one point on made drives, the Rafters' offensive rebounding is a putback after a miss that Box Out denies, and Solar's star is cooled off by 30 or more Contest in a turn.
 

@@ -9,6 +9,7 @@ import { actionList, useAction, isClosingTime } from "../engine/actions.js";
 import { showOverlay, hideOverlay } from "./screens.js";
 import { icon } from "./icons.js";
 import { esc } from "./dom.js";
+import { openPlanBoard } from "./strategy.js";
 
 export function createGame(app) {
   const root = $("#screen-game");
@@ -29,6 +30,7 @@ export function createGame(app) {
     hud.renderOpponent(app);
     hud.renderPlays(app);
     hud.renderCoach(app);
+    hud.renderPlan(app);
     hud.renderLog(app);
     hud.renderPiles(app);
     hud.renderEndHint(app);
@@ -92,6 +94,14 @@ export function createGame(app) {
             hud.setOnFire(makeStreak >= 3);
             break;
           }
+          case "halftime":
+            fx.pop("HALFTIME", "small");
+            app.sfx("buzzer");
+            await sleep(500);
+            break;
+          case "plan_changed":
+            fx.pop("NEW GAME PLAN", "good small");
+            break;
           case "play_call":
             fx.pop(`${ev.name.toUpperCase()} +${ev.bonus}%`, "good small");
             await sleep(380);
@@ -275,6 +285,14 @@ export function createGame(app) {
   }
   $("#btn-coach").addEventListener("click", openCoachMenu);
 
+  /** The game plan board during a game (free at halftime, otherwise a timeout). */
+  function openPlan() {
+    const run = app.run;
+    if (app.locked || !run?.match || run.match.over) return;
+    openPlanBoard(app, (events) => processEvents(events));
+  }
+  $("#btn-plan").addEventListener("click", openPlan);
+
   handEl.addEventListener("click", (e) => {
     const cardEl = e.target.closest(".card");
     if (cardEl) tryPlay(cardEl.dataset.iid, cardEl);
@@ -323,6 +341,8 @@ export function createGame(app) {
       tryEndTurn();
     } else if (e.key === "t" || e.key === "T") {
       openCoachMenu();
+    } else if (e.key === "p" || e.key === "P") {
+      openPlan();
     } else if (/^[1-9]$/.test(e.key)) {
       const cardEl = handEl.children[Number(e.key) - 1];
       if (cardEl) tryPlay(cardEl.dataset.iid, cardEl);

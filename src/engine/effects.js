@@ -3,6 +3,7 @@
 import { drawCards, discardHand } from "./deck.js";
 import { roll100 } from "./rng.js";
 import { calcShot, checkCondition, getCard } from "./rules.js";
+import { rulesOf } from "./teamRules.js";
 
 export function log(run, text) {
   const m = run.match;
@@ -46,8 +47,9 @@ const HANDLERS = {
 
   // Rolled when the opponent attempts; see turnLoop.resolveOpponent.
   steal_attempt(run, e, ctx) {
-    run.match.steals.push({ chance: e.chance, onSuccess: e.onSuccess || [] });
-    ctx.events.push({ type: "steal_set", chance: e.chance });
+    const chance = Math.min(95, e.chance + rulesOf(run, "steal_bonus").reduce((s, r) => s + r.value, 0));
+    run.match.steals.push({ chance, onSuccess: e.onSuccess || [] });
+    ctx.events.push({ type: "steal_set", chance });
   },
 
   // Effects that fire if the opponent's attempt this turn fails (miss or steal).

@@ -9,6 +9,7 @@ import { canPlay, calcShot, getCard, getCardCost, getShootEffect } from "../src/
 import { applyReward } from "../src/engine/rewards.js";
 import { opponentPreview } from "../src/engine/rules.js";
 import { canUseAction, useAction, isClosingTime } from "../src/engine/actions.js";
+import { recommended, setStrategy } from "../src/engine/strategy.js";
 
 const CASUAL = process.argv.includes("casual");
 const PER_TEAM = process.argv.includes("teams");
@@ -63,6 +64,7 @@ export function simulate(runs, { casual = CASUAL, teams = content.teams, config 
   const c = { ...content, teams };
   const stops = {};
   const byTeam = {};
+  const plans = {};
   let champions = 0;
   let matches = 0;
   let turns = 0;
@@ -73,6 +75,10 @@ export function simulate(runs, { casual = CASUAL, teams = content.teams, config 
     while (run.phase === "map" && guard++ < 30) {
       const stop = run.schedule[run.round];
       const roundBefore = run.round;
+      // The thorough bot coaches: it picks the recommended system and scheme for this opponent.
+      if (!casual) setStrategy(run, recommended(run, c.teams.find((t) => t.id === stop.teamId)));
+      const plan = `${run.strategy.offense} / ${run.strategy.defense}`;
+      plans[plan] = (plans[plan] || 0) + 1;
       startMatch(run);
       let g = 0;
       while (!run.match.over && g++ < 300) botTurn(run, casual);
@@ -103,7 +109,7 @@ export function simulate(runs, { casual = CASUAL, teams = content.teams, config 
       }
     }
   }
-  return { runs, stops, byTeam, champions, matches, turns };
+  return { runs, stops, byTeam, plans, champions, matches, turns };
 }
 
 function report(r, label) {
@@ -113,6 +119,8 @@ function report(r, label) {
     console.log(`${name.padEnd(8)} reached ${String(s.reached).padStart(5)}  cleared ${pct(s.cleared, s.reached)}  game win rate ${pct(s.wins, s.games)}`);
   }
   console.log(`champions: ${pct(r.champions, r.runs)}`);
+  const top = Object.entries(r.plans).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  console.log(`plans used: ${top.map(([k, v]) => `${k} ${Math.round((100 * v) / r.matches)}%`).join(", ")}`);
   if (PER_TEAM) {
     console.log("\nper team (game win rate, average score):");
     for (const t of content.teams) {

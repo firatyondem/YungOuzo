@@ -5,6 +5,7 @@
 //   group "closing"  - only in closing time (either team within CLOSING_WINDOW of
 //                      the target), each one once per match
 import { applyEffects, log } from "./effects.js";
+import { setStrategy } from "./strategy.js";
 
 export function isClosingTime(run) {
   const m = run.match;
@@ -51,6 +52,34 @@ export function useAction(run, id) {
   log(run, action.group === "timeout" ? `Timeout: ${action.name}. ${m.timeouts} left.` : `Closing time: ${action.name}.`);
   applyEffects(run, action.effects, { inst: null, events });
   return events;
+}
+
+/** Can the game plan be changed now? Outside a game: always. In a game: free at halftime, else a timeout. */
+export function canChangePlan(run) {
+  const m = run.match;
+  if (!m || m.over || run.phase !== "match") return { ok: true, free: true, reason: "" };
+  if (m.turnEnded) return { ok: false, free: false, reason: "Turn is over" };
+  if (m.freePlanChange) return { ok: true, free: true, reason: "" };
+  if (m.timeouts <= 0) return { ok: false, free: false, reason: "No timeouts left" };
+  return { ok: true, free: false, reason: "" };
+}
+
+/**
+ * Change the game plan ({ offense, defense, pace, starId }). During a game this
+ * is free in the halftime window and otherwise spends a timeout; nothing is
+ * spent if the plan does not actually change. Returns events.
+ */
+export function changePlan(run, patch) {
+  const can = canChangePlan(run);
+  if (!can.ok) return [];
+  const m = run.match;
+  const inGame = m && !m.over && run.phase === "match";
+  if (!setStrategy(run, patch)) return [];
+  if (!inGame) return [{ type: "plan_changed", free: true }];
+  if (can.free) m.freePlanChange = false;
+  else m.timeouts--;
+  log(run, can.free ? "Halftime adjustment: new game plan." : `Timeout: new game plan. ${m.timeouts} left.`);
+  return [{ type: "plan_changed", free: can.free, timeouts: m.timeouts }];
 }
 
 /** Actions for the UI, with whether each can be used now. */
