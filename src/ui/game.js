@@ -22,6 +22,7 @@ export function createGame(app) {
     hud.renderLineup(app);
     hud.renderChem(app);
     hud.renderIntent(app);
+    hud.renderOpponent(app);
     hud.renderLog(app);
     hud.renderPiles(app);
     hud.renderEndHint(app);
@@ -85,6 +86,41 @@ export function createGame(app) {
             hud.setOnFire(makeStreak >= 3);
             break;
           }
+          case "picked_off":
+            fx.pop("PICKED OFF!", "bad small");
+            fx.flash("flash-blue");
+            app.sfx("clank");
+            break;
+          case "negated":
+            fx.pop("SWITCHED! NO OPENNESS", "bad small");
+            break;
+          case "hot_start":
+            fx.pop("THEY ARE HEATING UP", "bad small");
+            await sleep(500);
+            break;
+          case "phase_shift":
+            fx.banner(ev.name, ev.text);
+            app.sfx("buzzer");
+            await sleep(1900);
+            break;
+          case "adapt":
+            fx.pop("COACH ADJUSTS", "bad small");
+            await sleep(600);
+            break;
+          case "cooled":
+            fx.pop("COOLED OFF", "good small");
+            await sleep(400);
+            break;
+          case "box_out_stop":
+            fx.pop("BOXED OUT!", "good small");
+            await sleep(450);
+            break;
+          case "second_chance":
+            fx.pop(ev.made ? "SECOND CHANCE +2" : "PUTBACK MISSES", ev.made ? "opp" : "good small");
+            if (ev.made) app.sfx("swish");
+            hud.renderScore(app, ev.score);
+            await sleep(550);
+            break;
           case "violation":
             makeStreak = 0;
             fx.pop("SHOT-CLOCK VIOLATION", "bad small");
@@ -108,7 +144,7 @@ export function createGame(app) {
               const slot = (((run.match.intentIndex - 1) % 5) + 5) % 5; // the intent that was just resolved
               await app.court?.shoot({ side: "opp", slot, made: ev.made, points: ev.points }, cfg.OPP_ANIM_MS);
               if (ev.made) {
-                fx.pop(`${getTeam(run).name.toUpperCase()} +${ev.points}`, "opp");
+                fx.pop(`${getTeam(run).name.toUpperCase()} +${ev.points + (ev.extra || 0)}${ev.extra ? " AND-ONE" : ""}`, "opp");
                 app.sfx("swish");
               } else {
                 fx.pop("THEY MISS!", "good small");
@@ -122,6 +158,7 @@ export function createGame(app) {
           }
           case "match_end":
             fx.pop(ev.winner === "player" ? "YOU WIN!" : "DEFEAT", ev.winner === "player" ? "good big" : "bad big");
+            if (ev.series) fx.pop(`SERIES ${ev.series.wins}-${ev.series.losses}`, "small");
             app.sfx("buzzer");
             app.announce(ev.winner === "player" ? "win" : "loss");
             break;

@@ -1,5 +1,14 @@
 // Pure rule calculations: chemistry, costs, shot %, opponent %, playability.
 // Nothing in here mutates state or references a specific card/player/team.
+//
+// ORDER OF OPERATIONS (your shot):
+//   base + Openness + rating x multiplier - opponent DEF + card bonuses + chemistry
+//   + team rules (shot_mod), clamp to 5-95, then team multipliers (shot_mult), clamp again.
+// ORDER OF OPERATIONS (their attempt):
+//   intent % + clutch + team rule bonuses, minus your Contest (after any ignored part), clamp to 5-95.
+// Every modifier that applies is returned in `notes` with the name of its source,
+// so the UI can explain the number.
+import { rulesOf, firstRule, phaseIntents, intentMatches, weakestDefender } from "./teamRules.js";
 
 export const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -95,6 +104,13 @@ export function getCardCost(run, card) {
   for (const tag of card.tags || []) {
     cost -= chemistrySum(run, "tag_cost_reduction", (e) => e.tag === tag);
   }
+  if (run.match) {
+    for (const r of rulesOf(run, "card_cost")) {
+      if (r.tag && !(card.tags || []).includes(r.tag)) continue;
+      if (r.cardType && card.type !== r.cardType) continue;
+      cost += r.value;
+    }
+  }
   return Math.max(0, cost);
 }
 
@@ -140,10 +156,33 @@ export function calcShot(run, inst) {
   if (points === 3) bonus += (m.buffs.threeStreakBonus || 0) * m.threeStreak;
 
   const defense = Math.max(0, getTeam(run).defense - ignore); // never below 0
-  const rating = shooter.ratings[ratingKey];
-  const raw = cfg.BASE_PCT[points] + m.openness + rating * mult - defense + bonus;
+  let rating = shooter.ratings[ratingKey];
+  const notes = [];
+  const cap = firstRule(run, "rating_cap");
+  if (cap && rating > cap.value) {
+    notes.push({ label: cap.label, text: `${ratingKey} counts as ${cap.value}` });
+    rating = cap.value;
+  }
+  let ruleBonus = 0;
+  const tags = card.tags || [];
+  for (const r of rulesOf(run, "shot_mod")) {
+    if (r.points && r.points !== points) continue;
+    if (r.tag && !tags.includes(r.tag)) continue;
+    if (r.archetype && shooter.archetype !== r.archetype) continue;
+    ruleBonus += r.value;
+    notes.push({ label: r.label, value: r.value });
+  }
+  const raw = cfg.BASE_PCT[points] + m.openness + rating * mult - defense + bonus + ruleBonus;
+  let pct = clampPct(run, raw);
+  for (const r of rulesOf(run, "shot_mult")) {
+    if (r.points && r.points !== points) continue;
+    pct = clampPct(run, pct * r.value);
+    notes.push({ label: r.label, text: `x${r.value}` });
+  }
   return {
-    pct: clampPct(run, raw),
+    pct,
+    ruleBonus,
+    notes,
     raw,
     points,
     shooter,
@@ -177,8 +216,11 @@ export function canPlay(run, iid) {
 // ---------- Opponent ----------
 
 export function currentIntent(run) {
-  const t = getTeam(run);
-  return t.intents[run.match.intentIndex % t.intents.length];
+  const m = run.match;
+  const nth = firstRule(run, "every_nth_intent");
+  if (nth && m.opp && (m.opp.possessions + 1) % nth.n === 0) return { ...nth.intent, setPlay: true, setPlayLabel: nth.label };
+  const intents = phaseIntents(run);
+  return intents[m.intentIndex % intents.length];
 }
 
 /** Clutch: team-defined bonus when either side is within N points of the target. */
@@ -192,15 +234,54 @@ export function isClutch(run) {
 
 /** What the opponent will attempt, and their chance after your Contest. */
 export function opponentPreview(run) {
+  const m = run.match;
+  const opp = m.opp || { streak: 0, possessions: 0, hot: 0, adapted: null };
   const intent = currentIntent(run);
   const clutch = isClutch(run);
-  const basePct = intent.pct + (clutch ? getTeam(run).clutch.bonus : 0);
+  const notes = [];
+  let basePct = intent.pct + (clutch ? getTeam(run).clutch.bonus : 0);
+  const add = (label, value, text) => {
+    if (!value) return;
+    basePct += value;
+    notes.push({ label, value, text });
+  };
+  if (intent.setPlay) notes.push({ label: intent.setPlayLabel || "Set play", value: 0 });
+  for (const r of rulesOf(run, "intent_bonus")) if (intentMatches(r, intent)) add(r.label, r.value);
+  for (const r of rulesOf(run, "streak_bonus")) add(r.label, Math.min(r.cap, r.value * opp.streak), `${opp.streak} in a row`);
+  for (const r of rulesOf(run, "ramp_bonus")) add(r.label, Math.min(r.cap, r.value * opp.possessions));
+  for (const r of rulesOf(run, "late_bonus")) {
+    const close = Math.abs(m.score.player - m.score.opp) <= r.within;
+    const late = Math.max(m.score.player, m.score.opp) >= m.target - r.window;
+    if (close && late) add(r.label, r.value, "close and late");
+  }
+  const hot = firstRule(run, "hot_streak");
+  if (hot && opp.hot > 0) add(hot.label, hot.bonus, "on fire");
+  for (const r of rulesOf(run, "mismatch_bonus")) {
+    const weak = weakestDefender(run);
+    add(r.label, Math.max(0, 5 - weak.ratings.DEF) * r.perPoint, `attacking ${weak.name}`);
+  }
+  if (opp.adapted && (intent.tags || []).includes(opp.adapted.tag)) add(opp.adapted.label, opp.adapted.bonus, "adapted");
+
+  // Your Contest, after any part the opponent ignores.
+  let contest = m.contest;
+  for (const r of rulesOf(run, "ignore_contest")) {
+    if (!intentMatches(r, intent) || contest <= 0) continue;
+    const ignored = Math.min(contest, r.value);
+    contest -= ignored;
+    notes.push({ label: r.label, value: 0, text: `ignores ${Math.round(ignored)} Contest` });
+  }
+  const all = firstRule(run, "ignore_all_contest_every");
+  if (all && (opp.possessions + 1) % all.n === 0) {
+    contest = 0;
+    notes.push({ label: all.label, value: 0, text: "ignores all Contest" });
+  }
   return {
     intent,
     clutch,
     basePct,
-    contest: run.match.contest,
-    pct: clampPct(run, basePct - run.match.contest),
-    steals: run.match.steals.length,
+    contest,
+    pct: clampPct(run, basePct - contest),
+    steals: m.steals.length,
+    notes,
   };
 }

@@ -37,7 +37,8 @@ export function renderScore(app, score = app.run.match.score) {
   const tc = teamColors(team);
   countTimers.forEach(clearTimeout);
   countTimers = [];
-  $("#g-round").innerHTML = `<b>${esc(team.round)}</b><span>Game ${run.round + 1} of ${run.content.teams.length} / Turn ${m.turn}</span>`;
+  const series = m.seriesGames > 1;
+  $("#g-round").innerHTML = `<b>${esc(m.stopLabel || "")}${series ? ` G${m.gameNo}` : ""}</b><span>${series ? `Best of ${m.seriesGames}` : `Stop ${run.round + 1} of ${run.schedule.length}`} / Turn ${m.turn}</span>`;
   const upP = shownScore.player >= 0 && score.player > shownScore.player;
   const upO = shownScore.opp >= 0 && score.opp > shownScore.opp;
   const bug = $("#g-scorebug");
@@ -133,6 +134,9 @@ export function spotlightActor(playerId) {
 export function renderChem(app) {
   const run = app.run;
   const chem = getActiveChemistry(run);
+  // The Chemistry heading only shows when a bonus is active (saves room for the opponent panel).
+  const title = $("#g-chem").previousElementSibling;
+  if (title) title.hidden = !chem.length;
   const passive = `<div class="chem-passive">Each turn: <b>+${Math.round(passiveOpenness(run))}</b> Openness, <b>+${Math.round(passiveContest(run))}</b> Contest</div>`;
   $("#g-chem").innerHTML =
     (chem.length
@@ -141,7 +145,7 @@ export function renderChem(app) {
             (c) => `<div class="chem-chip on">${icon("star")}<div><b>${esc(c.name)}</b><span>${c.count} x ${esc(ARCHETYPE_LABEL[c.archetype] || c.archetype)}: ${esc(c.text)}</span></div></div>`
           )
           .join("")
-      : `<div class="chem-chip"><div><span>None yet. Two players of the same archetype unlock a bonus.</span></div></div>`) + passive;
+      : "") + passive;
 }
 
 export function renderIntent(app) {
@@ -169,6 +173,7 @@ export function renderIntent(app) {
           ${pre.clutch ? `<span class="tag tag-clutch">${icon("clutch")}Clutch +${team.clutch.bonus}%</span>` : ""}
           ${pre.intent.unblockableBySteal ? `<span class="tag tag-warn">${icon("lock")}Can't be stolen</span>` : ""}
           ${pre.steals ? `<span class="tag tag-steal">${icon("hustle")}Steal armed</span>` : ""}
+          ${(pre.notes || []).slice(0, 3).map((n) => `<span class="tag tag-rule" title="${esc(n.text || "")}">${icon("star")}${esc(n.label)}${n.value ? ` ${n.value > 0 ? "+" : ""}${Math.round(n.value)}%` : n.text ? `: ${esc(n.text)}` : ""}</span>`).join("")}
         </div>
       </div>
       <div class="lt-pct lt-${danger}">
@@ -177,6 +182,23 @@ export function renderIntent(app) {
         <span>to score</span>
       </div>
     </div>`;
+}
+
+/** Who you are playing: star ability, signature mechanic, boss phase, tip-off notes. */
+export function renderOpponent(app) {
+  const run = app.run;
+  const m = run.match;
+  const team = getTeam(run);
+  const el = $("#g-opp");
+  if (!el) return;
+  const phase = team.phases && team.phases[m.opp ? m.opp.phase : 0];
+  const row = (ico, name, text, cls = "") => `<div class="opp-trait ${cls}" title="${esc(text)}">${icon(ico)}<div><b>${esc(name)}</b><span>${esc(text)}</span></div></div>`;
+  el.innerHTML =
+    (team.star ? row("star", team.star.name, team.star.text) : "") +
+    (team.signature ? row("relic", team.signature.name, team.signature.text) : "") +
+    (phase && team.phases.length > 1 ? row("clutch", `Phase: ${phase.name}`, phase.text, "phase") : "") +
+    (m.notes || []).map((n) => row("mismatch", "Scouted", n, "scout")).join("") ||
+    `<div class="opp-trait"><div><span>No special rules.</span></div></div>`;
 }
 
 export function renderLog(app) {

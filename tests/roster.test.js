@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execSync } from "node:child_process";
-import { readJson, content } from "./helpers.js";
+import { readJson, league as leagueContent } from "./helpers.js";
 import { loadRoster, validateRoster, LEAGUE_URL, REAL_URL } from "../src/roster.js";
 import { normalizeLook, LOOK_DEFAULTS, HAIR, BEARD, BUILD, ACCESSORIES, isHexColor } from "../src/look.js";
 import { generatePlayerAvatar, avatarHTML } from "../src/ui/avatar.js";
@@ -159,8 +159,8 @@ test("look: normalizeLook fills defaults for missing or invalid data", () => {
 });
 
 test("look: every league and opponent player has a complete, valid look", () => {
-  const all = [...league, ...content.teams.flatMap((t) => t.players)];
-  assert.equal(content.teams.every((t) => t.players.length === 5), true);
+  const all = [...league, ...leagueContent.teams.flatMap((t) => t.players)];
+  assert.equal(leagueContent.teams.every((t) => t.players.length === 8), true);
   for (const p of all) {
     assert.ok(p.look, `${p.id} has a look`);
     assert.deepEqual(normalizeLook(p.look), p.look, `${p.id} look is already valid`);
@@ -203,7 +203,7 @@ test("avatar: every player produces a valid, distinct SVG portrait", () => {
     seen.add(svg);
   }
   assert.equal(seen.size, league.length);
-  for (const team of content.teams) {
+  for (const team of leagueContent.teams) {
     for (const p of team.players) assertValidSvg(generatePlayerAvatar(p, { color: team.color }));
   }
   // Each option changes the picture.

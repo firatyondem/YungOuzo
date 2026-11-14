@@ -23,14 +23,14 @@ export function renderEnd(app) {
         won
           ? "You ran the full court and took down The Dynasty. The title is yours."
           : lastTeam
-            ? `Eliminated by ${esc(lastTeam.name)} (${esc(lastTeam.round)}), ${last.opp}–${last.player}.`
+            ? `Eliminated by ${esc(lastTeam.name)} (${esc(last.label || "")}), ${last.opp}–${last.player}.`
             : "The run ends here."
       }</p>
       <div class="end-results">
         ${run.results
           .map((r) => {
             const t = teams.find((x) => x.id === r.teamId);
-            return `<div class="end-result ${r.won ? "w" : "l"}"><span>${esc(t.round)}</span><b>${r.player}–${r.opp}</b><span>${r.won ? "W" : "L"} vs ${esc(t.name)}</span></div>`;
+            return `<div class="end-result ${r.won ? "w" : "l"}"><span>${esc(r.label || "")}${r.label === "Finals" ? ` G${r.game}` : ""}</span><b>${r.player}–${r.opp}</b><span>${r.won ? "W" : "L"} vs ${esc(t.name)}</span></div>`;
           })
           .join("")}
       </div>

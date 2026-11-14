@@ -57,7 +57,7 @@
 //   steal {success, blocked} · opp_attempt {intent, pct, made, points, clutch, score}
 //   match_end {winner, phase}
 // =====================================================================
-import { hashSeed } from "./rng.js";
+import { hashSeed, pick } from "./rng.js";
 import { buildStartingDeck } from "./deck.js";
 
 export function clonePlayer(p) {
@@ -92,6 +92,8 @@ export function createRun(content, config, seed) {
     nextIid: 1,
     rewards: null,
     results: [],
+    schedule: [], // [{ teamId, label, games, wins, losses }] - run.round indexes this
+    film: { types: {}, shots: {} }, // what the league has seen you do (film study)
     stats: {
       wins: 0,
       turns: 0,
@@ -109,5 +111,32 @@ export function createRun(content, config, seed) {
   Object.defineProperty(run, "config", { value: config, enumerable: false });
   run.lineup = config.STARTING_LINEUP.map((id) => clonePlayer(content.players[id]));
   run.deck = buildStartingDeck(run);
+  run.schedule = buildSchedule(run);
   return run;
+}
+
+/**
+ * The season for this run. With a tiered league (team.tier = 1 | 2 | 3 | "boss")
+ * one opponent is drawn per act with the seeded RNG, then the boss, so every
+ * run meets a different set. Without tiers the teams are played in file order.
+ * A stop is a single game unless the team has `series` (best-of-N).
+ */
+export function buildSchedule(run) {
+  const teams = run.content.teams;
+  const stop = (t, label) => ({ teamId: t.id, label, games: t.series || 1, wins: 0, losses: 0 });
+  if (!teams.some((t) => t.tier != null)) {
+    return teams.map((t, i) => stop(t, t.round || `Game ${i + 1}`));
+  }
+  const stops = [];
+  (run.config.LEAGUE_ACTS || [1, 2, 3]).forEach((tier, i) => {
+    const pool = teams.filter((t) => t.tier === tier);
+    if (pool.length) stops.push(stop(pick(run, pool), `Act ${i + 1}`));
+  });
+  for (const boss of teams.filter((t) => t.tier === "boss")) stops.push(stop(boss, "Finals"));
+  return stops;
+}
+
+/** Wins needed to take a stop (1 for a single game, 2 for a best-of-3). */
+export function winsNeeded(stop) {
+  return Math.ceil(stop.games / 2);
 }

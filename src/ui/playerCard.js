@@ -24,7 +24,7 @@ export function playerCardHTML(p, content, opts = {}) {
     .map((c) => `<span class="sig type-${c.type.toLowerCase()}" title="${esc(c.text || "")}">${icon(TYPE_ICON[c.type] || "utility")}${esc(c.name)}</span>`)
     .join("");
   return `
-    <div class="pcard" style="--pc:${p.color}" ${opts.slot != null ? `data-slot="${opts.slot}"` : ""}>
+    <div class="pcard${opts.compact ? " compact" : ""}" style="--pc:${p.color}" ${opts.slot != null ? `data-slot="${opts.slot}"` : ""}>
       ${opts.tag ? `<div class="pcard-tag">${esc(opts.tag)}</div>` : ""}
       <div class="pcard-head">
         ${avatarHTML(p, { size: "lg", badge: true })}

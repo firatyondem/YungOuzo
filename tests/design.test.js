@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { content } from "./helpers.js";
+import { content, league } from "./helpers.js";
 import { icon, ICON_NAMES, TYPE_ICON } from "../src/ui/icons.js";
 import { playDiagramSVG } from "../src/ui/playDiagram.js";
 import { cardHTML, richText, pctClass, TYPE_COLOR } from "../src/ui/cards.js";
@@ -188,7 +188,7 @@ test("design: card markup has the full anatomy and safe text", () => {
 });
 
 test("design: every team has primary and secondary colours", () => {
-  for (const t of content.teams) {
+  for (const t of league.teams) {
     assert.match(t.colors.primary, /^#[0-9a-fA-F]{6}$/, `${t.id} primary`);
     assert.match(t.colors.secondary, /^#[0-9a-fA-F]{6}$/, `${t.id} secondary`);
     // Team slabs carry navy ink text, so the primary must be bright enough.

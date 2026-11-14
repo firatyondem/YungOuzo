@@ -40,6 +40,12 @@ export const CONFIG = {
   SHOT_ANIM_MS: 750,
   OPP_ANIM_MS: 800,
 
+  // League film study: from the second stop on, opponents defend your favourite
+  // shot type harder once it is this large a share of your shots. null = off.
+  LEAGUE_SCOUTING: { minShots: 8, share: 0.62, defense: 6 },
+  // Which tier each act draws its opponent from.
+  LEAGUE_ACTS: [1, 2, 3],
+
   // 3D court (Three.js from a CDN). false, ?css=1 in the URL, or any load
   // failure -> the CSS court is used instead.
   USE_THREE: true,

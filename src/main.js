@@ -141,6 +141,9 @@ app.onMatchEnd = () => {
   if (run.phase === "reward") {
     renderRewards(app);
     showScreen("reward");
+  } else if (run.phase === "map") {
+    app.goMap(); // a series continues: back to the season map
+    return;
   } else {
     renderEnd(app);
     showScreen("end");

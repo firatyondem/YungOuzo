@@ -4,6 +4,7 @@ import { drawCards, discardHand, makeInstance } from "./deck.js";
 import { applyEffects, log } from "./effects.js";
 import {
   canPlay,
+  clampPct,
   getCard,
   getCardCost,
   getShootEffect,
@@ -14,11 +15,17 @@ import {
   chemistrySum,
 } from "./rules.js";
 import { generateRewards } from "./rewards.js";
+import { winsNeeded } from "./gameState.js";
+import { firstRule, rulesOf, intentMatches, tipOffRules } from "./teamRules.js";
 
 export function startMatch(run) {
-  const team = run.content.teams[run.round];
+  const stop = run.schedule[run.round];
+  const team = run.content.teams.find((t) => t.id === stop.teamId);
   run.match = {
     teamId: team.id,
+    stopLabel: stop.label,
+    gameNo: stop.wins + stop.losses + 1,
+    seriesGames: stop.games,
     target: run.config.TARGET_SCORE,
     score: { player: 0, opp: 0 },
     turn: 0,
@@ -41,24 +48,50 @@ export function startMatch(run) {
     lastOppFailed: false,
     threeStreak: 0,
     buffs: {},
+    // Opponent-side state used by team rules (see teamRules.js).
+    opp: { streak: 0, possessions: 0, hot: 0, phase: 0, tagStats: {}, adapted: null },
+    extraRules: [], // league scouting + film study, fixed at tip-off
+    notes: [], // what the player is told before the game
     turnEnded: false,
     over: false,
     winner: null,
     log: [],
   };
-  run.match.draw = shuffle(run, run.deck.map((c) => ({ ...c })));
+  const m = run.match;
+  const tip = tipOffRules(run, team, stop);
+  m.extraRules = tip.rules;
+  m.notes = tip.notes;
+  const pace = firstRule(run, "pace");
+  if (pace && pace.clock) m.maxEnergy = pace.clock;
+  m.draw = shuffle(run, run.deck.map((c) => ({ ...c })));
   run.phase = "match";
   const events = [{ type: "match_start", teamId: team.id }];
-  log(run, `Tip-off vs ${team.name}. First to ${run.match.target} wins.`);
+  log(run, `Tip-off vs ${team.name}. First to ${m.target} wins.`);
+  for (const note of m.notes) log(run, note);
   startTurn(run, events);
   return events;
+}
+
+/** Boss phases: when either team reaches the next phase's score, the opponent changes shape. */
+function checkPhase(run, events) {
+  const m = run.match;
+  const team = getTeam(run);
+  const next = team.phases && team.phases[m.opp.phase + 1];
+  if (!next || (m.score.player < next.at && m.score.opp < next.at)) return;
+  m.opp.phase++;
+  m.intentIndex = 0;
+  log(run, `${team.name} change shape: ${next.name}. ${next.text}`);
+  events.push({ type: "phase_shift", name: next.name, text: next.text });
 }
 
 function startTurn(run, events) {
   const m = run.match;
   m.turn++;
   run.stats.turns++;
-  m.energy = m.maxEnergy;
+  checkPhase(run, events);
+  const pace = firstRule(run, "pace");
+  const tax = rulesOf(run, "energy_tax").reduce((s, r) => s + r.value, 0);
+  m.energy = Math.max(0, m.maxEnergy - tax);
   m.shotsTaken = 0;
   m.shotsAllowed = 1;
   m.missedShotThisTurn = false;
@@ -67,11 +100,19 @@ function startTurn(run, events) {
   m.onOppFail = [];
   m.turnEnded = false;
   // Passive lineup + chemistry bonuses, plus delayed effects from last turn.
-  m.openness = passiveOpenness(run) + m.pending.openness;
+  const passive = firstRule(run, "no_passive_openness") ? 0 : passiveOpenness(run);
+  m.openness = passive + m.pending.openness + rulesOf(run, "openness_start").reduce((s, r) => s + r.value, 0);
   m.contest = passiveContest(run);
-  const n = run.config.HAND_SIZE + chemistrySum(run, "extra_draw") + m.pending.draw;
+  const n = Math.max(1, run.config.HAND_SIZE + chemistrySum(run, "extra_draw") + m.pending.draw + (pace ? pace.draw || 0 : 0));
   m.pending = { draw: 0, openness: 0 };
   events.push({ type: "turn_start", turn: m.turn });
+  // A streaky opponent can catch fire; it is rolled now so the player sees it coming.
+  const hot = firstRule(run, "hot_streak");
+  if (hot && m.opp.hot <= 0 && roll100(run) < hot.chance) {
+    m.opp.hot = hot.length;
+    log(run, `${getTeam(run).name} are heating up: ${hot.label}!`);
+    events.push({ type: "hot_start", label: hot.label });
+  }
   const drawn = drawCards(run, n);
   // No dead hands: keep drawing (a few) until the hand holds a shot card.
   let extra = 0;
@@ -83,23 +124,32 @@ function startTurn(run, events) {
 
 function finishMatch(run, winner, events) {
   const m = run.match;
+  const stop = run.schedule[run.round];
+  const team = getTeam(run);
   m.over = true;
   m.winner = winner;
-  run.results.push({ teamId: m.teamId, player: m.score.player, opp: m.score.opp, won: winner === "player" });
-  if (winner === "player") {
+  const won = winner === "player";
+  run.results.push({ teamId: m.teamId, label: stop.label, game: m.gameNo, player: m.score.player, opp: m.score.opp, won });
+  if (won) {
+    stop.wins++;
     run.stats.wins++;
-    if (run.round >= run.content.teams.length - 1) {
-      run.phase = "victory";
+    log(run, `FINAL: you beat ${team.name} ${m.score.player}-${m.score.opp}!`);
+    if (stop.wins >= winsNeeded(stop)) {
+      if (run.round >= run.schedule.length - 1) {
+        run.phase = "victory";
+      } else {
+        run.phase = "reward";
+        generateRewards(run);
+      }
     } else {
-      run.phase = "reward";
-      generateRewards(run);
+      run.phase = "map"; // series continues
     }
-    log(run, `FINAL: you beat ${getTeam(run).name} ${m.score.player}-${m.score.opp}!`);
   } else {
-    run.phase = "gameover";
-    log(run, `FINAL: ${getTeam(run).name} win ${m.score.opp}-${m.score.player}.`);
+    stop.losses++;
+    log(run, `FINAL: ${team.name} win ${m.score.opp}-${m.score.player}.`);
+    run.phase = stop.losses >= winsNeeded(stop) ? "gameover" : "map";
   }
-  events.push({ type: "match_end", winner, phase: run.phase });
+  events.push({ type: "match_end", winner, phase: run.phase, series: stop.games > 1 ? { wins: stop.wins, losses: stop.losses } : null });
 }
 
 function checkWin(run, events) {
@@ -118,12 +168,34 @@ export function playCard(run, iid) {
   const inst = m.hand[idx];
   const card = getCard(run, inst);
   const cost = getCardCost(run, card);
+  const tags = card.tags || [];
   m.energy = Math.max(0, m.energy - cost);
   m.hand.splice(idx, 1);
-  m.playedTags.push(...(card.tags || []));
   run.stats.cardsPlayed++;
+  // Film: the league remembers what you lean on.
+  run.film.types[card.type] = (run.film.types[card.type] || 0) + 1;
+  const shoot = getShootEffect(card);
+  if (shoot) run.film.shots[shoot.points] = (run.film.shots[shoot.points] || 0) + 1;
   const events = [{ type: "card_played", iid, cardId: card.id, cost, cardType: card.type }];
-  applyEffects(run, card.effects, { inst, events });
+
+  // A pressing opponent can pick off a Pass card: it is spent for nothing.
+  const steal = tags.includes("Pass") ? firstRule(run, "pass_steal") : null;
+  if (steal && roll100(run) < steal.chance) {
+    log(run, `${steal.label}! ${card.name} is picked off.`);
+    events.push({ type: "picked_off", label: steal.label, cardId: card.id });
+    (card.exhaust ? m.exhaust : m.discard).push(inst);
+    return events;
+  }
+
+  m.playedTags.push(...tags);
+  let effects = card.effects;
+  const negated = rulesOf(run, "negate_tag").find((r) => tags.includes(r.tag));
+  if (negated) {
+    effects = (effects || []).filter((e) => e.type !== "add_openness");
+    log(run, `${negated.label}: ${card.name} creates no Openness.`);
+    events.push({ type: "negated", label: negated.label, cardId: card.id });
+  }
+  applyEffects(run, effects, { inst, events });
   (card.exhaust ? m.exhaust : m.discard).push(inst);
   checkWin(run, events);
   return events;
@@ -131,6 +203,7 @@ export function playCard(run, iid) {
 
 function resolveOpponent(run, events) {
   const m = run.match;
+  const opp = m.opp;
   const team = getTeam(run);
   const pre = opponentPreview(run);
   const intent = pre.intent;
@@ -156,17 +229,25 @@ function resolveOpponent(run, events) {
   }
 
   let made = false;
+  let extra = 0;
   if (!stolen) {
     made = roll100(run) < pre.pct;
     if (made) {
       m.score.opp += intent.points;
       run.stats.pointsAgainst += intent.points;
+      const andOne = rulesOf(run, "and_one").find((r) => intentMatches(r, intent));
+      if (andOne && roll100(run) < andOne.chance) {
+        extra = 1;
+        m.score.opp += 1;
+        run.stats.pointsAgainst += 1;
+      }
     }
+    const pct = Math.round(pre.pct);
     log(
       run,
       made
-        ? `${team.name}: ${intent.name} is good for ${intent.points}. (${Math.round(pre.pct)}%)`
-        : `${team.name}: ${intent.name} misses! (${Math.round(pre.pct)}%)`
+        ? `${team.name}: ${intent.name} is good for ${intent.points}${extra ? " and the foul (+1)" : ""}. (${pct}%)`
+        : `${team.name}: ${intent.name} misses! (${pct}%)`
     );
   }
   events.push({
@@ -174,19 +255,70 @@ function resolveOpponent(run, events) {
     intent,
     pct: pre.pct,
     clutch: pre.clutch,
+    notes: pre.notes,
     made,
     stolen,
+    extra,
     points: intent.points,
     score: { ...m.score },
   });
 
-  const failed = stolen || !made;
+  // What the opponent learns and carries forward.
+  const tag = (intent.tags || [])[0];
+  if (tag && !stolen) {
+    const s = (opp.tagStats[tag] ||= { att: 0, made: 0 });
+    s.att++;
+    if (made) s.made++;
+  }
+  opp.streak = made ? opp.streak + 1 : 0;
+  const streak = firstRule(run, "streak_bonus");
+  if (streak && streak.resetContest && opp.streak > 0 && m.contest >= streak.resetContest) {
+    opp.streak = 0;
+    log(run, `Heavy pressure cools off ${streak.label}.`);
+    events.push({ type: "cooled", label: streak.label });
+  }
+
+  // Second chance: a putback after a miss, unless you boxed out this turn.
+  let putback = false;
+  if (!stolen && !made) {
+    const second = firstRule(run, "second_chance");
+    if (second) {
+      if (m.onOppFail.length) {
+        log(run, "Box Out denies the second chance.");
+        events.push({ type: "box_out_stop", label: second.label });
+      } else if (roll100(run) < second.chance) {
+        const pct2 = clampPct(run, second.pct - m.contest / 2);
+        putback = roll100(run) < pct2;
+        if (putback) {
+          m.score.opp += 2;
+          run.stats.pointsAgainst += 2;
+        }
+        log(run, putback ? `${second.label}: offensive rebound and putback for 2!` : `${second.label}: offensive rebound, but the putback misses.`);
+        events.push({ type: "second_chance", label: second.label, made: putback, pct: pct2, score: { ...m.score } });
+      }
+    }
+  }
+
+  const failed = stolen || (!made && !putback);
   m.lastOppFailed = failed;
   if (failed) {
     applyEffects(run, m.onOppFail, { inst: null, events });
     m.pending.draw += chemistrySum(run, "draw_on_opponent_fail");
   }
-  m.intentIndex++;
+  opp.possessions++;
+  if (opp.hot > 0) opp.hot--;
+  if (!intent.setPlay) m.intentIndex++;
+
+  // Adaptation: after n possessions they go back to what has worked best.
+  const adapt = firstRule(run, "adapt_after");
+  if (adapt && !opp.adapted && opp.possessions >= adapt.n) {
+    const ranked = Object.entries(opp.tagStats).sort((a, b) => b[1].made / b[1].att - a[1].made / a[1].att || b[1].att - a[1].att);
+    if (ranked.length) {
+      opp.adapted = { tag: ranked[0][0], bonus: adapt.bonus, label: adapt.label };
+      log(run, `Coach adjusts: ${team.name} go back to their ${ranked[0][0]} game (+${adapt.bonus}%).`);
+      events.push({ type: "adapt", label: adapt.label, tag: ranked[0][0], bonus: adapt.bonus });
+    }
+  }
 }
 
 /** End the player's turn: violation check, opponent attempt, then next turn. */

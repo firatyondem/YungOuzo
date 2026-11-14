@@ -97,6 +97,9 @@ function shotTip(s) {
   const r = Math.round;
   let t = `${s.base} <i>base</i> +${r(s.openness)} <i>open</i> +${s.ratingBonus} <i>${s.ratingKey}</i> −${s.defense} <i>DEF</i>`;
   if (s.bonus) t += ` ${s.bonus > 0 ? "+" : "−"}${r(Math.abs(s.bonus))} <i>bonus</i>`;
+  for (const n of s.notes || []) {
+    t += n.value != null ? ` ${n.value > 0 ? "+" : "−"}${r(Math.abs(n.value))} <i>${esc(n.label)}</i>` : ` <i>${esc(n.label)}: ${esc(n.text)}</i>`;
+  }
   return t;
 }
 

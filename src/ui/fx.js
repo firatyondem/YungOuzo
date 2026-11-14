@@ -106,6 +106,21 @@ export function flyCard(cardEl, target = null) {
   setTimeout(finish, 380);
 }
 
+/** Full-width dramatic banner over the court (e.g. a boss changing phase). */
+export function banner(title, text = "") {
+  const layer = $("#g-fx");
+  if (!layer) return;
+  const el = document.createElement("div");
+  el.className = "fx-banner";
+  const h = document.createElement("b");
+  h.textContent = title;
+  const p = document.createElement("span");
+  p.textContent = text;
+  el.append(h, p);
+  layer.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+
 export function nudge(el) {
   if (!el) return;
   el.classList.remove("nudge");
