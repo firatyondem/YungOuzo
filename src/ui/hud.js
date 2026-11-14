@@ -118,8 +118,8 @@ export function renderLineup(app) {
     <div class="lp" data-slot="${i}" data-pid="${esc(p.id)}" style="--pc:${p.color}">
       ${avatarHTML(p, { size: "md", badge: true })}
       <div class="lp-main">
-        <div class="lp-name" title="${esc(p.name)}">${esc(shortName(p.name))}</div>
-        <div class="lp-arch" title="${esc(p.position)} / ${esc(ARCHETYPE_LABEL[p.archetype] || p.archetype)}">${esc(ARCH_SHORT[p.archetype] || p.archetype)}</div>
+        <div class="lp-name">${esc(shortName(p.name))}</div>
+        <div class="lp-arch">${icon(ARCH_ICON[p.archetype] || "users")}${esc(ARCH_SHORT[p.archetype] || p.archetype)}</div>
       </div>
       <div class="lp-stats">
         ${stat("SHT", p.ratings.SHT, "Shooting: 3PT shots")}
@@ -130,6 +130,83 @@ export function renderLineup(app) {
     </div>`
     )
     .join("");
+  bindLineupPopover(app);
+}
+
+const ARCH_ICON = { Sniper: "target", Slasher: "offense", Big: "users", FloorGeneral: "play", Lockdown: "defense" };
+const RATING_FULL = { SHT: "Shooting (threes)", INS: "Inside (twos)", DEF: "Defense", PLY: "Playmaking" };
+
+/**
+ * Full player details in a small popover anchored inside the lineup column
+ * (max 280 x 180), on hover or click. It never leaves the column, so it can
+ * never cover the court. Closes on mouse-out or Escape.
+ */
+let popoverBound = false;
+let pinnedPid = null;
+function bindLineupPopover(app) {
+  const host = $("#g-lineup");
+  if (!host) return;
+  hidePlayerPopover();
+  if (popoverBound) return;
+  popoverBound = true;
+  host.addEventListener("mouseover", (e) => {
+    const chip = e.target.closest(".lp");
+    if (chip && !pinnedPid) showPlayerPopover(app, chip);
+  });
+  host.addEventListener("mouseleave", () => {
+    pinnedPid = null;
+    hidePlayerPopover();
+  });
+  host.addEventListener("click", (e) => {
+    const chip = e.target.closest(".lp");
+    if (!chip || chip.classList.contains("pickable")) return;
+    if (pinnedPid === chip.dataset.pid) {
+      pinnedPid = null;
+      hidePlayerPopover();
+    } else {
+      pinnedPid = chip.dataset.pid;
+      showPlayerPopover(app, chip);
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      pinnedPid = null;
+      hidePlayerPopover();
+    }
+  });
+}
+
+export function hidePlayerPopover() {
+  document.querySelector("#g-lp-pop")?.remove();
+}
+
+function showPlayerPopover(app, chip) {
+  const run = app.run;
+  const p = run.lineup.find((x) => x.id === chip.dataset.pid);
+  const col = chip.closest(".left-col");
+  if (!p || !col) return;
+  hidePlayerPopover();
+  const el = document.createElement("div");
+  el.id = "g-lp-pop";
+  el.className = "lp-pop";
+  el.style.setProperty("--pc", p.color);
+  const sigs = (p.signatureCards || []).map((id) => (run.content.cards[id] || {}).name).filter(Boolean);
+  const facts = [p.position, p.nationality, p.age ? `${p.age} y` : "", p.heightCm ? `${p.heightCm} cm` : ""].filter(Boolean).join(" · ");
+  el.innerHTML = `
+    <div class="lp-pop-head"><b>#${esc(p.jersey)} ${esc(p.name)}</b>${p.nickname ? `<i>"${esc(p.nickname)}"</i>` : ""}</div>
+    <div class="lp-pop-sub">${icon(ARCH_ICON[p.archetype] || "users")}${esc(ARCHETYPE_LABEL[p.archetype] || p.archetype)}${facts ? ` · ${esc(facts)}` : ""}</div>
+    <div class="lp-pop-ratings">${["SHT", "INS", "DEF", "PLY"].map((k) => `<span><em>${RATING_FULL[k]}</em><b>${p.ratings[k]}</b></span>`).join("")}</div>
+    ${sigs.length ? `<div class="lp-pop-sigs"><em>Signature cards</em> ${sigs.map(esc).join(", ")}</div>` : ""}
+    ${p.blurb ? `<div class="lp-pop-blurb">${esc(p.blurb)}</div>` : ""}`;
+  col.appendChild(el);
+  // Under the chip when there is room, otherwise above it. Always inside the column.
+  const colRect = col.getBoundingClientRect();
+  const r = chip.getBoundingClientRect();
+  const scale = colRect.width / col.offsetWidth || 1;
+  const h = el.offsetHeight;
+  let top = (r.bottom - colRect.top) / scale + 4;
+  if (top + h > col.clientHeight - 4) top = Math.max(4, (r.top - colRect.top) / scale - h - 4);
+  el.style.top = `${Math.round(top)}px`;
 }
 
 /** Spotlight the lineup tile of the player who performs the hovered card. */
@@ -230,7 +307,7 @@ export function renderOpponent(app) {
 
 /** Their adjustments to your habits, on the court: icon + one line each. Red = applies now, yellow = one step away. */
 export function renderAdapt(app) {
-  const court = $("#g-court");
+  const court = $("#g-foot") || $("#g-court"); // the strip under the court
   if (!court) return;
   let el = $("#g-adapt");
   if (!el) {
@@ -241,14 +318,14 @@ export function renderAdapt(app) {
   }
   el.innerHTML = adaptStatus(app.run)
     .slice(0, 4)
-    .map((a) => `<div class="adapt-row ${a.state === "active" ? "on" : "warn"}">${icon(a.icon)}<b>${esc(a.state === "active" ? a.name : "Warning")}</b><span>${esc(a.text)}</span></div>`)
+    .map((a) => `<div class="adapt-row ${a.state === "active" ? "on" : "warn"}" title="${esc(a.text)}">${icon(a.icon)}<b>${esc(a.state === "active" ? a.name : "Warning")}</b><span>${esc(a.text)}</span></div>`)
     .join("");
 }
 
 /** "x3 COMBO": cards chained this turn. Pops (and ticks) each time it grows. */
 let shownCombo = 0;
 export function renderCombo(app) {
-  const court = $("#g-court");
+  const court = $("#g-foot") || $("#g-court");
   if (!court) return;
   let el = $("#g-combo");
   if (!el) {

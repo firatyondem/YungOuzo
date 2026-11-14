@@ -19,7 +19,7 @@ export function pop(text, cls = "") {
 /** One short line that explains a consequence ("Miss on the drive: turnover, their play is at +10%"). */
 let captionTimer = 0;
 export function caption(text, cls = "bad") {
-  const layer = $("#g-fx");
+  const layer = $("#g-feed") || $("#g-fx"); // the strip above the court, never over the rim
   if (!layer || !text) return;
   let el = layer.querySelector(".fx-caption");
   if (!el) {

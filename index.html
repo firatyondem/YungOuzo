@@ -55,12 +55,19 @@
           <div id="g-opp" class="opp-traits"></div>
         </aside>
 
-        <div class="court-wrap" id="g-court">
-          <div class="css-court" id="css-court"></div>
-          <canvas id="three-canvas" hidden></canvas>
-          <div class="intent" id="g-intent"></div>
-          <div class="fx-layer" id="g-fx"></div>
-          <div class="caption" id="g-caption"></div>
+        <!-- Court safe zone: the hoop, the rim and every shooter's path to it stay clear.
+             Persistent UI lives in the strips above and below the court, never on it. -->
+        <div class="court-col">
+          <div class="court-top">
+            <div class="court-feed" id="g-feed"><div class="caption" id="g-caption"></div></div>
+            <div class="intent" id="g-intent"></div>
+          </div>
+          <div class="court-wrap" id="g-court">
+            <div class="css-court" id="css-court"></div>
+            <canvas id="three-canvas" hidden></canvas>
+            <div class="fx-layer" id="g-fx"></div>
+          </div>
+          <div class="court-foot" id="g-foot"></div>
         </div>
 
         <aside class="side right-col">

@@ -317,6 +317,43 @@ export async function createThreeCourt({ canvas, wrap, manifest = null, config =
       const r = canvas.getBoundingClientRect();
       return { x: r.left + ((p.x + 1) / 2) * r.width, y: r.top + ((1 - p.y) / 2) * r.height };
     },
+    /**
+     * Court safe zone on screen: the box around backboard, rim and net, plus the rim
+     * centre. Used to check that no UI and no model ever covers the hoop.
+     */
+    safeZone() {
+      const r = canvas.getBoundingClientRect();
+      const h = COURT.hoop;
+      const pts = [
+        [-0.95, 4.13, h.z - 0.42], [0.95, 4.13, h.z - 0.42],
+        [-0.95, 2.98, h.z - 0.42], [0.95, 2.98, h.z - 0.42],
+        [-0.34, h.y - 0.55, h.z], [0.34, h.y - 0.55, h.z],
+        [-0.34, h.y, h.z + 0.3], [0.34, h.y, h.z + 0.3],
+      ].map(([x, y, z]) => {
+        const p = new THREE.Vector3(x, y, z).project(camera);
+        return { x: r.left + ((p.x + 1) / 2) * r.width, y: r.top + ((1 - p.y) / 2) * r.height };
+      });
+      const xs = pts.map((p) => p.x);
+      const ys = pts.map((p) => p.y);
+      const rim = new THREE.Vector3(h.x, h.y, h.z).project(camera);
+      return {
+        left: Math.min(...xs), right: Math.max(...xs), top: Math.min(...ys), bottom: Math.max(...ys),
+        rim: { x: r.left + ((rim.x + 1) / 2) * r.width, y: r.top + ((1 - rim.y) / 2) * r.height },
+        canvas: { left: r.left, top: r.top, right: r.right, bottom: r.bottom },
+      };
+    },
+    /** Screen boxes of every figure (models included), for the same check. */
+    figureBoxes() {
+      const r = canvas.getBoundingClientRect();
+      return figs.boxes().map((b) => {
+        const c = [];
+        for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) {
+          const p = new THREE.Vector3(x, y, z).project(camera);
+          c.push({ x: r.left + ((p.x + 1) / 2) * r.width, y: r.top + ((1 - p.y) / 2) * r.height });
+        }
+        return { side: b.side, slot: b.slot, left: Math.min(...c.map((p) => p.x)), right: Math.max(...c.map((p) => p.x)), top: Math.min(...c.map((p) => p.y)), bottom: Math.max(...c.map((p) => p.y)), depth: b.depth };
+      });
+    },
     setVisible(v) {
       active = v;
       canvas.hidden = !v;

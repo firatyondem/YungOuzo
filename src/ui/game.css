@@ -347,3 +347,55 @@
 .adapt-row.on { background: var(--bad); }
 .adapt-row.warn { background: var(--yellow); }
 @media (prefers-reduced-motion: reduce) { .combo.tick, .card-pct.bump, .meter.m-open.blaze .meter-track { animation: none; } }
+
+/* ---------- Court safe zone ----------
+   The hoop, the rim and every shooter's path to it are never covered: the intent
+   banner and captions sit in a strip above the court, adjustments and the combo
+   counter in a strip below it, tips and player details stay in the lineup column,
+   and the short celebration text is pinned to the bottom edge of the court. */
+.court-col { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 6px; min-width: 0; min-height: 0; }
+.court-top { display: flex; align-items: stretch; justify-content: space-between; gap: 10px; min-height: 58px; }
+.court-feed { position: relative; flex: 1 1 0; min-width: 0; display: flex; align-items: center; overflow: hidden; }
+.court-top .intent { position: static; flex: 0 0 auto; align-self: stretch; display: flex; }
+.court-top .lt { filter: none; }
+.court-top .lt-body { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "kicker kicker" "play chips"; column-gap: 8px; row-gap: 2px; align-content: center; padding: 4px 10px; }
+.court-top .lt-kicker { grid-area: kicker; }
+.court-top .lt-play { grid-area: play; font-size: var(--fs-20); }
+.court-top .lt-chips { grid-area: chips; flex-wrap: nowrap; overflow: hidden; align-items: center; }
+.court-top .lt-slab { padding: 3px 10px 3px 28px; }
+.court-top .lt-slab .av { width: 44px; height: 44px; }
+.court-top .lt-pct b { font-size: 36px; }
+.court-feed .caption { position: static; max-width: 100%; min-width: 0; }
+.court-feed .caption-box { font-size: var(--fs-16); padding: 6px 30px 6px 0; }
+.court-feed .fx-caption { position: static; transform: none; max-width: 100%; animation: none; text-align: left; font-size: var(--fs-14); padding: 6px 12px; box-shadow: none; white-space: normal; }
+.court-feed:has(.fx-caption) .caption { display: none; }
+.court-foot { display: flex; align-items: center; gap: 8px; min-height: 34px; min-width: 0; }
+.court-foot .adapt-strip { position: static; flex: 1 1 0; min-width: 0; max-width: none; flex-direction: row; flex-wrap: nowrap; overflow: hidden; pointer-events: auto; }
+.court-foot .adapt-row { min-width: 0; flex: 0 1 auto; box-shadow: none; }
+.court-foot .adapt-row span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.court-foot .combo { position: static; margin-left: auto; flex: 0 0 auto; box-shadow: none; padding: 0 12px; }
+.court-foot .combo b { font-size: 28px; }
+.court-foot .combo span { font-size: 16px; }
+.fx-layer { place-items: end center; padding-bottom: 2.5%; }
+.fx-pop { font-size: 60px; }
+.fx-pop.big { font-size: 76px; }
+.fx-pop.small, .fx-pop.opp { font-size: 44px; }
+.fx-banner { align-self: end; padding: 8px 20px 6px; }
+.fx-banner b { font-size: var(--fs-36, 36px); }
+@media (max-height: 800px) { .fx-pop { font-size: 50px; } .fx-pop.big { font-size: 62px; } .fx-pop.small, .fx-pop.opp { font-size: 38px; } .court-top { min-height: 52px; } }
+/* Lineup chips (max 64px tall) and their details popover (max 280 x 180), inside the column */
+.left-col { position: relative; }
+.lp { max-height: 64px; cursor: pointer; }
+.lp-arch { display: inline-flex; align-items: center; gap: 4px; }
+.lp-arch .ico { width: 13px; height: 13px; }
+.lp-pop { position: absolute; left: 8px; right: 8px; max-width: 280px; max-height: 180px; overflow: hidden; z-index: 30; background: var(--white); color: var(--navy-ink); border: 3px solid var(--navy-ink); border-left: 8px solid var(--pc); border-radius: var(--r-panel); box-shadow: 0 8px 0 rgba(0, 0, 0, 0.35); padding: 7px 10px; font-size: var(--fs-12); line-height: 1.3; pointer-events: none; display: flex; flex-direction: column; gap: 4px; }
+.lp-pop-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.lp-pop-head b { font-family: var(--display); font-weight: 400; font-size: var(--fs-20); line-height: 1; letter-spacing: 0.03em; }
+.lp-pop-head i { font-weight: 700; }
+.lp-pop-sub { display: flex; align-items: center; gap: 5px; font-weight: 700; }
+.lp-pop-sub .ico { width: 13px; height: 13px; flex: 0 0 13px; }
+.lp-pop-ratings { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; }
+.lp-pop-ratings span { display: flex; justify-content: space-between; gap: 6px; border-bottom: 1px solid #C9CFDB; }
+.lp-pop-ratings em, .lp-pop-sigs em { font-style: normal; font-weight: 700; }
+.lp-pop-ratings b { font-weight: 800; }
+.lp-pop-blurb { font-style: italic; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }

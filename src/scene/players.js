@@ -271,5 +271,13 @@ export function createFigurines(THREE, scene, court) {
     f.body.position.y -= legSpread ? 0.03 : 0;
   }
 
-  return { setTeams, update, jump, releasePoint };
+  /** World-space bounding boxes of the figures (body only: the floating number disc is not a model). */
+  function boxes() {
+    return figs.map((f) => {
+      const box = new THREE.Box3().setFromObject(f.body);
+      return { side: f.side, slot: f.slot, min: box.min, max: box.max, depth: f.group.position.z };
+    });
+  }
+
+  return { setTeams, update, jump, releasePoint, boxes };
 }

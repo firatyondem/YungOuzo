@@ -109,7 +109,7 @@ export function createTutorial(app) {
     if (!box) {
       box = document.createElement("div");
       box.className = "tut-box";
-      $("#g-court").appendChild(box);
+      ($("#screen-game .left-col") || $("#g-court")).appendChild(box);
       box.addEventListener("click", (e) => {
         const act = e.target.dataset.act;
         if (act === "skip") stop();

@@ -87,3 +87,6 @@
 .tut-hl { outline: 4px solid var(--yellow) !important; outline-offset: 3px; animation: tuthl 0.9s ease-in-out infinite; position: relative; z-index: 12; }
 .card.tut-hl { z-index: 12; }
 @keyframes tuthl { 0%, 100% { outline-color: var(--yellow); } 50% { outline-color: var(--white); } }
+
+/* Tips dock at the bottom of the lineup column (court safe zone: nothing sits on the court) */
+.left-col .tut-box { left: 6px; right: 6px; top: auto; bottom: 6px; width: auto; z-index: 25; }
