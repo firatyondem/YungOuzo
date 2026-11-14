@@ -22,7 +22,7 @@ export function renderEnd(app) {
       <h1 class="end-title ${won ? "gold" : "bad"}">${won ? "CHAMPIONS!" : "RUN OVER"}</h1>
       <p class="end-sub">${
         won
-          ? "You ran the full court and took down The Dynasty. The title is yours."
+          ? `You ran the full court and took down ${esc(lastTeam ? lastTeam.name : "the champions")}. The ${esc(app.league?.short || "league")} title is yours.`
           : lastTeam
             ? `Eliminated by ${esc(lastTeam.name)} (${esc(last.label || "")}), ${last.opp}–${last.player}.`
             : "The run ends here."

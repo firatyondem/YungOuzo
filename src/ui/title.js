@@ -28,7 +28,7 @@ export function renderTitle(app) {
         <span class="logo-line">FULL C<i class="logo-ball"></i>URT</span>
         <span class="logo-line logo-run">RUN</span>
       </h1>
-      <p class="title-pitch">Build your squad. Beat the 24-second shot clock. Survive the league and win the Finals.</p>
+      <p class="title-pitch">Build your squad. Beat the 24-second shot clock. Survive the ${esc(app.league?.name || "league")} and win the Finals.</p>
       <div class="title-actions">
         <button class="btn btn-primary btn-play" id="title-play">PLAY</button>
         <button class="btn btn-howto" id="title-howto">HOW TO PLAY</button>
@@ -58,7 +58,7 @@ export function howtoHTML(app) {
   return `
     <div class="how">
       <h1>HOW TO PLAY</h1>
-      <p class="how-lead">First to <b>15</b> wins a game. Beat <b>three league opponents</b>, then win the <b>best-of-3 Finals</b>.</p>
+      <p class="how-lead">First to <b>15</b> wins a game. Beat <b>three ${esc(app.league?.short || "league")} clubs</b>, then win the <b>best-of-3 Finals</b>.</p>
       <div class="how-steps">
         ${step(1, "GET OPEN", "<b class='o'>Offense</b> cards build <b class='o'>Openness</b>. Every point adds +1% to your next shot.", "swing_pass")}
         ${step(2, "TAKE THE SHOT", "<b class='y'>Shot</b> cards score 2 or 3. The big % on the card is your live chance. One shot per turn.", "pull_up_jumper")}

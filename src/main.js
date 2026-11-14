@@ -100,6 +100,7 @@ async function loadContent() {
   ]);
   app.roster = { source: roster.source, warning: roster.warning || "" };
   applyTeamOverlay(teams, overlay);
+  app.league = await loadJson("content/league.json").catch(() => null);
   return buildContent({ cards, players: roster.players, teams, chemistry, rewards, plays, actions, lineups, strategy });
 }
 

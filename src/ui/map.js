@@ -87,7 +87,7 @@ export function renderMap(app) {
         ${
           tip.notes.length
             ? `<div class="map-notes">${tip.notes.map((n) => `<span class="bnode-scout">${icon("mismatch")}<span>${esc(n)}</span></span>`).join("")}</div>`
-            : `<p>Beat three league opponents, then win the <b>best-of-3 Finals</b>. A loss before the Finals costs a life.</p>`
+            : `<p><b>${esc(app.league?.name || "The league")}</b>: beat three clubs, then win the <b>best-of-3 Finals</b>. A loss before the Finals costs a life.</p>`
         }
       </header>
       <div class="bracket">

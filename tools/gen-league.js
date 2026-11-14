@@ -3,9 +3,10 @@
 // below; the 8-player rosters (names, numbers, looks, tendencies) are generated
 // with a fixed seed so the file is reproducible.
 //   node tools/gen-league.js
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { NATIONS, REAL_NAMES, HEIGHT, BLURB, NICKNAMES, CLUBS, LEAGUE } from "./league-names.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -36,6 +37,46 @@ const TENDENCIES = {
   PF: ["post_up", "rebounder", "aggressive_defender", "poor_ft"],
   C: ["post_up", "rebounder", "poor_ft", "aggressive_defender"],
 };
+
+// Names and biographies use their own random stream, so adding them never moves
+// the numbers, looks and tendencies that the first stream already produced.
+let seed2 = 19940914;
+const rnd2 = () => {
+  seed2 = (seed2 + 0x6d2b79f5) >>> 0;
+  let t = seed2;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+const pick2 = (arr) => arr[Math.floor(rnd2() * arr.length)];
+const takenNames = new Set(JSON.parse(readFileSync(join(root, "content/players.league.json"), "utf8")).map((p) => p.name)); // never reuse a name from your own squad
+
+/** Nationality (plausible for the player's look, home country favoured), then a name from that nationality only. */
+function biography(player, club, index) {
+  const tone = player.look.skinTone;
+  const fits = Object.keys(NATIONS).filter((n) => NATIONS[n].tones.includes(tone));
+  const pool = [...fits];
+  if (fits.includes(club.nation)) for (let i = 0; i < 5; i++) pool.push(club.nation); // most of a roster is local
+  let nationality;
+  let name;
+  for (let tries = 0; tries < 200 && !name; tries++) {
+    nationality = pick2(pool);
+    const candidate = `${pick2(NATIONS[nationality].first)} ${pick2(NATIONS[nationality].last)}`;
+    if (!REAL_NAMES.has(candidate) && !takenNames.has(candidate)) name = candidate;
+  }
+  if (!name) throw new Error("ran out of names for " + player.id);
+  takenNames.add(name);
+  const [lo, hi] = HEIGHT[player.position];
+  const bio = {
+    name,
+    nationality,
+    birthplace: pick2(NATIONS[nationality].cities),
+    age: 19 + Math.floor(rnd2() * 17),
+    heightCm: lo + Math.floor(rnd2() * (hi - lo + 1)) + (player.look.build === "tall" ? 2 : 0),
+    blurb: BLURB[player.tendencies[0]] || "Does the small things that do not show up in the box score.",
+  };
+  return bio;
+}
 
 const usedNames = new Set();
 function makeRoster(teamId) {
@@ -244,9 +285,17 @@ const ADAPT_TEAM = { owls: 2, forge: 2, volts: 5, gators: 5, solar: 2 };
 
 const teams = TEAMS.map((t) => {
   const [primary, secondary] = t.colors;
-  const players = makeRoster(t.id);
+  const club = CLUBS[t.id];
+  const players = makeRoster(t.id).map((p, i) => {
+    const bio = biography(p, club, i);
+    const { id, position, jersey, look, tendencies } = p;
+    const out = { id, ...bio, position, jersey, look, tendencies };
+    if (i === 0) out.nickname = NICKNAMES[TEAMS.indexOf(t) % NICKNAMES.length]; // the team's star
+    return out;
+  });
   const out = {
-    id: t.id, name: t.name, tier: t.tier, identity: t.identity, tagline: t.tagline,
+    id: t.id, name: club.name, tier: t.tier, identity: t.identity, tagline: t.tagline,
+    city: club.city, country: club.nation, arena: club.arena, history: club.history, rival: club.rival,
     logo: `assets/teams/${t.id}.png`,
     defense: t.defense, adaptAt: ADAPT_TEAM[t.id] ?? ADAPT_AT[t.tier], color: primary, colors: { primary, secondary },
     coach: t.coach,
@@ -276,4 +325,5 @@ const json =
     .join(",\n") +
   "\n]\n";
 writeFileSync(join(root, "content/teams.json"), json);
+writeFileSync(join(root, "content/league.json"), JSON.stringify({ ...LEAGUE, clubs: teams.length }, null, 2) + "\n");
 console.log(`teams.json: ${teams.length} teams, ${teams.reduce((n, t) => n + t.players.length, 0)} players`);

@@ -134,7 +134,7 @@ export function renderLineup(app) {
 }
 
 const ARCH_ICON = { Sniper: "target", Slasher: "offense", Big: "users", FloorGeneral: "play", Lockdown: "defense" };
-const RATING_FULL = { SHT: "Shooting (threes)", INS: "Inside (twos)", DEF: "Defense", PLY: "Playmaking" };
+const RATING_FULL = { SHT: "Shooting", INS: "Inside", DEF: "Defense", PLY: "Playmaking" };
 
 /**
  * Full player details in a small popover anchored inside the lineup column
