@@ -17,7 +17,7 @@ const BUILD = {
 export const POSITION_HEIGHT = { PG: 0.94, SG: 0.97, SF: 1.01, PF: 1.05, C: 1.1 };
 
 /** Number (front) or surname + number (back) as a texture. */
-function jerseyTexture(THREE, number, name) {
+export function jerseyTexture(THREE, number, name) {
   const c = document.createElement("canvas");
   c.width = 256;
   c.height = 192;

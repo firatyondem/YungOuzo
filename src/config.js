@@ -76,6 +76,9 @@ export const CONFIG = {
   // failure -> the CSS court is used instead.
   USE_THREE: true,
   // Replace the procedural 3D floor with assets/models/court.glb (if present).
+  // assets/models/hoop.glb replaces the pole and backboard when true (the game's own rim
+  // and net always stay, so the rim is never hidden and the ball still drops through it).
+  USE_HOOP_MODEL: false,
   USE_COURT_MODEL: false,
 
   // Synthesized fallback sounds when an SFX file is missing (assets/audio/).

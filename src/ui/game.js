@@ -78,7 +78,8 @@ export function createGame(app) {
           case "shot": {
             const slot = Math.max(0, run.lineup.findIndex((p) => p.id === ev.shooterId));
             if (ev.gamePoint) await fx.slowMo(app); // a shot that can end the game gets a beat
-            await app.court?.shoot({ side: "player", slot, made: ev.made, points: ev.points }, cfg.SHOT_ANIM_MS);
+            const layup = ev.points === 2 && ((run.content.cards[ev.cardId] || {}).tags || []).includes("Drive");
+            await app.court?.shoot({ side: "player", slot, made: ev.made, points: ev.points, layup }, cfg.SHOT_ANIM_MS);
             if (ev.made) {
               makeStreak++;
               const three = ev.points >= 3;

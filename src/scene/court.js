@@ -1,5 +1,6 @@
 // Three.js half-court. An enhancement only: if anything here throws, the game
 // keeps using the CSS court. Same interface as ui/cssCourt.js.
+import { modelFileFor } from "./models.js";
 import { createFigurines } from "./players.js";
 import { createBall } from "./ball.js";
 import { hasAsset } from "../assets.js";
@@ -191,9 +192,12 @@ export async function createThreeCourt({ canvas, wrap, manifest = null, config =
 
   // Optional models. Listed in the manifest -> load; no manifest -> try silently.
   const wanted = (file) => hasAsset(manifest, "models", file) !== false;
+  // players/<id>.glb -> <archetype>_<n>.glb -> <archetype>.glb -> procedural (scene/models.js).
+  // Only files the manifest lists are requested, so a missing model costs nothing.
+  const listed = (file) => hasAsset(manifest, "models", file) === true;
   const modelUrlFor = (p) => {
-    const file = p.model || `${String(p.archetype).toLowerCase()}.glb`;
-    return wanted(file) ? MODEL_DIR + file : null;
+    const file = modelFileFor(p, listed);
+    return file ? MODEL_DIR + file : null;
   };
   async function loadOptional(file) {
     if (hasAsset(manifest, "models", file) !== true) return null; // only when known to exist
@@ -216,6 +220,50 @@ export async function createThreeCourt({ canvas, wrap, manifest = null, config =
       ball.setModel(obj);
     } catch {}
   });
+  // Props with fallbacks: a coach on the sideline (idle clip if the file has one), and
+  // optionally a hoop model. Both are far from, or behind, the rim: the safe zone stays clear.
+  let coachMixer = null;
+  if (hasAsset(manifest, "models", "coach.glb") === true) {
+    import("three/addons/loaders/GLTFLoader.js")
+      .then(({ GLTFLoader }) => new GLTFLoader().loadAsync(MODEL_DIR + "coach.glb"))
+      .then((gltf) => {
+        try {
+          const obj = gltf.scene;
+          const size = new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3());
+          if (!(size.y > 0)) return;
+          obj.scale.multiplyScalar(2.3 / size.y);
+          const box = new THREE.Box3().setFromObject(obj);
+          obj.position.set(-COURT.width / 2 - 1.3 - (box.min.x + box.max.x) / 2, -box.min.y, 8);
+          obj.rotation.y = Math.PI / 2; // facing the court
+          scene.add(obj);
+          const clip = (gltf.animations || [])[0];
+          if (clip) {
+            coachMixer = new THREE.AnimationMixer(obj);
+            coachMixer.clipAction(clip).play();
+          }
+        } catch {
+          /* no coach */
+        }
+      })
+      .catch(() => {});
+  }
+  if (config.USE_HOOP_MODEL) {
+    loadOptional("hoop.glb").then((obj) => {
+      if (!obj) return;
+      try {
+        const size = new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3());
+        if (!(size.y > 0)) return;
+        obj.scale.multiplyScalar(4.15 / size.y);
+        const box = new THREE.Box3().setFromObject(obj);
+        // Stand it behind the rim: its front face ends where the backboard was.
+        obj.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, COURT.hoop.z - 0.45 - box.max.z);
+        scene.add(obj);
+        for (const part of hoop.group.children) part.visible = part === hoop.rim || part === hoop.net;
+      } catch {
+        /* keep the built hoop */
+      }
+    });
+  }
   if (config.USE_COURT_MODEL) {
     loadOptional("court.glb").then((obj) => {
       if (!obj) return;
@@ -264,11 +312,14 @@ export async function createThreeCourt({ canvas, wrap, manifest = null, config =
   let raf = 0;
   let netPulse = -1;
   let rimShake = -1;
+  let lastFrame = 0;
   function frame(now) {
     raf = requestAnimationFrame(frame);
     if (!active || canvas.hidden || canvas.offsetParent === null) return;
     figs.update(now);
     ball.update(now);
+    if (coachMixer) coachMixer.update(lastFrame ? Math.min(0.1, (now - lastFrame) / 1000) : 0);
+    lastFrame = now;
     if (netPulse >= 0) {
       const t = (now - netPulse) / 420;
       hoop.net.scale.y = t >= 1 ? 1 : 1 + Math.sin(t * Math.PI) * 0.5;
@@ -297,16 +348,18 @@ export async function createThreeCourt({ canvas, wrap, manifest = null, config =
       figs.setTeams(lineup, team, modelUrlFor);
     },
     /** Animate a shot. Resolves when the ball reaches the rim. */
-    shoot({ side, slot = 0, made, points = 2 }, ms = 700) {
+    shoot({ side, slot = 0, made, points = 2, layup = false }, ms = 700) {
       if (lost) return Promise.resolve();
       const now = performance.now();
-      figs.jump(side, slot, now);
+      figs.jump(side, slot, now, { layup: !!layup });
       const from = figs.releasePoint(side, slot);
       return ball
         .shoot({ from, hoop: COURT.hoop, made, dir: slot % 2 === 0 ? 1 : -1, ms })
         .then(() => {
-          if (made) netPulse = performance.now();
-          else rimShake = performance.now();
+          if (made) {
+            netPulse = performance.now();
+            figs.celebrate(side, slot);
+          } else rimShake = performance.now();
         });
     },
     /** Screen position of a figurine's chest, for effects. */

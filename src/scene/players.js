@@ -2,7 +2,8 @@
 //   1. GLB model (assets/models/<archetype>.glb) when it exists
 //   2. procedural figurine built from the player's `look` (scene/figurine.js)
 //   3. plain coloured capsule (if procedural generation fails)
-import { buildFigurineBody } from "./figurine.js";
+import { buildFigurineBody, jerseyTexture, POSITION_HEIGHT } from "./figurine.js";
+import { isRigged, mapClips, tintKit } from "./models.js";
 
 // Offense spots as (x%, y%) of the half-court, shared with the CSS court.
 export const SPOTS = [
@@ -112,7 +113,8 @@ export function createFigurines(THREE, scene, court) {
             if (!loaderPromise) loaderPromise = import("three/addons/loaders/GLTFLoader.js");
             const { GLTFLoader } = await loaderPromise;
             const gltf = await new GLTFLoader().loadAsync(url);
-            return gltf.scene;
+            // Loaded once per file; every figure gets its own clone (see useModel).
+            return { scene: gltf.scene, clips: gltf.animations || [], rigged: isRigged(gltf.scene) };
           } catch {
             return null; // missing or broken model: keep the capsule
           }
@@ -153,22 +155,7 @@ export function createFigurines(THREE, scene, court) {
       const fig = { side: "player", slot: i, ...f, phase: i * 1.3, jumpAt: -1, ...facing(f.group, pos.x * 0.55, pos.z + 22) };
       root.add(f.group);
       figs.push(fig);
-      const url = modelUrlFor(p);
-      if (url) {
-        loadModel(url).then((model) => {
-          if (!model || token !== setTeams.token) return;
-          try {
-            const clone = model.clone(true);
-            if (!normalize(clone, 2.45)) return;
-            fig.body.clear();
-            fig.body.scale.set(1, 1, 1);
-            fig.body.add(clone);
-            fig.rig = null; // a loaded model has no procedural rig
-          } catch {
-            /* keep the capsule */
-          }
-        });
-      }
+      useModel(fig, p, p.color, modelUrlFor(p), token);
     });
     for (let i = 0; i < SPOTS.length; i++) {
       const op = (team.players || [])[i] || {};
@@ -176,8 +163,104 @@ export function createFigurines(THREE, scene, court) {
       f.group.position.copy(spotToWorld(i, 0.3));
       const guard = spotToWorld(i);
       root.add(f.group);
-      figs.push({ side: "opp", slot: i, ...f, phase: i * 2.1 + 1, jumpAt: -1, ...facing(f.group, guard.x, guard.z + 6) });
+      const fig = { side: "opp", slot: i, ...f, phase: i * 2.1 + 1, jumpAt: -1, ...facing(f.group, guard.x, guard.z + 6) };
+      figs.push(fig);
+      if (op.id) useModel(fig, { ...op, position: op.position || ["PG", "SG", "SF", "PF", "C"][i] }, team.color, modelUrlFor({ ...op, position: op.position || ["PG", "SG", "SF", "PF", "C"][i] }), token);
     }
+  }
+
+  const BUILD_SCALE = { lean: [0.94, 1], average: [1, 1], strong: [1.1, 1.02], tall: [1, 1.07] };
+
+  /**
+   * Swap the procedural body for a loaded model, if there is one. One load per
+   * file (cached), one clone per figure (SkeletonUtils for rigged models), kit
+   * tinted to the team colour, number on chest and back, height from position
+   * and build, feet on the floor, clips mapped to game moments. Any failure
+   * keeps the procedural figure.
+   */
+  function useModel(fig, player, color, url, token) {
+    if (!url) return;
+    loadModel(url).then(async (model) => {
+      if (!model || token !== setTeams.token) return;
+      try {
+        let clone;
+        if (model.rigged) {
+          if (!skeletonUtils) skeletonUtils = import("three/addons/utils/SkeletonUtils.js");
+          clone = (await skeletonUtils).clone(model.scene);
+        } else clone = model.scene.clone(true);
+        if (token !== setTeams.token) return;
+        const look = player.look || {};
+        const [wide, tall] = BUILD_SCALE[look.build] || BUILD_SCALE.average;
+        const height = 2.42 * (POSITION_HEIGHT[player.position] || 1) * tall;
+        if (!normalize(clone, height)) return;
+        clone.scale.x *= wide;
+        clone.scale.z *= wide;
+        tintKit(THREE, clone, color);
+        const holder = new THREE.Group();
+        holder.add(clone);
+        // Number on chest and back, placed from the model's own size.
+        const digits = String(player.jersey ?? "").replace(/[^0-9]/g, "").slice(0, 2);
+        if (digits) {
+          const box = new THREE.Box3().setFromObject(clone);
+          const depth = Math.max(0.12, (box.max.z - box.min.z) * 0.32);
+          const mat = new THREE.MeshBasicMaterial({ map: jerseyTexture(THREE, digits, ""), transparent: true, depthWrite: false });
+          const front = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.255), mat);
+          front.position.set(0, height * 0.66, depth);
+          const back = front.clone();
+          back.position.z = -depth;
+          back.rotation.y = Math.PI;
+          holder.add(front, back);
+        }
+        fig.body.clear();
+        fig.body.scale.set(1, 1, 1);
+        fig.body.add(holder);
+        fig.rig = null; // a loaded model has no procedural rig
+        // Animation clips, when the file has them. Missing clips are simply not used.
+        const clips = mapClips(model.clips);
+        if (Object.keys(clips).length) {
+          fig.mixer = new THREE.AnimationMixer(clone);
+          fig.actions = {};
+          for (const [key, clip] of Object.entries(clips)) fig.actions[key] = fig.mixer.clipAction(clip);
+          fig.current = null;
+          playClip(fig, baseClip(fig));
+        }
+      } catch {
+        /* keep the procedural figure */
+      }
+    });
+  }
+  let skeletonUtils = null;
+
+  /** The clip a figure rests in: defenders hold a stance, the ball handler dribbles, everyone else idles. */
+  function baseClip(fig) {
+    const a = fig.actions || {};
+    if (fig.side === "opp" && a.defend) return "defend";
+    if (fig.side === "player" && fig.slot === 3 && a.dribble) return "dribble";
+    return a.idle ? "idle" : null;
+  }
+
+  /** Cross-fade (0.2 s) to a clip; one-shot clips return to the resting clip. */
+  function playClip(fig, name, once = false) {
+    if (!fig.mixer || !name || !fig.actions[name]) return false;
+    const next = fig.actions[name];
+    if (fig.current === next && !once) return true;
+    next.reset();
+    next.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, once ? 1 : Infinity);
+    next.clampWhenFinished = once;
+    if (fig.current && fig.current !== next) next.crossFadeFrom(fig.current, 0.2, false);
+    next.play();
+    fig.current = next;
+    if (once) {
+      const dur = (next.getClip().duration || 1) * 1000;
+      clearTimeout(fig.clipTimer);
+      fig.clipTimer = setTimeout(() => playClip(fig, baseClip(fig)), Math.min(dur, 1600));
+    }
+    return true;
+  }
+
+  function celebrate(side, slot) {
+    const f = find(side, slot);
+    if (f) playClip(f, "celebrate", true);
   }
 
   /** Point the figure at (x, z) and remember that pose plus the pose facing the hoop. */
@@ -200,14 +283,21 @@ export function createFigurines(THREE, scene, court) {
     return p;
   }
 
-  function jump(side, slot, now) {
+  function jump(side, slot, now, { layup = false } = {}) {
     const f = find(side, slot);
-    if (f) f.jumpAt = now;
+    if (!f) return;
+    f.jumpAt = now;
+    // Models with clips: a lay-up on drives, otherwise the shooting clip.
+    if (!(layup && playClip(f, "layup", true))) playClip(f, "shoot", true);
   }
 
+  let lastNow = 0;
   function update(now) {
     const t = now / 1000;
+    const dt = lastNow ? Math.min(0.1, (now - lastNow) / 1000) : 0;
+    lastNow = now;
     for (const f of figs) {
+      if (f.mixer) f.mixer.update(dt);
       let y = Math.abs(Math.sin(t * 2.2 + f.phase)) * 0.06; // idle bounce
       if (f.jumpAt >= 0) {
         const jt = (now - f.jumpAt) / 620;
@@ -279,5 +369,5 @@ export function createFigurines(THREE, scene, court) {
     });
   }
 
-  return { setTeams, update, jump, releasePoint, boxes };
+  return { setTeams, update, jump, releasePoint, boxes, celebrate };
 }

@@ -226,6 +226,27 @@ Every team has a `logo` slot and every player a `portrait` slot (`assets/teams/<
 
 Real team and player names work the same way as the private roster: copy `content/teams.real.example.json` to `content/teams.real.json` (gitignored, checked by `tools/check-private.js`), fill in names, and open the game with `?roster=real`. Without that parameter the file is never requested, and the public build stays fictional.
 
+## 3D models (Meshy)
+
+The game is complete without any model file. When models exist they are picked per player, most specific first:
+`assets/models/players/<playerId>.glb` → `assets/models/<archetype>_2.glb` / `_3.glb` (variant chosen by the player's id) → `assets/models/<archetype>.glb` → the procedural figurine. Opponents map their position to an archetype (PG floor general, SG sniper, SF slasher, PF lockdown, C big). Each file is loaded once and cloned per player; the white kit is tinted to the team colour, a number is added on chest and back, and the model is scaled by position and build. Clips named like idle, throw, jump, stance and victory play at the matching moments with a 0.2 s cross-fade; missing clips are ignored.
+
+Generate them with `tools/meshy-generate.mjs` (job list in `tools/meshy-jobs.json`):
+
+```bash
+node tools/meshy-generate.mjs --dry-run
+```
+
+```bash
+node tools/meshy-generate.mjs --group archetypes
+```
+
+```bash
+node tools/update-assets.js
+```
+
+The key is read from the environment variable `MESHY_API_KEY` or from a `MESHY_API_KEY=...` line in a `.env` file (gitignored); it is never printed. The script stops starting jobs at 1,000 credits (`--budget`) and records every task in `tools/meshy-ledger.json`. Other groups: `stars`, `variants`, `props`. **No models have been generated yet.**
+
 ## Assets (all optional)
 
 The game is complete without any asset files: procedural figurines built from each player's `look`, synthesized sound effects and captions cover everything. A GLB for an archetype replaces the procedural figurine for those players; if procedural generation ever fails, a plain capsule is used.
