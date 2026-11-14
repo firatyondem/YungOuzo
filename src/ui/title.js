@@ -24,9 +24,8 @@ export function renderTitle(app) {
     <div class="title-top">${soundButtonHTML(app)}</div>
     <div class="title-content">
       <div class="title-kicker">A BASKETBALL ROGUELIKE DECKBUILDER</div>
-      <h1 class="logo" aria-label="Full Court Run">
-        <span class="logo-line">FULL C<i class="logo-ball"></i>URT</span>
-        <span class="logo-line logo-run">RUN</span>
+      <h1 class="logo" aria-label="Ballin">
+        <span class="logo-line logo-run logo-ballin">BALLIN</span>
       </h1>
       <p class="title-pitch">Build your squad. Beat the 24-second shot clock. Survive the ${esc(app.league?.name || "league")} and win the Finals.</p>
       <div class="title-actions">

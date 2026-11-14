@@ -144,3 +144,9 @@
 .card-hold.on { background: #FFB800; }
 .card.held { outline: 3px solid #FFB800; outline-offset: 2px; }
 .card.type-status .card-frame { filter: saturate(0.6); }
+
+/* Descriptions are never clipped: longer text takes height from the art window. */
+.card.tx-m .card-art { flex-basis: 78px; }
+.card.tx-l .card-art { flex-basis: 52px; }
+.card.tx-l .card-text { font-size: 12px; line-height: 1.2; }
+.card.tx-l .card-name, .card.tx-m .card-name { padding-top: 5px; }

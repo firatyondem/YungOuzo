@@ -64,7 +64,7 @@ function floorTexture(THREE) {
   g.fillStyle = "rgba(255,255,255,0.16)";
   g.font = "bold 92px 'Bebas Neue', Impact, sans-serif";
   g.textAlign = "center";
-  g.fillText("FULL COURT RUN", X(0), Z(10.9));
+  g.fillText("BALLIN", X(0), Z(10.9));
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;

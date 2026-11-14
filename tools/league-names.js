@@ -156,7 +156,11 @@ export const NICKNAMES = [
   "Second Wind", "The Cartographer", "Copper Wire", "The Tollbooth", "Late Train", "The Lamplighter", "The Clockmaker", "Last Tram",
 ];
 
-// The league and its sixteen clubs. Cities and regions are invented or generic.
+// The league and its sixteen clubs. Eight use the names of real clubs (Real Madrid, Barcelona,
+// Anadolu Efes, Virtus Bologna, Bayern Munich, Žalgiris Kaunas, Paris Basketball, Partizan), at the
+// project owner's request: names only, no logos, and their players here are generated and fictional.
+// Their lines describe how the team plays in this game and state no facts about the real clubs.
+// The other eight clubs are invented.
 export const LEAGUE = {
   name: "Meridian Continental League",
   short: "MCL",
@@ -168,18 +172,18 @@ export const LEAGUE = {
 export const CLUBS = {
   gulls: { name: "Marevo Port BC", nation: "Croatian", city: "Marevo", arena: "Lučka Dvorana", rival: "tides", history: "Founded by dock workers in 1961; four cup finals, all of them lost at the buzzer." },
   volts: { name: "Lumena Volt BC", nation: "Greek", city: "Lumena", arena: "Ilektra Arena", rival: "rockets", history: "A power-company team turned pro in 1988; famous for games that end 110-108." },
-  rafters: { name: "KK Drinava", nation: "Serbian", city: "Drinava", arena: "Hala Splavara", rival: "rams", history: "River-town club since 1953; the old hall still has wooden stands on one side." },
-  gators: { name: "Marais Noir BC", nation: "French", city: "Marais-Noir", arena: "Salle des Roseaux", rival: "forge", history: "Promoted in 2009 and never relegated; nobody enjoys the trip to the marsh." },
+  rafters: {name: "Partizan",nation: "Serbian",city: "Belgrade",arena: "Home court, Belgrade",rival: "solar",history: "They chase every miss; second chances are how they beat you."},
+  gators: {name: "Paris Basketball",nation: "French",city: "Paris",arena: "Home court, Paris",rival: "swans",history: "Physical from the opening tip; every trip to the paint costs something."},
   hawks: { name: "Altınyaka Hawks", nation: "Turkish", city: "Altınyaka", arena: "Kanat Spor Salonu", rival: "wolves", history: "University club founded in 1975; the youth academy feeds half the league." },
   wolves: { name: "Nordtor Wolves", nation: "German", city: "Nordtor", arena: "Torhalle", rival: "hawks", history: "Formed in 1999 from two merged city clubs; they have pressed full court ever since." },
   owls: { name: "Mylos Owls", nation: "Greek", city: "Mylos", arena: "Palaio Kleisto", rival: "polar", history: "Champions in 1997 and 2004; the average age of the roster is a running joke." },
-  forge: { name: "Valferro Forge", nation: "Italian", city: "Valferro", arena: "PalaFucina", rival: "gators", history: "Steel-town club since 1947; they once won a final 52-49 and celebrated the score." },
+  forge: {name: "Virtus Bologna",nation: "Italian",city: "Bologna",arena: "Home court, Bologna",rival: "polar",history: "Low scores and long nights: they are happy to win 52-49."},
   tides: { name: "Bahía Luna CB", nation: "Spanish", city: "Bahía Luna", arena: "Pabellón de la Marea", rival: "gulls", history: "Founded in 1982 by a retired coach who banned dribbling in practice." },
   rams: { name: "Kamenvrh Rams", nation: "Slovenian", city: "Kamenvrh", arena: "Dvorana Pod Skalo", rival: "rafters", history: "Mountain club since 1968; every centre they sign is taller than the last." },
-  swans: { name: "BK Sudrabezers", nation: "Latvian", city: "Sudrabezers", arena: "Ezera Halle", rival: "kings", history: "Lake-district club founded in 1991; five positions, one size." },
-  polar: { name: "Eiskamm Baskets", nation: "German", city: "Eiskamm", arena: "Kammhalle", rival: "owls", history: "Promoted in 2012; they have never scored 90 and never lost by 20." },
-  solar: { name: "Negev Shemesh BC", nation: "Israeli", city: "Negev region", arena: "Heichal HaShemesh", rival: "dynasty", history: "Built in 2006 around one scorer, and rebuilt around the next one ever since." },
+  swans: {name: "Žalgiris Kaunas",nation: "Lithuanian",city: "Kaunas",arena: "Home court, Kaunas",rival: "rafters",history: "Five positions, one size: every screen is switched."},
+  polar: {name: "Bayern Munich",nation: "German",city: "Munich",arena: "Home court, Munich",rival: "forge",history: "They slow the game to a walk and trust the last two minutes."},
+  solar: {name: "Anadolu Efes",nation: "Turkish",city: "Istanbul",arena: "Home court, Istanbul",rival: "rafters",history: "One scorer, and four players who know exactly where he wants the ball."},
   rockets: { name: "Costarossa Rockets", nation: "Italian", city: "Costarossa", arena: "PalaRosso", rival: "volts", history: "Coastal club since 1979; four scoring champions and one assist leader." },
-  kings: { name: "Reyes del Sur CB", nation: "Spanish", city: "southern plains", arena: "Pabellón Real", rival: "swans", history: "Founded in 1970; opponents have shot under 45% in their building for a decade." },
-  dynasty: { name: "Krunograd Dynasty", nation: "Serbian", city: "Krunograd", arena: "Krunska Arena", rival: "solar", history: "Eleven titles since 1994, six of the last eight. Everyone else plays for second." },
+  kings: {name: "Barcelona",nation: "Spanish",city: "Barcelona",arena: "Home court, Barcelona",rival: "dynasty",history: "Nothing easy at the rim in their building; they make you win it from outside."},
+  dynasty: {name: "Real Madrid",nation: "Spanish",city: "Madrid",arena: "Home court, Madrid",rival: "kings",history: "The team everyone measures themselves against. Beat them twice and the title is yours."},
 };

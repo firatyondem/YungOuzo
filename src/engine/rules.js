@@ -33,7 +33,7 @@ export function getCard(run, inst) {
     cache[base.id] = {
       ...base,
       cost: Math.max(0, base.cost - off),
-      text: `${base.text} Upgraded: ${off}s cheaper.`,
+      text: `${base.text} Upgraded: -${off}s.`,
       ...patch,
       name: `${base.name}+`,
       upgraded: true,

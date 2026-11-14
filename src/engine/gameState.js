@@ -1,5 +1,5 @@
 // =====================================================================
-// FULL COURT RUN - engine public API and state shape
+// BALLIN - engine public API and state shape
 // =====================================================================
 // The engine is pure logic: no DOM, no Three.js, runs in Node.
 // The UI holds one `run` object and calls the functions below; every

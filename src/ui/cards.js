@@ -70,6 +70,10 @@ export function cardHTML(card, opts = {}) {
   if (opts.playable === false) cls.push("unplayable");
   if (opts.playable === true) cls.push("playable");
   if (opts.dealt != null) cls.push("dealt");
+  // Long descriptions get more room: the art window gives up height so no text is ever cut off.
+  const textLen = String(card.text || "").length;
+  if (textLen > 78) cls.push("tx-l");
+  else if (textLen > 48) cls.push("tx-m");
   const style = [];
   if (opts.index != null) style.push(`--i:${opts.index}`);
   if (opts.dealt != null) style.push(`--d:${opts.dealt}`);
